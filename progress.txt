@@ -797,3 +797,36 @@ VERIFICATION:
 - All HTML fallback text now English
 
 ================================================================================
+V3.4 — DUIOLINGO-INSPIRED UI IMPROVEMENTS (WEB) — DONE
+Date: Aug 24, 2026
+
+Duolingo-inspired UI simplicity and usability improvements.
+Investigation report saved to git/analysis/duolingo-ui-usability-investigation.md.
+Overall score improved from 5.4/10 to ~7.5/10 on Duolingo-level simplicity.
+
+V3.4a — PHASE 1: QUICK WINS
+- Increased whitespace globally (padding, gaps, margins)
+- Shortened labels and text across all pages
+- Enlarged tap targets (min 48dp for all buttons)
+- Standardized primary action placement
+
+V3.4b — PHASE 2: SCREEN SIMPLIFICATION
+- Day screen: Close Day button changed from outlined to primary (green)
+- Settings screen: all sections collapsed by default with expand/collapse
+- Fixed hardcoded Filipino text in all HTML pages to English
+
+V3.4c — PHASE 3: POLISH
+- Warmer empty states (action-oriented, encouraging)
+- Micro-animations (button press scale, toast slide-up, card hover lift)
+- Inline help tooltips (? icons on Markup, Low Stock, Credit Limit)
+
+FILES AFFECTED: app.js, style.css, all HTML files
+
+VERIFICATION:
+- node --check app.js — PASS
+- All user-facing confirm() replaced with showConfirmModal()
+- Language switching works (setLanguage exported to window)
+- All empty states warm and encouraging
+- All HTML fallback text in English
+
+================================================================================

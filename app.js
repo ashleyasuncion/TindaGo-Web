@@ -132,7 +132,7 @@
       overdueCloseStart: 'Close Old Day & Start Today',
       overdueReview: 'Review Last Day\'s Sales',
       overdueReviewTitle: 'Last Day\'s Sales',
-      overdueReviewEmpty: 'No sales recorded that day.',
+      overdueReviewEmpty: 'No sales were recorded on that day.',
       overdueReviewTotal: 'Total',
       overdueArchivedToast: 'Previous day\'s sales saved safely. New day started!',
       overdueRedirect: 'Please close the previous day on the Morning page.',
@@ -142,19 +142,19 @@
       earnings: 'Earnings',
       itemsSold: 'Sold',
       utangToday: 'Debt Today',
-      noTransactions: 'No transactions yet.',
+      noTransactions: 'No transactions yet — start selling to see them here!',
       closingExpenses: 'Cost of Goods',
       closingActualSales: 'Cash Counted',
       closingProfitLabel: 'Profit from Items Sold',
-      closingProfitHint: 'Selling price of items sold minus their cost.',
+      closingProfitHint: 'Revenue minus cost of goods sold.',
       closingExpensesToday: 'Store Expenses Today',
       closingNetProfit: 'Net Profit',
-      closingNetProfitHint: 'Net Profit = profit from items sold - store expenses.',
-      noSales: 'No sales recorded today.',
+      closingNetProfitHint: 'Profit after store expenses.',
+      noSales: 'No sales yet — tap Sell to record your first sale!',
       closingRecordedSales: 'Cash Sales Today',
       closingSalesDiff: 'Cash Difference',
-      allStockOk: 'All stock is good.',
-      noDebts: 'No outstanding debts.',
+      allStockOk: 'All stock is good — you\'re ready to sell!',
+      noDebts: 'No outstanding debts — everyone is settled!',
       dayCompleteSub: 'Rest well, {name}. See you tomorrow!',
       productLabel: 'What did they buy?',
       productPlaceholder: 'Search product...',
@@ -187,11 +187,11 @@
       exportData: 'Export Data',
       importDataBtn: 'Import Data',
       mobileOnlyNotifications: 'Push Notifications',
-      mobileOnlyNotificationsDesc: 'This feature is available on the TindaGo mobile app. It uses your phone notification system to send alerts for overdue stores, low stock, restock reminders, and closing time.',
+      mobileOnlyNotificationsDesc: 'This feature requires the TindaGo mobile app for device notifications.',
       mobileOnlySms: 'SMS Notifications',
-      mobileOnlySmsDesc: 'This feature is available on the TindaGo mobile app. It sends debt reminders and receipts via SMS using your phone messaging capability.',
+      mobileOnlySmsDesc: 'This feature requires the TindaGo mobile app for SMS messaging.',
       mobileOnlyNotifSettings: 'Notification Settings',
-      mobileOnlyNotifSettingsDesc: 'This feature is available on the TindaGo mobile app. Configure notification channels for overdue stores, low stock, restock reminders, and closing time alerts.',
+      mobileOnlyNotifSettingsDesc: 'This feature requires the TindaGo mobile app for notification settings.',
       mobileOnlyTitle: 'Mobile-only functionality',
       mobileOnlyDesc: 'This feature is available on the TindaGo mobile app. Please use the mobile app to continue.',
       mobileOnlyOk: 'OK',
@@ -209,9 +209,9 @@
       markupHint: 'Cost {cost} + {pct}% ({amount}) = Suggested {price}',
       markupBoxHint: 'Cost {cost} + {pct}% = {amount}',
       defaultMarkupLabel: 'Default Markup (%)',
-      defaultMarkupHint: 'Applied to new products',
+      defaultMarkupHint: 'For new products',
       defaultCreditLimitLabel: 'Default Credit Limit (₱)',
-      defaultCreditLimitHint: 'Applied to new customers. Set 0 for no limit.',
+      defaultCreditLimitHint: 'For new customers. 0 = no limit.',
       creditLimitLabel: 'Credit Limit',
       creditLimitNone: 'No limit',
       creditLimitUsesDefault: 'Uses default',
@@ -245,8 +245,8 @@
       recordPayment: 'Record Payment',
       productSaved: 'Product saved!',
       dataReset: 'Data has been reset.',
-      noProducts: 'No products yet.',
-      noDebtItems: 'No debts yet.',
+      noProducts: 'No products yet — add your first product to get started!',
+      noDebtItems: 'No debts yet — credit sales will appear here.',
       confirmReset: 'Reset all data? This cannot be undone.',
       dayAlreadyOpen: 'Day is already open!',
       dayNotOpen: 'Day not started yet!',
@@ -266,7 +266,7 @@
       expenseNotePlaceholder: 'e.g. electric bill',
       expenseSave: 'Save Expense',
       expenseDelete: 'Delete',
-      expenseEmpty: 'No expenses recorded yet.',
+      expenseEmpty: 'No expenses yet — tap + to record your first expense.',
       expenseAdded: 'Expense added.',
       expenseDeleted: 'Expense deleted.',
       expenseAmountRequired: 'Enter an amount greater than 0.',
@@ -309,7 +309,7 @@
       mainTutorial11: 'The Inventory page lets you search, add, and manage all your stock items in one place.',
       mainTutorial12: 'Tap "Add Stock" to add new products or restock existing items with cost and selling price.',
       mainTutorial13: 'The Debts page tracks all customer debts. The total outstanding amount is shown at the top.',
-      mainTutorial14: 'Visit Settings anytime to change language, text size, store name, or owner name.',
+      mainTutorial14: 'Visit Settings anytime to change language, text size, store name, or owner name. Tap section headers to expand settings.',
       // Morning Tutorial
       morningTutorial1: 'This is the Morning Check — your daily overview before opening the store.',
       morningTutorial2: 'Check which items are running low or out of stock so you can restock today.',
@@ -571,11 +571,11 @@
       markupLabel: 'Markup (%)',
       lowStockAlertLabel: 'Low Stock Alert At',
       alertThreshold: 'Low Stock Threshold',
-      alertThresholdDesc: 'Alert when stock falls below this number',
+      alertThresholdDesc: 'Alert when stock is low',
       saveBtn: 'Save',
       // Product details (units, brands, categories)
       productDetailsSection: 'Product Details',
-      productDetailsHint: 'Optional — helps identify and sort your products',
+      productDetailsHint: 'Optional — helps sort your products',
       categoryLabel: 'Category',
       brandLabel: 'Brand',
       unitLabel: 'Unit',
@@ -697,9 +697,9 @@
       markupHint: 'Halaga {cost} + {pct}% ({amount}) = Mungkahing {price}',
       markupBoxHint: 'Halaga {cost} + {pct}% = {amount}',
       defaultMarkupLabel: 'Default na Markup (%)',
-      defaultMarkupHint: 'Gagamitin sa mga bagong produkto',
+      defaultMarkupHint: 'Para sa mga bagong produkto',
       defaultCreditLimitLabel: 'Default na Limit ng Utang (₱)',
-      defaultCreditLimitHint: 'Gagamitin sa mga bagong kostumer. Maglagay ng 0 kung walang limit.',
+      defaultCreditLimitHint: 'Para sa mga bagong kostumer. 0 = walang limit.',
       creditLimitLabel: 'Limit ng Utang',
       creditLimitNone: 'Walang limit',
       creditLimitUsesDefault: 'Ginagamit ang default',
@@ -789,7 +789,7 @@
       mainTutorial11: 'Ang Inventory page ay nagbibigay-daan sa iyo na maghanap, magdagdag, at mamahala ng stock.',
       mainTutorial12: 'I-tap ang "Magdagdag ng Stock" para magdagdag ng bagong produkto o mag-restock.',
       mainTutorial13: 'Ang Debts page ay sumusubaybay sa lahat ng utang ng kostumer. Ang kabuuang halaga ay nasa itaas.',
-      mainTutorial14: 'Pumunta sa Settings anumang oras para baguhin ang wika, laki ng teksto, o pangalan ng tindahan.',
+      mainTutorial14: 'Pumunta sa Settings anumang oras para baguhin ang wika, laki ng teksto, o pangalan ng tindahan. I-tap ang mga section header para buksan ang settings.',
       // Morning Tutorial
       morningTutorial1: 'Ito ang Morning Check — ang iyong pang-araw-araw na pagsusuri bago buksan ang tindahan.',
       morningTutorial2: 'Tingnan kung aling mga item ang nauubos o wala na para mag-restock ngayong araw.',
@@ -1042,7 +1042,7 @@
       markupLabel: 'Markup (%)',
       lowStockAlertLabel: 'Alerto Kapag Kulang ang Stock',
       alertThreshold: 'Low Stock Threshold',
-      alertThresholdDesc: 'Alert kapag ang stock ay bumaba sa ibaba ng numerong ito',
+      alertThresholdDesc: 'Alert kapag mababa ang stock',
       saveBtn: 'I-save',
       // Product details (units, brands, categories)
       productDetailsSection: 'Detalye ng Produkto',
@@ -3478,6 +3478,16 @@
         content.style.maxHeight = content.scrollHeight + 'px';
         setTimeout(function() { content.style.maxHeight = ''; }, 250);
       }
+    }
+  }
+
+  // Collapsible settings sections
+  window.toggleSettingsSection = function(titleEl) {
+    var section = titleEl.closest('.settings-section');
+    if (section) {
+      section.classList.toggle('collapsed');
+      var arrow = titleEl.querySelector('.collapse-arrow');
+      if (arrow) arrow.classList.toggle('open', !section.classList.contains('collapsed'));
     }
   }
 

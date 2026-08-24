@@ -39,7 +39,7 @@
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             </div>
             <div class="morning-greeting" id="morningGreeting">Good morning!</div>
-            <div class="morning-subtitle" id="morningSubtitle" data-i18n="morningSubtitle">Handa na ba ang tindahan ngayong araw?</div>
+            <div class="morning-subtitle" id="morningSubtitle" data-i18n="morningSubtitle">Is your store ready for today?</div>
           </div>
 
           <div class="morning-cards">
@@ -49,9 +49,9 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </div>
               <div class="morning-card-body">
-                <div class="morning-card-title" id="morningOverdueTitle">⚠️ Hindi pa isinara ang tindahan</div>
-                <div class="morning-card-desc" id="morningOverdueDesc">Binuksan noong ... · Bukas na sa loob ng N na araw</div>
-                <button class="btn btn-secondary btn-sm" id="morningOverdueReviewBtn" data-i18n="overdueReview" style="margin-top:10px;width:100%;" onclick="openOverdueReview()">Tingnan ang Benta ng Nakaraang Araw</button>
+                <div class="morning-card-title" id="morningOverdueTitle">⚠️ Store not closed</div>
+                <div class="morning-card-desc" id="morningOverdueDesc">Opened on ... · Open for N days</div>
+                <button class="btn btn-secondary btn-sm" id="morningOverdueReviewBtn" data-i18n="overdueReview" style="margin-top:10px;width:100%;" onclick="openOverdueReview()">Review Last Day's Sales</button>
               </div>
             </div>
 
@@ -61,7 +61,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               </div>
               <div class="morning-card-body">
-                <div class="morning-card-title" id="morningStockTitle">✅ Lahat ng stock — okay</div>
+                <div class="morning-card-title" id="morningStockTitle">✅ All stock — good</div>
                 <div class="morning-card-desc" id="morningStockDesc">No items running low</div>
               </div>
             </div>
@@ -72,7 +72,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M8 12h.01"/></svg>
               </div>
               <div class="morning-card-body">
-                <div class="morning-card-title" id="morningDebtTitle">💰 Utang: ₱0.00</div>
+                <div class="morning-card-title" id="morningDebtTitle">💰 Debt: ₱0.00</div>
                 <div class="morning-card-desc" id="morningDebtDesc">0 customers</div>
               </div>
             </div>
@@ -83,7 +83,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div class="morning-card-body">
-                <div class="morning-card-title" id="morningYesterdayTitle">Kahapon: ₱0.00</div>
+                <div class="morning-card-title" id="morningYesterdayTitle">Yesterday: ₱0.00</div>
                 <div class="morning-card-desc" id="morningYesterdayDesc">Yesterday's earnings</div>
               </div>
             </div>
@@ -102,7 +102,7 @@
 
           <button class="btn btn-primary btn-large morning-start-btn" id="btnStartDay" onclick="startDay()">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <span data-i18n="startDay">Simulan ang Araw</span>
+            <span data-i18n="startDay">Start Day</span>
           </button>
         </div>
 
@@ -122,10 +122,10 @@
             <div id="overdueReviewList"></div>
             <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-weight:700;" id="overdueReviewTotal"></div>
             <button class="btn btn-primary btn-large" style="margin-top:16px;" onclick="closeStaleDayAndStartToday()">
-              <span data-i18n="overdueCloseStart">Isara ang dating araw at simulan ang bago</span>
+              <span data-i18n="overdueCloseStart">Close previous day and start today</span>
             </button>
             <button class="btn btn-secondary btn-full" style="margin-top:8px;" onclick="closeOverdueReview()">
-              <span data-i18n="cancel">Kanselahin</span>
+              <span data-i18n="cancel">Cancel</span>
             </button>
           </div>
         </div>

@@ -88,46 +88,46 @@
           <!-- Mga Nabenta (collapsible) -->
           <div class="closing-section">
             <div class="closing-section-title closing-collapsible" onclick="toggleCollapse('soldItems')" id="soldItemsToggle">
-              <span data-i18n="closingSectionSold">Mga Nabenta</span>
+              <span data-i18n="closingSectionSold">Sold Items</span>
               <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="closing-items collapsing" id="closingSoldItems">
-              <div class="empty-state" style="padding:12px 0;">No sales recorded today.</div>
+              <div class="empty-state" style="padding:12px 0;">No sales yet — tap Sell to record your first sale!</div>
             </div>
           </div>
 
           <!-- Mga Kulang sa Stock (collapsible) -->
           <div class="closing-section">
             <div class="closing-section-title closing-collapsible" onclick="toggleCollapse('lowStock')" id="lowStockToggle">
-              <span data-i18n="closingSectionLowStock">Mga Kulang sa Stock</span>
+              <span data-i18n="closingSectionLowStock">Low Stock</span>
               <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="closing-items collapsing" id="closingLowStock">
-              <div class="empty-state" style="padding:12px 0;">✅ All stock is good.</div>
+              <div class="empty-state" style="padding:12px 0;">✅ All stock is good — you're ready to sell!</div>
             </div>
           </div>
 
           <!-- Utang Hindi Pa Bayad (collapsible) -->
           <div class="closing-section">
             <div class="closing-section-title closing-collapsible" onclick="toggleCollapse('debts')" id="debtsToggle">
-              <span data-i18n="closingSectionDebts">Utang Hindi Pa Bayad</span>
+              <span data-i18n="closingSectionDebts">Outstanding Debts</span>
               <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="closing-items collapsing" id="closingDebts">
-              <div class="empty-state" style="padding:12px 0;">✅ No outstanding debts.</div>
+              <div class="empty-state" style="padding:12px 0;">✅ No outstanding debts — everyone is settled!</div>
             </div>
           </div>
 
           <!-- Weekly snapshot -->
           <div class="closing-section">
-            <div class="closing-section-title" data-i18n="closingSectionWeekly">Ngayong Linggo</div>
+            <div class="closing-section-title" data-i18n="closingSectionWeekly">This Week</div>
             <div class="closing-weekly">
               <div class="closing-weekly-row">
-                <span class="label" data-i18n="closingWeeklyLabel">Kabuuang benta</span>
+                <span class="label" data-i18n="closingWeeklyLabel">Total Sales</span>
                 <span class="value" id="closingWeeklySales">₱0.00</span>
               </div>
               <div class="closing-weekly-row">
-                <span class="label" data-i18n="closingTopSellerLabel">Pinakamabenta</span>
+                <span class="label" data-i18n="closingTopSellerLabel">Top Seller</span>
                 <span class="value" id="closingTopSeller">—</span>
               </div>
             </div>

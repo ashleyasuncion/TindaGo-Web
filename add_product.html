@@ -18,7 +18,7 @@
         <button class="header-btn" onclick="historyBack()" style="color:white;background:none;border:none;cursor:pointer;display:flex;align-items:center;padding:6px;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </button>
-        <h1 style="font-size:var(--text-xl);font-weight:700;flex:1;text-align:center;" id="addProductTitle" data-i18n="addProductTitle">Magdagdag ng Stock</h1>
+        <h1 style="font-size:var(--text-xl);font-weight:700;flex:1;text-align:center;" id="addProductTitle" data-i18n="addProductTitle">Add Stock</h1>
         <div class="header-actions">
           <button class="header-btn header-tutorial-btn" id="headerTutorialBtn" onclick="startTutorial('add_product', true)" aria-label="Tutorial">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -29,7 +29,7 @@
       <!-- CONTENT -->
       <main class="app-content" id="appContent">
         <div class="form-group">
-          <label for="productName" data-i18n="productNameLabel">Pangalan ng Produkto</label>
+          <label for="productName" data-i18n="productNameLabel">Product Name</label>
           <input type="text" id="productName" class="form-input" autocomplete="off" data-i18n-placeholder="productName" placeholder="e.g. Canned Tuna">
         </div>
 
@@ -63,37 +63,37 @@
         </div>
 
         <div class="form-group">
-          <label for="productQty" data-i18n="productQtyLabel">Dami</label>
+          <label for="productQty" data-i18n="productQtyLabel">Quantity</label>
           <input type="number" id="productQty" class="form-input" placeholder="10" min="1" step="1">
         </div>
         <div class="form-group">
-          <label for="productCost" data-i18n="costLabel">Presyo ng Stock (₱)</label>
+          <label for="productCost" data-i18n="costLabel">Cost Price (₱)</label>
           <input type="number" id="productCost" class="form-input" placeholder="0.00" min="0" step="0.01">
         </div>
 
         <!-- Markup Helper -->
         <div class="markup-helper" id="markupSuggestion" style="display:none;">
-          <div class="hint" id="markupHint">Sa 20% markup, ibenta sa</div>
+          <div class="hint" id="markupHint">At 20% markup, sell at</div>
           <div class="suggested" id="markupSuggestedPrice">₱0.00</div>
           <div class="hint"><span data-i18n="suggestedPrice">Suggested</span></div>
         </div>
 
         <div class="form-group">
-          <label for="productMarkup" data-i18n="markupLabel">Markup (%)</label>
+          <label for="productMarkup" data-i18n="markupLabel">Markup (%)<span class="help-icon">?<span class="help-tooltip">Added to cost price to set selling price. Example: ₱100 cost + 20% = ₱120 selling price.</span></span></label>
           <input type="number" id="productMarkup" class="form-input" placeholder="20" min="0" max="1000" step="1">
           <div class="markup-hint" id="productMarkupHint"></div>
         </div>
         <div class="form-group">
-          <label for="productPrice" data-i18n="priceLabel">Presyo ng Benta (₱)</label>
+          <label for="productPrice" data-i18n="priceLabel">Selling Price (₱)</label>
           <input type="number" id="productPrice" class="form-input" placeholder="0.00" min="0" step="0.01">
         </div>
         <div class="form-group">
-          <label for="productLowStock" data-i18n="lowStockAlertLabel">Low Stock Alert At</label>
+          <label for="productLowStock" data-i18n="lowStockAlertLabel">Low Stock Alert At<span class="help-icon">?<span class="help-tooltip">You'll get an alert when stock falls below this number.</span></span></label>
           <input type="number" id="productLowStock" class="form-input" placeholder="5" min="0" max="999" step="1">
-          <div class="markup-hint" data-i18n="alertThresholdDesc">Alert when stock falls below this number</div>
+          <div class="markup-hint" data-i18n="alertThresholdDesc">Alert when stock is low</div>
         </div>
         <input type="hidden" id="editProductId">
-        <button class="btn btn-primary btn-full" onclick="saveProduct()" data-i18n="saveBtn">I-save</button>
+        <button class="btn btn-primary btn-full" onclick="saveProduct()" data-i18n="saveBtn">Save</button>
       </main>
 
       <div class="toast-container" id="toastContainer"></div>

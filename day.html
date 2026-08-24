@@ -36,7 +36,7 @@
         <div class="moment-screen">
           <div class="day-summary" id="daySummary">
             <div class="day-summary-header">
-              <div class="day-summary-label" data-i18n="dayModeLabel">Araw na ito</div>
+              <div class="day-summary-label" data-i18n="dayModeLabel">Today</div>
               <div class="day-summary-date" id="dayDate">June 15, 2026</div>
             </div>
 
@@ -52,14 +52,14 @@
                 <div class="day-stat-icon item-bg">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                 </div>
-                <div class="day-stat-label" data-i18n="dayItemsSoldLabel">Naibenta</div>
+                <div class="day-stat-label" data-i18n="dayItemsSoldLabel">Items Sold</div>
                 <div class="day-stat-value" id="dayItemsSold">0</div>
               </div>
               <div class="day-stat-card">
                 <div class="day-stat-icon debt-bg">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/></svg>
                 </div>
-                <div class="day-stat-label" data-i18n="dayUtangLabel">Utang Ngayon</div>
+                <div class="day-stat-label" data-i18n="dayUtangLabel">Debts</div>
                 <div class="day-stat-value" id="dayUtang">₱0.00</div>
               </div>
             </div>
@@ -67,14 +67,14 @@
             <!-- Today's transactions -->
             <div class="day-transactions" id="dayTransactions">
               <div class="day-transactions-header" onclick="toggleDayTransactions()">
-                <div class="section-label" data-i18n="dayTransactionsLabel">Mga Transaksyon Ngayon</div>
+                <div class="section-label" data-i18n="dayTransactionsLabel">Today's Transactions</div>
                 <svg class="day-transactions-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
               <div class="list-container" id="dayTransactionList">
                 <!-- V2.68: fallback synced to the localized noTransactions text
                      (runtime replaces this with t('noTransactions')) — the old
                      "May Bumili" sales-sheet wording is gone. -->
-                <div class="empty-state">No transactions yet.</div>
+                <div class="empty-state">No transactions yet — start selling to see them here!</div>
               </div>
             </div>
           </div>
@@ -85,7 +85,7 @@
             <span id="dayExpensesTotal" style="font-weight:700;color:var(--danger);">₱0.00</span>
           </button>
 
-          <button class="btn btn-outline btn-large close-day-btn" id="btnCloseDay" onclick="showClosingScreen()">
+          <button class="btn btn-primary btn-large close-day-btn" id="btnCloseDay" onclick="showClosingScreen()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <span data-i18n="closeDay">Isara ang Tindahan 🌙</span>
           </button>

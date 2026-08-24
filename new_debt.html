@@ -27,12 +27,12 @@
       <!-- CONTENT -->
       <main class="app-content" id="appContent">
         <div class="form-group" style="position:relative;">
-          <label data-i18n="newDebtCustomer">Pangalan ng Kostumer</label>
-          <input type="text" id="newDebtCustomer" class="form-input" placeholder="Ilagay ang pangalan" autocomplete="off" oninput="onNewDebtCustomerSearch()" data-i18n-placeholder="enterCustomerNameDebt">
+          <label data-i18n="newDebtCustomer">Customer Name</label>
+          <input type="text" id="newDebtCustomer" class="form-input" placeholder="Enter name" autocomplete="off" oninput="onNewDebtCustomerSearch()" data-i18n-placeholder="enterCustomerNameDebt">
           <div class="customer-suggestions" id="newDebtSuggestions"></div>
         </div>
         <div class="form-group">
-          <label data-i18n="newDebtAmount">Halaga ng Utang (₱)</label>
+          <label data-i18n="newDebtAmount">Debt Amount (₱)</label>
           <input type="number" id="newDebtAmount" class="form-input" placeholder="0.00" min="0.01" step="0.01" oninput="updateNewDebtCreditWarn()">
         </div>
         <div class="form-group">
@@ -42,7 +42,7 @@
         </div>
         <div class="credit-warn" id="newDebtCreditWarn" style="display:none;"></div>
         <button class="btn btn-secondary btn-full" id="newDebtAllowAnyway" onclick="saveNewDebt(true)" style="display:none;margin-bottom:8px;" data-i18n="creditAllowAnyway">Allow anyway</button>
-        <button class="btn btn-primary btn-full" onclick="saveNewDebt()" data-i18n="saveDebt">I-save ang Utang</button>
+        <button class="btn btn-primary btn-full" onclick="saveNewDebt()" data-i18n="saveDebt">Save Debt</button>
       </main>
 
       <div class="toast-container" id="toastContainer"></div>

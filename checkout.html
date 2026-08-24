@@ -37,14 +37,14 @@
           <!-- PRODUCT PICKER -->
           <div class="checkout-picker">
             <div class="form-group">
-              <label data-i18n="productLabel">Ano ang binili?</label>
+              <label data-i18n="productLabel">What was bought?</label>
               <div class="product-search-wrap">
-                <input type="text" id="saleProductName" class="form-input product-search-input" placeholder="Maghanap ng produkto..." autocomplete="off" oninput="onProductSearch()" data-i18n-placeholder="searchProduct">
+                <input type="text" id="saleProductName" class="form-input product-search-input" placeholder="Search products..." autocomplete="off" oninput="onProductSearch()" data-i18n-placeholder="searchProduct">
                 <div class="product-suggestions" id="productSuggestions"></div>
               </div>
             </div>
             <div class="form-group">
-              <label data-i18n="saleQtyLabel">Ilan?</label>
+              <label data-i18n="saleQtyLabel">Quantity?</label>
               <div class="qty-selector">
                 <button class="qty-btn" onclick="adjustQty(-1)">−</button>
                 <input type="number" id="saleQty" class="qty-input qty-input-editable" value="1" min="1" onchange="onQtyChange()">
@@ -75,8 +75,8 @@
             <button class="payment-btn" id="salePayCredit" onclick="setSalePayment('credit')" data-i18n="payCredit">Credit (Utang)</button>
           </div>
           <div class="form-group" id="saleCustomerWrap" style="position:relative;display:none;">
-            <label data-i18n="saleCustomerLabel">Sino? (kung utang)</label>
-            <input type="text" id="saleCustomer" class="form-input" placeholder="Pangalan ng kostumer" autocomplete="off" oninput="onCustomerSearch()" data-i18n-placeholder="customerPlaceholder">
+            <label data-i18n="saleCustomerLabel">Customer? (for credit)</label>
+            <input type="text" id="saleCustomer" class="form-input" placeholder="Customer name" autocomplete="off" oninput="onCustomerSearch()" data-i18n-placeholder="customerPlaceholder">
             <div class="customer-suggestions" id="customerSuggestions"></div>
           </div>
           <div class="form-group" id="salePhoneWrap" style="display:none;">
@@ -96,7 +96,7 @@
 
           <!-- ACTIONS -->
           <div class="sheet-actions">
-            <button class="btn btn-secondary" onclick="closeSaleSheet()" data-i18n="close">Isara</button>
+            <button class="btn btn-secondary" onclick="closeSaleSheet()" data-i18n="close">Close</button>
             <button class="btn btn-primary" id="btnCompleteSale" onclick="completeSale()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               <span data-i18n="completeSale">Complete Sale</span>

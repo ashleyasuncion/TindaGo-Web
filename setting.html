@@ -30,96 +30,126 @@
       <main class="app-content" id="appContent">
         <!-- ── Store Profile ── -->
         <div class="settings-section">
-          <div class="settings-section-title" data-i18n="settingsSectionProfile">Store Profile</div>
-          <div class="settings-section-item">
-            <label data-i18n="settingsStore">Store Name</label>
-            <input type="text" id="settingsStoreName" class="form-input" onchange="saveSettings()">
+          <div class="settings-section-title" onclick="toggleSettingsSection(this)">
+            <span data-i18n="settingsSectionProfile">Store Profile</span>
+            <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="settings-section-item">
-            <label data-i18n="settingsOwner">Owner Name</label>
-            <input type="text" id="settingsOwnerName" class="form-input" onchange="saveSettings()">
-          </div>
-          <div class="settings-section-item">
-            <label data-i18n="settingsLanguage">Language</label>
-            <div class="lang-chip-options" id="settingsLanguage">
-              <button class="lang-chip-btn" data-lang="en" onclick="setLanguage('en')">English</button>
-              <button class="lang-chip-btn" data-lang="fil" onclick="setLanguage('fil')">Filipino</button>
+          <div class="settings-section-body">
+            <div class="settings-section-item">
+              <label data-i18n="settingsStore">Store Name</label>
+              <input type="text" id="settingsStoreName" class="form-input" onchange="saveSettings()">
+            </div>
+            <div class="settings-section-item">
+              <label data-i18n="settingsOwner">Owner Name</label>
+              <input type="text" id="settingsOwnerName" class="form-input" onchange="saveSettings()">
+            </div>
+            <div class="settings-section-item">
+              <label data-i18n="settingsLanguage">Language</label>
+              <div class="lang-chip-options" id="settingsLanguage">
+                <button class="lang-chip-btn" data-lang="en" onclick="setLanguage('en')">English</button>
+                <button class="lang-chip-btn" data-lang="fil" onclick="setLanguage('fil')">Filipino</button>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- ── Display ── -->
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="settingsSectionDisplay">Display</div>
-          <div class="settings-section-item">
-            <label data-i18n="textSize">Text Size</label>
-            <div class="text-size-options">
-              <button class="text-size-btn active" data-size="standard" onclick="setTextSize('standard')" data-i18n="standard">Standard</button>
-              <button class="text-size-btn" data-size="large" onclick="setTextSize('large')" data-i18n="large">Large</button>
-              <button class="text-size-btn" data-size="extra-large" onclick="setTextSize('extra-large')" data-i18n="extraLarge">Extra Large</button>
+        <div class="settings-section collapsed">
+          <div class="settings-section-title" onclick="toggleSettingsSection(this)">
+            <span data-i18n="settingsSectionDisplay">Display</span>
+            <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="settings-section-body">
+            <div class="settings-section-item">
+              <label data-i18n="textSize">Text Size</label>
+              <div class="text-size-options">
+                <button class="text-size-btn active" data-size="standard" onclick="setTextSize('standard')" data-i18n="standard">Standard</button>
+                <button class="text-size-btn" data-size="large" onclick="setTextSize('large')" data-i18n="large">Large</button>
+                <button class="text-size-btn" data-size="extra-large" onclick="setTextSize('extra-large')" data-i18n="extraLarge">Extra Large</button>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- ── Inventory Defaults ── -->
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="settingsSectionDefaults">Inventory Defaults</div>
-          <div class="settings-section-item">
-            <label data-i18n="defaultMarkupLabel">Default Markup (%)</label>
-            <input type="number" id="settingsDefaultMarkup" class="form-input" min="0" max="200" step="1" onchange="saveSettings()">
-            <div class="markup-hint" data-i18n="defaultMarkupHint">Applied to new products</div>
+        <div class="settings-section collapsed">
+          <div class="settings-section-title" onclick="toggleSettingsSection(this)">
+            <span data-i18n="settingsSectionDefaults">Inventory Defaults</span>
+            <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <div class="settings-section-item">
-            <label data-i18n="alertThreshold">Low Stock Threshold</label>
-            <input type="number" id="settingsLowStockThreshold" class="form-input" min="0" max="999" step="1" onchange="saveSettings()">
-            <div class="markup-hint" data-i18n="alertThresholdDesc">Alert when stock falls below this number</div>
-          </div>
-          <div class="settings-section-item">
-            <label data-i18n="defaultCreditLimitLabel">Default Credit Limit (₱)</label>
-            <input type="number" id="settingsDefaultCreditLimit" class="form-input" min="0" max="10000" step="1" onchange="saveSettings()">
-            <div class="markup-hint" data-i18n="defaultCreditLimitHint">Applied to new customers. Set to 0 for no limit.</div>
+          <div class="settings-section-body">
+            <div class="settings-section-item">
+              <label data-i18n="defaultMarkupLabel">Default Markup (%)<span class="help-icon">?<span class="help-tooltip">Markup is added to cost price to set selling price. Example: ₱100 cost + 20% = ₱120 selling price.</span></span></label>
+              <input type="number" id="settingsDefaultMarkup" class="form-input" min="0" max="200" step="1" onchange="saveSettings()">
+              <div class="markup-hint" data-i18n="defaultMarkupHint">For new products</div>
+            </div>
+            <div class="settings-section-item">
+              <label data-i18n="alertThreshold">Low Stock Threshold<span class="help-icon">?<span class="help-tooltip">You'll get an alert when a product's stock falls below this number. Helps you know when to restock.</span></span></label>
+              <input type="number" id="settingsLowStockThreshold" class="form-input" min="0" max="999" step="1" onchange="saveSettings()">
+              <div class="markup-hint" data-i18n="alertThresholdDesc">Alert when stock is low</div>
+            </div>
+            <div class="settings-section-item">
+              <label data-i18n="defaultCreditLimitLabel">Default Credit Limit (₱)<span class="help-icon">?<span class="help-tooltip">Maximum amount a customer can owe. Set to 0 for no limit. This applies to new customers automatically.</span></span></label>
+              <input type="number" id="settingsDefaultCreditLimit" class="form-input" min="0" max="10000" step="1" onchange="saveSettings()">
+              <div class="markup-hint" data-i18n="defaultCreditLimitHint">For new customers. 0 = no limit.</div>
+            </div>
           </div>
         </div>
 
         <!-- ── Support ── -->
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="settingsSectionSupport">Support</div>
-          <a href="help.html" class="btn btn-outline btn-full" data-i18n="helpTitle" style="text-decoration:none;margin-bottom:8px;">Help</a>
-          <a href="reports.html" class="btn btn-outline btn-full" data-i18n="reportsTitle" style="text-decoration:none;">Reports</a>
+        <div class="settings-section collapsed">
+          <div class="settings-section-title" onclick="toggleSettingsSection(this)">
+            <span data-i18n="settingsSectionSupport">Support</span>
+            <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="settings-section-body">
+            <a href="help.html" class="btn btn-outline btn-full" data-i18n="helpTitle" style="text-decoration:none;margin-bottom:8px;">Help</a>
+            <a href="reports.html" class="btn btn-outline btn-full" data-i18n="reportsTitle" style="text-decoration:none;">Reports</a>
+          </div>
         </div>
         <!-- ── Notifications (Mobile Only) ── -->
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="mobileOnlyNotifications">Push Notifications</div>
-          <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlyNotifications', 'mobileOnlyNotificationsDesc')" style="margin-bottom:8px;">
+        <div class="settings-section collapsed">
+          <div class="settings-section-title" onclick="toggleSettingsSection(this)">
             <span data-i18n="mobileOnlyNotifications">Push Notifications</span>
-            <span class="btn-mobile-only-label">(Mobile only)</span>
-          </button>
-          <div class="settings-section-title" data-i18n="mobileOnlyNotifSettings">Notification Settings</div>
-          <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlyNotifSettings', 'mobileOnlyNotifSettingsDesc')" style="margin-bottom:8px;">
-            <span data-i18n="mobileOnlyNotifSettings">Notification Settings</span>
-            <span class="btn-mobile-only-label">(Mobile only)</span>
-          </button>
-          <div class="settings-section-title" data-i18n="mobileOnlySms">SMS Notifications</div>
-          <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlySms', 'mobileOnlySmsDesc')" style="margin-bottom:8px;">
-            <span data-i18n="mobileOnlySms">SMS Notifications</span>
-            <span class="btn-mobile-only-label">(Mobile only)</span>
-          </button>
+            <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="settings-section-body">
+            <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlyNotifications', 'mobileOnlyNotificationsDesc')" style="margin-bottom:8px;">
+              <span data-i18n="mobileOnlyNotifications">Push Notifications</span>
+              <span class="btn-mobile-only-label">(Mobile only)</span>
+            </button>
+            <div class="settings-section-title" data-i18n="mobileOnlyNotifSettings" style="margin-top:12px;">Notification Settings</div>
+            <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlyNotifSettings', 'mobileOnlyNotifSettingsDesc')" style="margin-bottom:8px;">
+              <span data-i18n="mobileOnlyNotifSettings">Notification Settings</span>
+              <span class="btn-mobile-only-label">(Mobile only)</span>
+            </button>
+            <div class="settings-section-title" data-i18n="mobileOnlySms" style="margin-top:12px;">SMS Notifications</div>
+            <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlySms', 'mobileOnlySmsDesc')">
+              <span data-i18n="mobileOnlySms">SMS Notifications</span>
+              <span class="btn-mobile-only-label">(Mobile only)</span>
+            </button>
+          </div>
         </div>
 
 
         <!-- ── Data ── -->
-        <div class="settings-section">
-          <div class="settings-section-title" data-i18n="settingsSectionData">Data</div>
-          <button class="btn btn-secondary btn-full" onclick="exportData()" style="margin-bottom:8px;">
-            <span data-i18n="exportDataBtn">Export Data</span>
-          </button>
-          <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlyTitle', 'mobileOnlyDesc')" style="margin-bottom:8px;">
-            <span data-i18n="importDataBtn">Import Data</span>
-            <span style="font-size:var(--text-xs);color:var(--text-muted);margin-left:6px;">(Mobile only)</span>
-          </button>
-          <button class="btn btn-danger btn-full" onclick="resetData()">
-            <span data-i18n="resetDataBtn">Reset All Data</span>
-          </button>
+        <div class="settings-section collapsed">
+          <div class="settings-section-title" onclick="toggleSettingsSection(this)">
+            <span data-i18n="settingsSectionData">Data</span>
+            <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="settings-section-body">
+            <button class="btn btn-secondary btn-full" onclick="exportData()" style="margin-bottom:8px;">
+              <span data-i18n="exportDataBtn">Export Data</span>
+            </button>
+            <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlyTitle', 'mobileOnlyDesc')" style="margin-bottom:8px;">
+              <span data-i18n="importDataBtn">Import Data</span>
+              <span style="font-size:var(--text-xs);color:var(--text-muted);margin-left:6px;">(Mobile only)</span>
+            </button>
+            <button class="btn btn-danger btn-full" onclick="resetData()">
+              <span data-i18n="resetDataBtn">Reset All Data</span>
+            </button>
+          </div>
         </div>
       </main>
 
