@@ -579,3 +579,221 @@ VERIFICATION:
 - node --check app.js — clean.
 
 ================================================================================
+
+V3.0 — BFCACHE STALE LANGUAGE FIX (WEB) — DONE
+Date: Aug 22, 2026
+Status: IMPLEMENTED + VERIFIED
+
+PROBLEM:
+- When switching languages in Settings and navigating back, some pages
+  retained the old language text. Root cause: Chrome's bfcache restores
+  frozen page DOM when navigating back (history.back()). DOMContentLoaded
+  does NOT fire on bfcache restore, so init() never ran and
+  applyTranslations() was never called on the restored page.
+- V2.9 patched 7 pages (inventory, debts, product_detail, debtor_detail,
+  record_payment, reports, expenses) but missed the 5 core workflow
+  pages: morning, day, closing, checkout, restock.
+
+SOLUTION:
+- Added pageshow event listeners to all 5 missing core workflow pages.
+  When ev.persisted is true (page restored from bfcache), re-runs
+  loadState() + applyTranslations() + the page's render function.
+
+Pages patched:
+  morning.html  — loadState + applyTranslations + renderMorningCheck
+  day.html      — loadState + applyTranslations + renderDayMode
+  checkout.html — loadState + applyTranslations + resetSaleForm
+  closing.html  — loadState + applyTranslations + renderClosingScreen
+  restock.html  — loadAll + cacheDom + showStep + render (via restock.js)
+
+WHAT CHANGED (code):
+- app.js: added window.addEventListener('pageshow', ...) in morning,
+  day, checkout, and closing page init branches
+- restock.js: added window.addEventListener('pageshow', ...) in
+  restock page init block (re-loads all data and DOM cache)
+
+FILES AFFECTED:
+  app.js (4 new pageshow handlers: morning, day, checkout, closing)
+  restock.js (1 new pageshow handler: restock)
+
+VERIFICATION:
+- node --check app.js — clean.
+- node --check restock.js — clean.
+
+================================================================================
+
+V3.2 — SMS DEBT NOTIFICATIONS: PHONE FIELD + ONE-TAP SMS HELPER (WEB) — DONE
+Date: Aug 24, 2026
+Status: IMPLEMENTED
+
+PROBLEM:
+- Web app had no SMS-related features — debtors only identified by name
+- No phone number stored in debt records
+- No way to send receipts or reminders from the web app
+
+SOLUTION:
+- Added phone number field to debt creation (New Debt) and credit checkout
+- Added SMS one-tap helper buttons on Debtor Detail page
+- Phone saved to localStorage debt records (web-side data model)
+- Full EN/FIL i18n support
+
+NOTE: Automated SMS is NOT feasible on the web (static localStorage app,
+no backend, no service worker). The web provides one-tap sms: URI helpers
+that open the phone's messaging app with pre-composed text — matching the
+mobile app's Phase 1 semi-manual approach.
+
+WHAT CHANGED (code):
+- app.js: added customerPhone field to debt state and debt creation
+- app.js: added renderSmsActions() function for debtor detail SMS buttons
+- app.js: added saveNewDebt() phone field handling + credit checkout phone
+- app.js: added setSalePayment() phone field toggle (credit mode)
+- app.js: added 8 EN/FIL i18n keys for SMS UI
+- new_debt.html: added phone number input field (tel, optional)
+- checkout.html: added phone number input field (shows on credit selection)
+- debtor_detail.html: added #debtorSmsActions placeholder div
+
+FILES AFFECTED:
+  app.js
+  new_debt.html
+  checkout.html
+  debtor_detail.html
+
+VERIFICATION:
+- node --check app.js — clean.
+
+================================================================================
+
+V3.1 — LANGUAGE SELECTOR UI OVERHAUL (WEB) — IN PROGRESS
+Date: Aug 22, 2026
+Status: PAUSED — implementation not started
+
+GOAL:
+- Replace the native <select> dropdown language selector on the Settings
+  page and Setup overlay with FilterChip-style toggle buttons that match
+  the mobile app's Material3 FilterChip design.
+- Two side-by-side chip buttons (English / Filipino) where the selected
+  one gets a green filled background (matching --primary #16a34a) and
+  the unselected one gets a bordered/outlined style.
+- Instant language propagation on tap (no onchange/select needed).
+
+PLAN:
+- setting.html: replace <select id="settingsLanguage"> with two buttons
+  inside a .lang-chips container
+- index.html: replace <select id="setupLanguage"> with two buttons
+  inside a .lang-chips container
+- style.css: add .lang-chips and .lang-chip styles matching mobile
+  FilterChip appearance
+- app.js: update saveSettings() to read language from the active button
+  instead of select.value; update init() to set active button state
+  instead of select.value; update setupLanguageChanged() to use buttons
+  instead of select
+
+NOTES:
+- Tutorial highlight target #settingsLanguage must be preserved
+- The hidden input or data-attribute approach can maintain .value
+  compatibility if needed
+- Mobile version already uses FilterChip — no changes needed there
+
+================================================================================
+V3.3 — BROWSER ALERT FIX + LANGUAGE SWITCH FIX + SMS CLEANUP (WEB) — DONE
+Date: Aug 24, 2026
+Status: IMPLEMENTED + VERIFIED
+
+V3.3a — Custom Confirm Modal (replaces browser confirm())
+─────────────────────────────────────────────────────────────────────────────
+PROBLEM:
+- User-facing flows (delete product, reset data, discard cart) used
+  window.confirm() — a blocking browser dialog with no app styling.
+
+SOLUTION:
+- Added showConfirmModal(message, title, okText, cancelText) — a
+  Promise-based in-app modal with styled backdrop, icon, title,
+  description, and Cancel/OK buttons.
+- Replaced all 5 user-facing confirm() calls:
+  1. deleteWebProduct()
+  2. resetData()
+  3. openSaleSheet() (discard cart)
+  4. leaveCheckout() (discard cart)
+  5. Dev Panel resetAll
+- Only the dev-only overdue confirm() remains (appropriate for dev flow).
+
+WHAT CHANGED (code):
+- app.js: added showConfirmModal() function (~50 lines)
+- app.js: replaced 5 confirm() calls with showConfirmModal().then()
+- style.css: added .confirm-overlay, .confirm-modal, .confirm-modal-icon,
+  .confirm-modal-title, .confirm-modal-desc, .confirm-modal-actions styles
+
+FILES AFFECTED: app.js, style.css
+
+V3.3b — Language Switch Fix (broken since V3.1)
+─────────────────────────────────────────────────────────────────────────────
+PROBLEM:
+- Clicking English/Filipino chip buttons on Settings or Setup page threw
+  "Uncaught ReferenceError: setLanguage is not defined" in console.
+  Language could never be switched from Filipino.
+
+ROOT CAUSE:
+- setLanguage() and setSetupLanguage() were defined inside the IIFE in
+  app.js but never exported to window. HTML onclick handlers run in
+  global scope and couldn't reach them.
+
+SOLUTION:
+- Added window.setLanguage = setLanguage and
+  window.setSetupLanguage = setSetupLanguage to the exports block.
+
+WHAT CHANGED (code):
+- app.js: added 2 window exports
+
+FILES AFFECTED: app.js
+
+V3.3c — SMS Duplicate Removal (browser alert on debtor detail)
+─────────────────────────────────────────────────────────────────────────────
+PROBLEM:
+- [Send Receipt] and [Send Reminder] buttons on debtor_detail.html
+  opened a browser alert instead of the mobile-only modal.
+
+ROOT CAUSE:
+- renderDebtorDetail() had TWO consecutive code blocks targeting
+  cddSmsActions. Block 1 (V3.2) used btn-mobile-only +
+  showMobileOnlyModal(). Block 2 (older) used <a href="sms:...">
+  links. Block 2 always overwrote Block 1. On desktop, sms: URI
+  triggers a browser dialog.
+
+SOLUTION:
+- Removed the duplicate Block 2 entirely (~25 lines).
+
+WHAT CHANGED (code):
+- app.js: removed duplicate cddSmsActions rendering block
+
+FILES AFFECTED: app.js
+
+V3.3d — English Fallback Defaults + Restock Nav i18n
+─────────────────────────────────────────────────────────────────────────────
+PROBLEM:
+- HTML files had hardcoded Filipino text as default content that flashes
+  before JavaScript replaces it. On slow connections or JS errors, users
+  see Filipino regardless of language setting.
+- restock.html nav labels had no data-i18n attributes.
+
+SOLUTION:
+- Changed fallback text to English in 6 HTML files.
+- Added data-i18n to restock.html nav labels.
+
+WHAT CHANGED (code):
+- morning.html: title Umaga → Morning, greeting → Good morning!
+- day.html: title Araw → Day
+- closing.html: title Isara → Close, 3 empty states → English
+- debts.html: title Utang → Debts
+- new_debt.html: title Bagong Utang → New Debt
+- restock.html: added data-i18n="navMorning" + data-i18n="debtsLink"
+
+FILES AFFECTED: morning.html, day.html, closing.html, debts.html,
+  new_debt.html, restock.html
+
+VERIFICATION:
+- node --check app.js — PASS
+- No remaining user-facing confirm() calls
+- No remaining sms: URI links in debtor_detail
+- All HTML fallback text now English
+
+================================================================================

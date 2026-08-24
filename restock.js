@@ -513,6 +513,19 @@
         showStep(1);
         renderCorrections();
       }
+      // bfcache: re-run loadAll + render when page is restored from cache
+      window.addEventListener('pageshow', function(ev) {
+        if (!ev.persisted) return;
+        loadAll();
+        cacheDom();
+        if (restockTemp.step === 2) {
+          showStep(2);
+          renderPurchaseList();
+        } else {
+          showStep(1);
+          renderCorrections();
+        }
+      });
     }
   }
 

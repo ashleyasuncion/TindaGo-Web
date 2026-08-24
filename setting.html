@@ -41,10 +41,10 @@
           </div>
           <div class="settings-section-item">
             <label data-i18n="settingsLanguage">Language</label>
-            <select id="settingsLanguage" class="form-input" onchange="saveSettings()">
-              <option value="en">English</option>
-              <option value="fil">Filipino</option>
-            </select>
+            <div class="lang-chip-options" id="settingsLanguage">
+              <button class="lang-chip-btn" data-lang="en" onclick="setLanguage('en')">English</button>
+              <button class="lang-chip-btn" data-lang="fil" onclick="setLanguage('fil')">Filipino</button>
+            </div>
           </div>
         </div>
 
@@ -87,6 +87,25 @@
           <a href="help.html" class="btn btn-outline btn-full" data-i18n="helpTitle" style="text-decoration:none;margin-bottom:8px;">Help</a>
           <a href="reports.html" class="btn btn-outline btn-full" data-i18n="reportsTitle" style="text-decoration:none;">Reports</a>
         </div>
+        <!-- ── Notifications (Mobile Only) ── -->
+        <div class="settings-section">
+          <div class="settings-section-title" data-i18n="mobileOnlyNotifications">Push Notifications</div>
+          <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlyNotifications', 'mobileOnlyNotificationsDesc')" style="margin-bottom:8px;">
+            <span data-i18n="mobileOnlyNotifications">Push Notifications</span>
+            <span class="btn-mobile-only-label">(Mobile only)</span>
+          </button>
+          <div class="settings-section-title" data-i18n="mobileOnlyNotifSettings">Notification Settings</div>
+          <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlyNotifSettings', 'mobileOnlyNotifSettingsDesc')" style="margin-bottom:8px;">
+            <span data-i18n="mobileOnlyNotifSettings">Notification Settings</span>
+            <span class="btn-mobile-only-label">(Mobile only)</span>
+          </button>
+          <div class="settings-section-title" data-i18n="mobileOnlySms">SMS Notifications</div>
+          <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlySms', 'mobileOnlySmsDesc')" style="margin-bottom:8px;">
+            <span data-i18n="mobileOnlySms">SMS Notifications</span>
+            <span class="btn-mobile-only-label">(Mobile only)</span>
+          </button>
+        </div>
+
 
         <!-- ── Data ── -->
         <div class="settings-section">
@@ -94,7 +113,7 @@
           <button class="btn btn-secondary btn-full" onclick="exportData()" style="margin-bottom:8px;">
             <span data-i18n="exportDataBtn">Export Data</span>
           </button>
-          <button class="btn btn-secondary btn-full" disabled style="margin-bottom:8px;opacity:0.5;cursor:not-allowed;">
+          <button class="btn btn-secondary btn-full btn-mobile-only" onclick="showMobileOnlyModal('mobileOnlyTitle', 'mobileOnlyDesc')" style="margin-bottom:8px;">
             <span data-i18n="importDataBtn">Import Data</span>
             <span style="font-size:var(--text-xs);color:var(--text-muted);margin-left:6px;">(Mobile only)</span>
           </button>

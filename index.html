@@ -34,10 +34,10 @@
           </div>
           <div class="form-group">
             <label data-i18n="settingsLanguage">Wika</label>
-            <select id="setupLanguage" class="form-input">
-              <option value="fil">Filipino</option>
-              <option value="en">English</option>
-            </select>
+            <div class="lang-chip-options" id="setupLanguage">
+              <button class="lang-chip-btn" data-lang="fil" onclick="setSetupLanguage('fil')">Filipino</button>
+              <button class="lang-chip-btn" data-lang="en" onclick="setSetupLanguage('en')">English</button>
+            </div>
           </div>
           <button class="btn btn-primary btn-full" data-i18n="setupBtn" onclick="completeSetup()">Magsimula na!</button>
         </div>
