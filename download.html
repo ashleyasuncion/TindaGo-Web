@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download — TindaGo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="img/TindaGo_logo.png">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ─── Landing Page Overrides (full-width, no phone frame) ─── */
+    body {
+      background: var(--bg);
+      display: block;
+      justify-content: unset;
+      align-items: unset;
+      min-height: unset;
+      overflow: auto;
+    }
+
+    .landing-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .landing-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .landing-nav-logo svg {
+      width: 28px;
+      height: 28px;
+    }
+    .landing-nav-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .landing-nav-links a {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .landing-nav-links a:hover { color: var(--primary); }
+
+    /* ─── Hero ─── */
+    .hero {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 24px 40px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: 44px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .hero h1 span { color: var(--primary); }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto 32px;
+      line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+    .btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      background: var(--primary);
+      color: white;
+      font-size: 17px;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+    }
+    .btn-download:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
+    }
+    .btn-download:active { transform: scale(0.98); }
+    .btn-download svg { width: 22px; height: 22px; }
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 600;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-outline:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    /* ─── Phone Mockup ─── */
+    .hero-mockup {
+      position: relative;
+      width: 280px;
+      height: 560px;
+      margin: 0 auto 20px;
+      background: var(--surface);
+      border-radius: 32px;
+      border: 4px solid #2d2d44;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    .mockup-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 22px;
+      background: #2d2d44;
+      border-radius: 0 0 14px 14px;
+      z-index: 2;
+    }
+    .mockup-screen {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #f0fdf4 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px 20px;
+    }
+    .mockup-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 12px rgba(22,163,74,0.3);
+    }
+    .mockup-icon svg { width: 30px; height: 30px; color: white; }
+    .mockup-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .mockup-subtitle {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+    .mockup-cards {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mockup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mockup-card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .mockup-card-icon.warn { background: #fef2f2; color: #dc2626; }
+    .mockup-card-icon.debt { background: #fef3c7; color: #f59e0b; }
+    .mockup-card-icon.profit { background: #f0fdf4; color: #16a34a; }
+    .mockup-card-icon svg { width: 16px; height: 16px; }
+    .mockup-card-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .mockup-card-label {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .mockup-card-value {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ─── Release Info ─── */
+    .release-info {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+    .release-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .release-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 8px;
+    }
+    .release-badge .dot {
+      width: 7px;
+      height: 7px;
+      background: var(--primary);
+      border-radius: 50%;
+    }
+    .release-meta {
+      flex: 1;
+      min-width: 200px;
+    }
+    .release-version {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .release-date {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .release-req {
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: var(--bg);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    /* ─── Features Grid ─── */
+    .features-section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .section-header h2 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .section-header p {
+      font-size: 16px;
+      color: var(--text-secondary);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      transition: all 0.25s;
+    }
+    .feature-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 16px rgba(22,163,74,0.1);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    .feature-icon.green { background: #f0fdf4; color: #16a34a; }
+    .feature-icon.amber { background: #fef3c7; color: #f59e0b; }
+    .feature-icon.red { background: #fef2f2; color: #dc2626; }
+    .feature-icon.blue { background: #eff6ff; color: #2563eb; }
+    .feature-icon.purple { background: #f5f3ff; color: #7c3aed; }
+    .feature-icon.teal { background: #f0fdfa; color: #0d9488; }
+    .feature-icon svg { width: 22px; height: 22px; }
+    .feature-card h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ─── Requirements ─── */
+    .req-section {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 24px 60px;
+    }
+    .req-table {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .req-row {
+      display: flex;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border-light);
+      align-items: center;
+    }
+    .req-row:last-child { border-bottom: none; }
+    .req-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      width: 140px;
+      flex-shrink: 0;
+    }
+    .req-value {
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    /* ─── Footer ─── */
+    .landing-footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .landing-footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .landing-footer a:hover { text-decoration: underline; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 30px; }
+      .hero p { font-size: 16px; }
+      .hero-mockup { width: 220px; height: 440px; }
+      .landing-nav-links { display: none; }
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVIGATION -->
+  <nav class="landing-nav">
+    <a class="landing-nav-logo" href="index.html">
+      <img src="img/TindaGo_logo.png" alt="TindaGo" style="width:32px;height:32px;border-radius:8px;">
+      TindaGo
+    </a>
+    <div class="landing-nav-links">
+      <a href="morning.html">Open Web App</a>
+      <a href="download.html" style="color:var(--primary);font-weight:700;">Download App</a>
+      <a href="help.html">Help</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">📱 Android App</div>
+
+    <h1>Your <span>sari-sari store</span><br>companion, on your phone</h1>
+    <p>TindaGo is a daily business tool for sari-sari store owners. Track stock, record sales, manage utang — all from your Android device.</p>
+
+    <div class="hero-actions">
+      <a class="btn-download" href="TindaGo.apk" download>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download APK
+      </a>
+      <a class="btn-outline" href="morning.html">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Try Web App
+      </a>
+    </div>
+
+    <!-- Phone Mockup -->
+    <div class="hero-mockup">
+      <div class="mockup-notch"></div>
+      <div class="mockup-screen">
+        <div class="mockup-icon" style="overflow:hidden;">
+          <img src="img/TindaGo_logo.png" alt="TindaGo" style="width:100%;height:100%;object-fit:cover;border-radius:14px;">
+        </div>
+        <div class="mockup-title">TindaGo</div>
+        <div class="mockup-subtitle">Good morning, Aling Rosa!</div>
+        <div class="mockup-cards">
+          <div class="mockup-card">
+            <div class="mockup-card-icon warn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-label">Stock Alert</div>
+              <div class="mockup-card-value">3 items low</div>
+            </div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-icon debt">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/></svg>
+            </div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-label">Outstanding Debt</div>
+              <div class="mockup-card-value">₱1,250.00</div>
+            </div>
+          </div>
+          <div class="mockup-card">
+            <div class="mockup-card-icon profit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="mockup-card-text">
+              <div class="mockup-card-label">Today's Profit</div>
+              <div class="mockup-card-value">₱385.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RELEASE INFO -->
+  <section class="release-info">
+    <div class="release-card">
+      <div class="release-badge">
+        <span class="dot"></span>
+        Stable
+      </div>
+      <div class="release-meta">
+        <div class="release-version">TindaGo v2.0</div>
+        <div class="release-date">Released: August 2026</div>
+      </div>
+      <div class="release-req">Requires Android 8.0 or higher</div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features-section">
+    <div class="section-header">
+      <h2>Everything your store needs</h2>
+      <p>Three pillars built from real interviews with sari-sari store owners.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        </div>
+        <h3>Stock Tracker</h3>
+        <p>Color-coded status — Plenty, Low, or Out of Stock. Markup pricing helper. 120 pre-loaded Filipino products across 20 categories.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Daily Cash Summary</h3>
+        <p>Record gastos and kita to auto-calculate profit and revolving fund. Net profit after store expenses. End-of-day closing routine.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M8 12h.01"/></svg>
+        </div>
+        <h3>Utang Notebook</h3>
+        <p>Track customer debts, record payments, view full ledger history. Credit limit warnings. Send SMS receipts and reminders.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <h3>Guided Tutorial</h3>
+        <p>Mandatory first-use walkthrough with 16 page-specific tutorials. Replayable anytime from the ? button. Designed for first-time smartphone users.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+        <h3>EN / Filipino</h3>
+        <p>Full English and Filipino language support. Switch instantly in Settings. Designed for bilingual store owners.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <h3>SMS Notifications</h3>
+        <p>Automated debt reminders via SMS. Send receipts to customers. One-tap messaging from the app. Quiet hours support.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SYSTEM REQUIREMENTS -->
+  <section class="req-section">
+    <div class="section-header">
+      <h2>System Requirements</h2>
+    </div>
+    <div class="req-table">
+      <div class="req-row">
+        <span class="req-label">Platform</span>
+        <span class="req-value">Android 8.0 (Oreo) or higher</span>
+      </div>
+      <div class="req-row">
+        <span class="req-label">Architecture</span>
+        <span class="req-value">ARM64, ARMv7, x86_64</span>
+      </div>
+      <div class="req-row">
+        <span class="req-label">Size</span>
+        <span class="req-value">~22 MB (APK)</span>
+      </div>
+      <div class="req-row">
+        <span class="req-label">Permissions</span>
+        <span class="req-value">SMS (optional, for debt reminders), Notifications</span>
+      </div>
+      <div class="req-row">
+        <span class="req-label">Storage</span>
+        <span class="req-value">~50 MB (Room database + images)</span>
+      </div>
+      <div class="req-row">
+        <span class="req-label">Internet</span>
+        <span class="req-value">Optional (works fully offline)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALL GUIDE -->
+  <section class="features-section" style="padding-top:0;">
+    <div class="section-header">
+      <h2>How to Install</h2>
+      <p>Since TindaGo is not on the Google Play Store, you'll need to install the APK manually.</p>
+    </div>
+    <div class="features-grid" style="max-width:700px;margin:0 auto;">
+      <div class="feature-card" style="text-align:center;">
+        <div class="feature-icon green" style="margin:0 auto 14px;">
+          <span style="font-size:20px;font-weight:800;color:var(--primary);">1</span>
+        </div>
+        <h3>Download the APK</h3>
+        <p>Tap the "Download APK" button above to save the file to your phone.</p>
+      </div>
+      <div class="feature-card" style="text-align:center;">
+        <div class="feature-icon amber" style="margin:0 auto 14px;">
+          <span style="font-size:20px;font-weight:800;color:#f59e0b;">2</span>
+        </div>
+        <h3>Allow Unknown Sources</h3>
+        <p>Go to Settings → Security → enable "Install from unknown sources" (or allow your browser to install APKs).</p>
+      </div>
+      <div class="feature-card" style="text-align:center;">
+        <div class="feature-icon green" style="margin:0 auto 14px;">
+          <span style="font-size:20px;font-weight:800;color:var(--primary);">3</span>
+        </div>
+        <h3>Install & Open</h3>
+        <p>Open the downloaded APK file, tap Install, then open TindaGo. The guided tutorial will walk you through your first use!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="landing-footer">
+    <p style="margin-bottom:6px;">
+      <a href="index.html">TindaGo</a> &mdash; a daily business companion for sari-sari store owners.
+    </p>
+    <p>
+      &copy; 2026 TindaGo &middot;
+      <a href="mailto:support@tindago.com">support@tindago.com</a> &middot;
+      <a href="help.html">Help</a>
+    </p>
+  </footer>
+
+</body>
+</html>

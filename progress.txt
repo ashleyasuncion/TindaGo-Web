@@ -830,3 +830,99 @@ VERIFICATION:
 - All HTML fallback text in English
 
 ================================================================================
+V3.5 — LOGO + DOWNLOAD PAGE + APK (WEB) — DONE
+Date: Aug 29, 2026
+Status: IMPLEMENTED
+
+V3.5a — Custom Logo + Favicon
+─────────────────────────────────────────────────────────────────────────────
+PROBLEM:
+- No visual brand identity — web app had no logo, no favicon, no app icon
+- Splash screen on mobile used a plain 🏪 emoji
+- Settings page and setup overlay had no branding imagery
+
+SOLUTION:
+- Created a custom TindaGo logo PNG (94 KB optimized, 1.3 MB source)
+- Added as favicon to all 17 HTML pages via <link rel="icon">
+- Added to setup overlay (index.html) — 80×80px with green box-shadow
+- Added to settings page header (28×28px) and profile section (56×56px)
+- Created drawable/ic_launcher_logo.png (19.8 KB) for Android splash screen
+
+WHAT CHANGED (code):
+- NEW: img/TindaGo_logo.png — custom logo asset (94 KB)
+- All 17 HTML pages: added <link rel="icon" type="image/png"
+  href="img/TindaGo_logo.png"> in <head>
+- index.html: added <img> of logo (80×80px, border-radius 20px,
+  box-shadow green glow) in setup overlay header
+- setting.html: added logo (28×28px) next to "Settings" title in header;
+  added logo (56×56px, border-radius 14px, shadow) in Store Profile card
+
+FILES AFFECTED:
+  img/TindaGo_logo.png (NEW)
+  index.html, setting.html
+  All 16 other HTML pages (favicon link added)
+
+V3.5b — Download Landing Page
+─────────────────────────────────────────────────────────────────────────────
+PROBLEM:
+- No way for web visitors to download the Android APK
+- No landing page to showcase the app's features and system requirements
+- No installation guide for sideloading
+
+SOLUTION:
+- Created download.html — a full responsive landing page with:
+    Navigation bar (logo + links)
+    Hero section (headline + subtitle + CTA buttons)
+    Phone mockup (CSS-only iPhone frame with TindaGo UI preview)
+    Release info card (version, date, Android requirement)
+    Features grid (6 cards: Stock, Cash, Utang, Tutorial, EN/FIL, SMS)
+    System requirements table
+    3-step install guide (Download → Unknown Sources → Install)
+    Footer (copyright, support email)
+- Page is fully standalone (own <style> block, no phone-frame wrapper)
+- Responsive: scales down on mobile (30px headline, single-column grid)
+
+WHAT CHANGED (code):
+- NEW: download.html (~500 lines, 22 KB)
+- download.html links to TindaGo.apk via <a href="TindaGo.apk" download>
+
+FILES AFFECTED:
+  download.html (NEW)
+
+V3.5c — APK File
+─────────────────────────────────────────────────────────────────────────────
+- Added TindaGo.apk (22.5 MB) — compiled Android app ready for sideloading
+- Referenced by download.html "Download APK" button
+- Hosted alongside the web app for direct download
+
+FILES AFFECTED:
+  TindaGo.apk (NEW, 22.5 MB)
+
+ALL FILES AFFECTED (V3.5):
+  img/TindaGo_logo.png (NEW)
+  download.html (NEW)
+  TindaGo.apk (NEW)
+  index.html (logo in setup overlay + favicon)
+  setting.html (logo in header + profile + favicon)
+  All 15 other HTML pages (favicon added)
+
+VERIFICATION:
+- All HTML pages render logo as favicon in browser tab
+- download.html loads correctly with phone mockup + feature cards
+- APK download link works from download.html
+- No broken image references
+
+================================================================================
+PENDING — SUPPORT EMAIL UPDATE
+─────────────────────────────────────────────────────────────────────────────
+- support@tindago.com is a placeholder — domain not yet registered
+- Must be changed to a real email before shipping
+- 4 files affected:
+    git/TindaGo/app.js (EN + FIL contactText i18n strings)
+    git/TindaGo/help.html (inline HTML in #helpContact)
+    git/TindaGo/download.html (footer mailto: link)
+    git/app/TindaGo_APP/app/.../Strings.kt (EN + FIL contactContent)
+- Old email (pre-rebrand): support@sarisarismart.com
+- Current placeholder: support@tindago.com
+
+================================================================================
