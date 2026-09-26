@@ -73,7 +73,7 @@
       'paymentSheetOverlay', 'paymentSheet',
       'paymentCustomerName', 'paymentCustomerBalance',
       'paymentAmount', 'paymentRemaining',
-      'manageInventoryList', 'manageDebtsList',
+      'manageInventoryList', 'inventoryListToolbar', 'manageDebtsList',
       'manageTotalDebt', 'manageStockSearch',
       'addProductTitle',
       'productName', 'productQty', 'productCost', 'productPrice', 'productMarkup',
@@ -413,6 +413,8 @@
       itemRemoved: 'Item removed',
       addedToCart: 'Added to cart',
       selectProductFirst: 'Select a product first.',
+      selectFromList: 'Tap a product from the {label} list first',
+      noProductsInList: 'No products in {label}',
       lineSubtotal: 'Subtotal',
       eachLabel: 'each',
       // Settings
@@ -424,6 +426,38 @@
       stockTitle: 'Stock',
       searchPlaceholder: 'Search product...',
       addStockBtn: 'Add Stock',
+      // Stock — Demand Forecast (offline ML)
+      forecastSortToggle: '\ud83d\udd2e Sort by Forecast',
+      forecastSortOff: 'Sort by forecast',
+      forecastInsufficientData: 'Collecting data\u2026',
+      forecastNoDemand: 'No demand',
+      forecastOutOfStock: 'Out of stock',
+      forecastOutToday: 'Out today',
+      forecastDaysLeftShort: '{n}d left',
+      forecastAvgPerDay: 'Avg {n}/day',
+      // Stock — Demand Forecast detail card + urgent restock (Stage 4)
+      forecastDetailTitle: 'Forecast Demand',
+      forecastDetailSubtitle: 'Pattern learned offline from your sales history',
+      forecastMethod: 'Statistical ML',
+      forecastHistory: 'Last 7 days sold',
+      forecastHowItWorks: 'Avg from 7 days \u2192 daysUntilOut = stock \u00f7 avg.',
+      forecastConfidenceHigh: 'High',
+      forecastConfidenceMedium: 'Medium',
+      forecastConfidenceLow: 'Low',
+      forecastInsufficientHint: 'Not enough history \u2014 record 2+ days',
+      forecastAvgLabel: 'Avg',
+      forecastEmaLabel: 'EMA',
+      forecastTrendLabel: 'Trend',
+      forecastSuggestedRestock: 'Suggest +{n}',
+      forecastFor7Days: 'for 7 days',
+      forecastDaysLeftFull: '~{n} days left',
+      forecastRestockSoonTitle: 'Restock Soon (ML Forecast) \ud83d\udd2e',
+      forecastRestockSoonDesc: 'Predicted days until out of stock (7-day window)',
+      forecastUrgentOutToday: 'Out today',
+      forecastUrgentOutOfStock: 'Out of stock',
+      forecastSuggestedShort: 'suggest +{n}',
+      forecastReportTitle: 'Restock Soon (ML Forecast) \ud83d\udd2e',
+      forecastReportDesc: '14-day demand window \u2014 buy these to avoid running out',
       // Restock
       tutRestock: 'Restock Day Tutorial',
       restockTutorial1: 'This is the Restock Day page - a guided 2-step workflow to update inventory.',
@@ -583,12 +617,28 @@
       brandPlaceholder: 'e.g. Ligo, Bear Brand',
       packageSizePlaceholder: 'e.g. 155g, 1L',
       catAll: 'All',
-      catSoftDrinks: 'Soft Drinks', catBottledWater: 'Bottled Water', catInstantCoffee: 'Instant Coffee',
-      catInstantNoodles: 'Instant Noodles', catRice: 'Rice', catCannedSardines: 'Canned Sardines',
-      catCannedTuna: 'Canned Tuna', catEggs: 'Eggs', catBread: 'Bread / Pandesal', catBiscuits: 'Biscuits / Cookies',
-      catChocolate: 'Chocolate / Candy', catChips: 'Chips / Snacks', catSalt: 'Salt', catSugar: 'Sugar',
-      catShampoo: 'Shampoo Sachets', catBathSoap: 'Bath Soap', catLaundry: 'Laundry Detergent', catToothcare: 'Toothpaste / Toothbrush',
-      catMosquito: 'Mosquito Coils', catCigarettes: 'Cigarettes', catOther: 'Other',
+      catPantryStaples: 'Pantry Staples & Cooking', catCannedGoods: 'Canned Goods', catInstantDryGoods: 'Instant & Dry Goods',
+      catSnacksSweets: 'Snacks, Biscuits & Sweets', catBeverages: 'Beverages', catDairyRefrigerated: 'Dairy & Refrigerated',
+      catFreshSection: 'Fresh Section', catLiquorWine: 'Liquor, Wine & Tobacco', catPersonalCare: 'Personal Care',
+      catHouseholdCare: 'Household & Home Care', catBabyCare: 'Baby Care', catPaperSanitary: 'Paper & Sanitary',
+      catOther: 'Other',
+      subRice: 'Rice', subCookingOil: 'Cooking Oil', subSugar: 'Sugar', subSalt: 'Salt', subVinegar: 'Vinegar', subBread: 'Bread / Pandesal',
+      subSardines: 'Sardines', subCornedBeef: 'Corned Beef', subTuna: 'Tuna', subMeatLoaf: 'Meat Loaf', subSausage: 'Sausage',
+      subInstantNoodles: 'Instant Noodles', subCupNoodles: 'Cup Noodles', subPasta: 'Pasta', subSoupMixes: 'Soup Mixes',
+      subChips: 'Chips', subCrackers: 'Crackers', subCandies: 'Candies', subChocolates: 'Chocolates', subCookies: 'Cookies',
+      subCoffeeMix: 'Coffee Mix', subPowderedMilk: 'Powdered Milk', subChocolateDrink: 'Chocolate Drink', subJuice: 'Juice',
+      subSoftDrinks: 'Soft Drinks', subBottledWater: 'Bottled Water',
+      subCheese: 'Cheese', subButter: 'Butter', subMargarine: 'Margarine', subChilledMeats: 'Chilled Meats',
+      subFreshMeat: 'Fresh Meat', subFreshSeafood: 'Fresh Seafood', subFruits: 'Fruits', subVegetables: 'Vegetables', subEggs: 'Eggs',
+      subBeer: 'Beer', subGin: 'Gin', subBrandy: 'Brandy', subWine: 'Wine', subCigarettes: 'Cigarettes',
+      subShampoo: 'Shampoo', subConditioner: 'Conditioner', subBathSoap: 'Bath Soap', subToothpaste: 'Toothpaste',
+      subToothbrush: 'Toothbrush', subLotion: 'Lotion', subCosmetics: 'Cosmetics',
+      subLaundry: 'Laundry', subFabricSoftener: 'Fabric Softener', subDishwashing: 'Dishwashing', subCleaners: 'Cleaners',
+      subTrashBags: 'Trash Bags', subMosquitoControl: 'Mosquito Control',
+      subDiapers: 'Diapers', subBabyWipes: 'Baby Wipes', subBabyToiletries: 'Baby Toiletries',
+      subTissue: 'Tissue', subPaperTowels: 'Paper Towels', subSanitaryPads: 'Sanitary Pads',
+      subcategoriesLabel: 'Subcategories',
+      checkoutOverflow: '{n} more — refine search or category',
       catMore: 'More ▾', catLess: 'Less ▴',
       unitPiece: 'piece', unitSachet: 'sachet', unitPack: 'pack', unitBox: 'box',
       unitBottle: 'bottle', unitCan: 'can', unitKg: 'kg', unitG: 'g',
@@ -893,6 +943,8 @@
       itemRemoved: 'Naalis ang item',
       addedToCart: 'Idinagdag sa cart',
       selectProductFirst: 'Pumili muna ng produkto.',
+      selectFromList: 'Pumili muna ng produkto mula sa {label}',
+      noProductsInList: 'Walang produkto sa {label}',
       lineSubtotal: 'Subtotal',
       eachLabel: 'bawat isa',
       // Settings
@@ -904,6 +956,38 @@
       stockTitle: 'Stock',
       searchPlaceholder: 'Maghanap ng produkto...',
       addStockBtn: 'Magdagdag ng Stock',
+      // Stock — Demand Forecast (offline ML)
+      forecastSortToggle: '\ud83d\udd2e Ayon sa Forecast',
+      forecastSortOff: 'Ayon sa forecast',
+      forecastInsufficientData: 'Nangongolekta pa\u2026',
+      forecastNoDemand: 'Walang benta',
+      forecastOutOfStock: 'Ubos na ang stock',
+      forecastOutToday: 'Ubos ngayon',
+      forecastDaysLeftShort: '{n} araw na lang',
+      forecastAvgPerDay: 'Avg {n}/araw',
+      // Stock — Demand Forecast detail card + urgent restock (Stage 4)
+      forecastDetailTitle: 'Hula ng Demand',
+      forecastDetailSubtitle: 'Pattern na natutunan offline mula sa iyong benta',
+      forecastMethod: 'Statistical ML',
+      forecastHistory: 'Huling 7 araw na benta',
+      forecastHowItWorks: 'Avg mula 7 araw \u2192 daysUntilOut = stock \u00f7 avg.',
+      forecastConfidenceHigh: 'Mataas',
+      forecastConfidenceMedium: 'Katamtaman',
+      forecastConfidenceLow: 'Mababa',
+      forecastInsufficientHint: 'Kulang ang kasaysayan \u2014 magtala ng 2+ araw',
+      forecastAvgLabel: 'Avg',
+      forecastEmaLabel: 'EMA',
+      forecastTrendLabel: 'Trend',
+      forecastSuggestedRestock: 'Mungkahi +{n}',
+      forecastFor7Days: 'para sa 7 araw',
+      forecastDaysLeftFull: '~{n} araw na lang',
+      forecastRestockSoonTitle: 'Restock Na (ML Forecast) \ud83d\udd2e',
+      forecastRestockSoonDesc: 'Inaasahang araw bago maubos (7-araw na window)',
+      forecastUrgentOutToday: 'Ubos ngayon',
+      forecastUrgentOutOfStock: 'Ubos na ang stock',
+      forecastSuggestedShort: 'mungkahi +{n}',
+      forecastReportTitle: 'Restock Na (ML Forecast) \ud83d\udd2e',
+      forecastReportDesc: '14-araw na window ng demand \u2014 bilhin ang mga ito para hindi maubos',
       // Debts
       debtsTitle: 'Utang',
       debtsTotalLabel: 'Kabuuang Utang',
@@ -1054,12 +1138,28 @@
       brandPlaceholder: 'Hal. Ligo, Bear Brand',
       packageSizePlaceholder: 'Hal. 155g, 1L',
       catAll: 'Lahat',
-      catSoftDrinks: 'Softdrinks', catBottledWater: 'Tubig', catInstantCoffee: 'Kape 3-in-1',
-      catInstantNoodles: 'Pansit Instant', catRice: 'Bigas', catCannedSardines: 'Sardinas',
-      catCannedTuna: 'Tuna en Lata', catEggs: 'Itlog', catBread: 'Tinapay / Pandesal', catBiscuits: 'Galletas / Biskwit',
-      catChocolate: 'Tsokolate / Kendi', catChips: 'Chips / Meryenda', catSalt: 'Asin', catSugar: 'Asukal',
-      catShampoo: 'Shampoo Sachet', catBathSoap: 'Sabon', catLaundry: 'Detergent', catToothcare: 'Toothpaste / Toothbrush',
-      catMosquito: 'Katol', catCigarettes: 'Sigarilyo', catOther: 'Iba pa',
+      catPantryStaples: 'Sangkap sa Pagluluto', catCannedGoods: 'De-lata', catInstantDryGoods: 'Instant at Tuyo',
+      catSnacksSweets: 'Meryenda at Matamis', catBeverages: 'Inumin', catDairyRefrigerated: 'Gatas at Malamig',
+      catFreshSection: 'Sariwang Produkto', catLiquorWine: 'Alak at Sigarilyo', catPersonalCare: 'Pansariling Kalinga',
+      catHouseholdCare: 'Pang-labada at Panglinis', catBabyCare: 'Pangangalaga sa Sanggol', catPaperSanitary: 'Papel at Sanitary',
+      catOther: 'Iba pa',
+      subRice: 'Bigas', subCookingOil: 'Mantika', subSugar: 'Asukal', subSalt: 'Asin', subVinegar: 'Suka', subBread: 'Tinapay / Pandesal',
+      subSardines: 'Sardinas', subCornedBeef: 'Corned Beef', subTuna: 'Tuna', subMeatLoaf: 'Meat Loaf', subSausage: 'Sausage',
+      subInstantNoodles: 'Pansit Instant', subCupNoodles: 'Cup Noodles', subPasta: 'Pasta', subSoupMixes: 'Soup Mix',
+      subChips: 'Chips', subCrackers: 'Galletas', subCandies: 'Kendi', subChocolates: 'Tsokolate', subCookies: 'Biskwit',
+      subCoffeeMix: 'Kape 3-in-1', subPowderedMilk: 'Gatas na Pulbos', subChocolateDrink: 'Chocolate Drink', subJuice: 'Juice',
+      subSoftDrinks: 'Softdrinks', subBottledWater: 'Tubig',
+      subCheese: 'Keso', subButter: 'Butter', subMargarine: 'Margarina', subChilledMeats: 'Malamig na Karne',
+      subFreshMeat: 'Sariwang Karne', subFreshSeafood: 'Sariwang Isda', subFruits: 'Prutas', subVegetables: 'Gulay', subEggs: 'Itlog',
+      subBeer: 'Beer', subGin: 'Gin', subBrandy: 'Brandy', subWine: 'Wine', subCigarettes: 'Sigarilyo',
+      subShampoo: 'Shampoo', subConditioner: 'Conditioner', subBathSoap: 'Sabon', subToothpaste: 'Toothpaste',
+      subToothbrush: 'Toothbrush', subLotion: 'Lotion', subCosmetics: 'Cosmetics',
+      subLaundry: 'Detergent', subFabricSoftener: 'Fabric Softener', subDishwashing: 'Panghugas ng Pinggan', subCleaners: 'Panglinis',
+      subTrashBags: 'Trash Bag', subMosquitoControl: 'Katol / Panlaban sa Lamok',
+      subDiapers: 'Diapers', subBabyWipes: 'Baby Wipes', subBabyToiletries: 'Baby Toiletries',
+      subTissue: 'Tissue', subPaperTowels: 'Paper Towel', subSanitaryPads: 'Sanitary Pads',
+      subcategoriesLabel: 'Mga Subcategory',
+      checkoutOverflow: '{n} pa — paliitin ang hanap o kategorya',
       catMore: 'Dagdag ▾', catLess: 'Bawas ▴',
       unitPiece: 'piraso', unitSachet: 'sachet', unitPack: 'pack', unitBox: 'kahon',
       unitBottle: 'bote', unitCan: 'lata', unitKg: 'kg', unitG: 'g',
@@ -1184,19 +1284,33 @@
   // PRODUCT DETAILS — units, brands, categories
   // ============================================
   // Category keys (keep in sync with the i18n cat* keys).
-  var PRODUCT_CATEGORIES = ['soft_drinks','bottled_water','instant_coffee','instant_noodles','rice','canned_sardines','canned_tuna','eggs','bread','biscuits','chocolate','chips','salt','sugar','shampoo','bath_soap','laundry','toothcare','mosquito','cigarettes'];
+  // 12 retail categories (Food on top, Non-Food below), each with the
+  // subcategory drill-down used by checkout / inventory / add-product.
+  var PRODUCT_CATEGORIES = ['pantry_staples','canned_goods','instant_dry_goods','snacks_sweets','beverages','dairy_refrigerated','fresh_section','liquor_wine','personal_care','household_care','baby_care','paper_sanitary'];
+  var PRODUCT_SUBCATEGORIES = {
+    pantry_staples:['rice','cooking_oil','sugar','salt','vinegar','bread'],
+    canned_goods:['sardines','corned_beef','tuna','meat_loaf','sausage'],
+    instant_dry_goods:['instant_noodles','cup_noodles','pasta','soup_mixes'],
+    snacks_sweets:['chips','crackers','candies','chocolates','cookies'],
+    beverages:['coffee_mix','powdered_milk','chocolate_drink','juice','soft_drinks','bottled_water'],
+    dairy_refrigerated:['cheese','butter','margarine','chilled_meats'],
+    fresh_section:['fresh_meat','fresh_seafood','fruits','vegetables','eggs'],
+    liquor_wine:['beer','gin','brandy','wine','cigarettes'],
+    personal_care:['shampoo','conditioner','bath_soap','toothpaste','toothbrush','lotion','cosmetics'],
+    household_care:['laundry','fabric_softener','dishwashing','cleaners','trash_bags','mosquito_control'],
+    baby_care:['diapers','baby_wipes','baby_toiletries'],
+    paper_sanitary:['tissue','paper_towels','sanitary_pads']
+  };
   // Unit keys (keep in sync with the i18n unit* keys).
   var PRODUCT_UNITS = ['piece', 'sachet', 'pack', 'box', 'bottle', 'can', 'kg', 'g', 'L', 'mL', 'bundle', 'dozen', 'sack', 'loaf', 'tube', 'bar', 'sticks'];
 
   function productCategoryLabel(key) {
     if (!key) return '';
     var map = {
-      soft_drinks:'catSoftDrinks',bottled_water:'catBottledWater',instant_coffee:'catInstantCoffee',
-      instant_noodles:'catInstantNoodles',rice:'catRice',canned_sardines:'catCannedSardines',
-      canned_tuna:'catCannedTuna',eggs:'catEggs',bread:'catBread',biscuits:'catBiscuits',
-      chocolate:'catChocolate',chips:'catChips',salt:'catSalt',sugar:'catSugar',
-      shampoo:'catShampoo',bath_soap:'catBathSoap',laundry:'catLaundry',toothcare:'catToothcare',
-      mosquito:'catMosquito',cigarettes:'catCigarettes'
+      pantry_staples:'catPantryStaples',canned_goods:'catCannedGoods',instant_dry_goods:'catInstantDryGoods',
+      snacks_sweets:'catSnacksSweets',beverages:'catBeverages',dairy_refrigerated:'catDairyRefrigerated',
+      fresh_section:'catFreshSection',liquor_wine:'catLiquorWine',personal_care:'catPersonalCare',
+      household_care:'catHouseholdCare',baby_care:'catBabyCare',paper_sanitary:'catPaperSanitary'
     };
     return t(map[key] || 'catOther');
   }
@@ -1210,6 +1324,34 @@
       sack: 'unitSack', loaf: 'unitLoaf', tube: 'unitTube', bar: 'unitBar', sticks: 'unitSticks'
     };
     return t(map[key] || key);
+  }
+  function productSubcategoryLabel(key) {
+    if (!key) return '';
+    var map = {
+      rice:'subRice',cooking_oil:'subCookingOil',sugar:'subSugar',salt:'subSalt',vinegar:'subVinegar',bread:'subBread',
+      sardines:'subSardines',corned_beef:'subCornedBeef',tuna:'subTuna',meat_loaf:'subMeatLoaf',sausage:'subSausage',
+      instant_noodles:'subInstantNoodles',cup_noodles:'subCupNoodles',pasta:'subPasta',soup_mixes:'subSoupMixes',
+      chips:'subChips',crackers:'subCrackers',candies:'subCandies',chocolates:'subChocolates',cookies:'subCookies',
+      coffee_mix:'subCoffeeMix',powdered_milk:'subPowderedMilk',chocolate_drink:'subChocolateDrink',juice:'subJuice',soft_drinks:'subSoftDrinks',bottled_water:'subBottledWater',
+      cheese:'subCheese',butter:'subButter',margarine:'subMargarine',chilled_meats:'subChilledMeats',
+      fresh_meat:'subFreshMeat',fresh_seafood:'subFreshSeafood',fruits:'subFruits',vegetables:'subVegetables',eggs:'subEggs',
+      beer:'subBeer',gin:'subGin',brandy:'subBrandy',wine:'subWine',cigarettes:'subCigarettes',
+      shampoo:'subShampoo',conditioner:'subConditioner',bath_soap:'subBathSoap',toothpaste:'subToothpaste',toothbrush:'subToothbrush',lotion:'subLotion',cosmetics:'subCosmetics',
+      laundry:'subLaundry',fabric_softener:'subFabricSoftener',dishwashing:'subDishwashing',cleaners:'subCleaners',trash_bags:'subTrashBags',mosquito_control:'subMosquitoControl',
+      diapers:'subDiapers',baby_wipes:'subBabyWipes',baby_toiletries:'subBabyToiletries',
+      tissue:'subTissue',paper_towels:'subPaperTowels',sanitary_pads:'subSanitaryPads'
+    };
+    var i18n = map[key];
+    if (!i18n) {
+      // Unknown sub — mirror Strings.kt:1996 title-case fallback
+      try { return key.replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); }); } catch(e){ return key; }
+    }
+    var out = t(i18n);
+    if (out === i18n) {
+      // Table miss (should not happen after EN/FIL patch) — fail-safe to readable label
+      try { return key.replace(/_/g,' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); }); } catch(e){ return key; }
+    }
+    return out;
   }
 
   // One-line product descriptor: "Brand · Size" (or unit) — used in the sale
@@ -1473,6 +1615,9 @@
     });
     // Also update dynamically rendered text
     updateHeader();
+    try{ if(window.__checkoutRefreshLabel) window.__checkoutRefreshLabel(); }catch(e){}
+    try{ if(window.__checkoutRerender) window.__checkoutRerender(); }catch(e){}
+    try{ window.dispatchEvent(new CustomEvent('tindago:languageChanged')); }catch(e){}
   }
 
   // ============================================
@@ -1551,7 +1696,7 @@
       label: 'tutCheckout',
       page: 'checkout',
       steps: [
-        { textKey: 'checkoutTutorial1', highlight: '#saleProductName' },
+        { textKey: 'checkoutTutorial1', highlight: '#checkoutSearchControl' },
         { textKey: 'checkoutTutorial2', highlight: '#btnAddToCart' },
         { textKey: 'checkoutTutorial3', highlight: '#saleCartSection' },
         { textKey: 'checkoutTutorial4', highlight: '#salePayCredit' },
@@ -2003,149 +2148,296 @@
   // SAMPLE DATA
   // ============================================
   function getSampleProducts() {
-    // 120-item sari-sari store inventory. Quantities use variety (0 / low / plenty)
-    // so all three stock statuses (out / low / plenty) are represented for demos.
+    // 120-item sari-sari store inventory across the 12 retail categories
+    // (pantry staples … paper & sanitary). Quantities use variety (0 / low /
+    // plenty) so all three stock statuses (out / low / plenty) show up in demos.
     return [
-      // ── Soft Drinks (6) ──
-      { id:'s1', name:'Coca-Cola Original Taste', category:'soft_drinks', brand:'Coca-Cola', unit:'bottle', packageSize:'290ml', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
-      { id:'s2', name:'Pepsi', category:'soft_drinks', brand:'Pepsi', unit:'bottle', packageSize:'330ml', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
-      { id:'s3', name:'Royal Tru-Orange', category:'soft_drinks', brand:'Royal', unit:'bottle', packageSize:'330ml', quantity:0, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
-      { id:'s4', name:'Sprite', category:'soft_drinks', brand:'Sprite', unit:'bottle', packageSize:'330ml', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
-      { id:'s5', name:'Mountain Dew', category:'soft_drinks', brand:'Mountain Dew', unit:'bottle', packageSize:'330ml', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
-      { id:'s6', name:'RC Cola', category:'soft_drinks', brand:'RC Cola', unit:'bottle', packageSize:'330ml', quantity:3, costPrice:15, sellingPrice:18.75, lowStockThreshold:6 },
-      // ── Bottled Water (6) ──
-      { id:'s7', name:'Wilkins Pure', category:'bottled_water', brand:'Wilkins', unit:'bottle', packageSize:'500ml', quantity:20, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
-      { id:'s8', name:'Absolute Purified Water', category:'bottled_water', brand:'Absolute', unit:'bottle', packageSize:'500ml', quantity:20, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
-      { id:'s9', name:'Nature\u2019s Spring', category:'bottled_water', brand:'Nature\u2019s Spring', unit:'bottle', packageSize:'500ml', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:6 },
-      { id:'s10', name:'Summit Water', category:'bottled_water', brand:'Summit', unit:'bottle', packageSize:'500ml', quantity:0, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
-      { id:'s11', name:'Viva Mineral Water', category:'bottled_water', brand:'Viva', unit:'bottle', packageSize:'500ml', quantity:4, costPrice:9, sellingPrice:11.7, lowStockThreshold:6 },
-      { id:'s12', name:'Aquabest Purified Water', category:'bottled_water', brand:'Aquabest', unit:'bottle', packageSize:'500ml', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
-      // ── Instant Coffee (6) ──
-      { id:'s13', name:'Nescaf\u00e9 Classic', category:'instant_coffee', brand:'Nescaf\u00e9', unit:'sachet', packageSize:'25g', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:6 },
-      { id:'s14', name:'Great Taste 3-in-1', category:'instant_coffee', brand:'Great Taste', unit:'sachet', packageSize:'25g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
-      { id:'s15', name:'Kopiko Brown Coffee', category:'instant_coffee', brand:'Kopiko', unit:'sachet', packageSize:'25g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
-      { id:'s16', name:'San Mig Coffee 3-in-1', category:'instant_coffee', brand:'San Mig Coffee', unit:'sachet', packageSize:'20g', quantity:3, costPrice:7, sellingPrice:9.1, lowStockThreshold:6 },
-      { id:'s17', name:'Caf\u00e9 Puro', category:'instant_coffee', brand:'Caf\u00e9 Puro', unit:'sachet', packageSize:'25g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
-      { id:'s18', name:'UCC 3-in-1 Coffee', category:'instant_coffee', brand:'UCC', unit:'sachet', packageSize:'20g', quantity:20, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
-      // ── Instant Noodles (6) ──
-      { id:'s19', name:'Lucky Me! Pancit Canton Original', category:'instant_noodles', brand:'Lucky Me!', unit:'pack', packageSize:'60g', quantity:20, costPrice:11, sellingPrice:13.75, lowStockThreshold:6 },
-      { id:'s20', name:'Payless Pancit Canton', category:'instant_noodles', brand:'Payless', unit:'pack', packageSize:'60g', quantity:0, costPrice:9, sellingPrice:11.25, lowStockThreshold:6 },
-      { id:'s21', name:'Nissin Ramen', category:'instant_noodles', brand:'Nissin', unit:'pack', packageSize:'55g', quantity:20, costPrice:10, sellingPrice:12.5, lowStockThreshold:6 },
-      { id:'s22', name:'QuickChow Pancit Canton', category:'instant_noodles', brand:'QuickChow', unit:'pack', packageSize:'60g', quantity:20, costPrice:9, sellingPrice:11.25, lowStockThreshold:6 },
-      { id:'s23', name:'Ho-Mi Instant Noodles', category:'instant_noodles', brand:'Ho-Mi', unit:'pack', packageSize:'55g', quantity:4, costPrice:8, sellingPrice:10, lowStockThreshold:6 },
-      { id:'s24', name:'Yakisoba Instant Noodles', category:'instant_noodles', brand:'Yakisoba', unit:'pack', packageSize:'60g', quantity:20, costPrice:11, sellingPrice:13.75, lowStockThreshold:6 },
-      // ── Rice (6) ──
-      { id:'s25', name:'Do\u00f1a Maria Jasponica', category:'rice', brand:'Do\u00f1a Maria', unit:'sack', packageSize:'5kg', quantity:20, costPrice:360, sellingPrice:414, lowStockThreshold:2 },
-      { id:'s26', name:'Dinorado Rice', category:'rice', brand:'Dinarado', unit:'sack', packageSize:'5kg', quantity:20, costPrice:330, sellingPrice:379.5, lowStockThreshold:2 },
-      { id:'s27', name:'Sinandomeng Rice', category:'rice', brand:'Sinandomeng', unit:'sack', packageSize:'5kg', quantity:20, costPrice:300, sellingPrice:345, lowStockThreshold:2 },
-      { id:'s28', name:'Maharlika Rice', category:'rice', brand:'Maharlika', unit:'sack', packageSize:'5kg', quantity:0, costPrice:320, sellingPrice:368, lowStockThreshold:2 },
-      { id:'s29', name:'Jasmine Rice', category:'rice', brand:'Jasmine', unit:'sack', packageSize:'5kg', quantity:1, costPrice:350, sellingPrice:402.5, lowStockThreshold:2 },
-      { id:'s30', name:'Jasmate Rice', category:'rice', brand:'Jasmate', unit:'sack', packageSize:'5kg', quantity:20, costPrice:340, sellingPrice:391, lowStockThreshold:2 },
-      // ── Canned Sardines (6) ──
-      { id:'s31', name:'Ligo Sardines in Tomato Sauce', category:'canned_sardines', brand:'Ligo', unit:'can', packageSize:'155g', quantity:20, costPrice:20, sellingPrice:25, lowStockThreshold:4 },
-      { id:'s32', name:'Mega Sardines in Tomato Sauce', category:'canned_sardines', brand:'Mega', unit:'can', packageSize:'155g', quantity:20, costPrice:20, sellingPrice:25, lowStockThreshold:4 },
-      { id:'s33', name:'Young\u2019s Town Sardines', category:'canned_sardines', brand:'Young\u2019s Town', unit:'can', packageSize:'155g', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:4 },
-      { id:'s34', name:'555 Sardines', category:'canned_sardines', brand:'555', unit:'can', packageSize:'155g', quantity:20, costPrice:21, sellingPrice:26.25, lowStockThreshold:4 },
-      { id:'s35', name:'Argentina Sardines', category:'canned_sardines', brand:'Argentina', unit:'can', packageSize:'155g', quantity:2, costPrice:19, sellingPrice:23.75, lowStockThreshold:4 },
-      { id:'s36', name:'Atami Sardines', category:'canned_sardines', brand:'Atami', unit:'can', packageSize:'155g', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:4 },
-      // ── Canned Tuna (6) ──
-      { id:'s37', name:'Century Tuna Flakes', category:'canned_tuna', brand:'Century Tuna', unit:'can', packageSize:'180g', quantity:20, costPrice:34, sellingPrice:42.5, lowStockThreshold:4 },
-      { id:'s38', name:'555 Tuna Flakes', category:'canned_tuna', brand:'555', unit:'can', packageSize:'155g', quantity:20, costPrice:28, sellingPrice:35, lowStockThreshold:4 },
-      { id:'s39', name:'Mega Tuna Flakes', category:'canned_tuna', brand:'Mega', unit:'can', packageSize:'180g', quantity:20, costPrice:30, sellingPrice:37.5, lowStockThreshold:4 },
-      { id:'s40', name:'San Marino Tuna Flakes', category:'canned_tuna', brand:'San Marino', unit:'can', packageSize:'180g', quantity:0, costPrice:29, sellingPrice:36.25, lowStockThreshold:4 },
-      { id:'s41', name:'Ligo Tuna Flakes', category:'canned_tuna', brand:'Ligo', unit:'can', packageSize:'180g', quantity:3, costPrice:30, sellingPrice:37.5, lowStockThreshold:4 },
-      { id:'s42', name:'Family\u2019s Choice Tuna', category:'canned_tuna', brand:'Family\u2019s Choice', unit:'can', packageSize:'180g', quantity:20, costPrice:27, sellingPrice:33.75, lowStockThreshold:4 },
-      // ── Eggs (6) ──
-      { id:'s43', name:'Bounty Fresh Chicken Egg', category:'eggs', brand:'Bounty Fresh', unit:'piece', packageSize:'Large', quantity:20, costPrice:9, sellingPrice:10.8, lowStockThreshold:12 },
-      { id:'s44', name:'Magnolia Chicken Egg', category:'eggs', brand:'Magnolia', unit:'piece', packageSize:'Large', quantity:20, costPrice:9.5, sellingPrice:11.4, lowStockThreshold:12 },
-      { id:'s45', name:'Sarimanok Chicken Egg', category:'eggs', brand:'Sarimanok', unit:'piece', packageSize:'Large', quantity:8, costPrice:8.5, sellingPrice:10.2, lowStockThreshold:12 },
-      { id:'s46', name:'Local Farm Chicken Egg', category:'eggs', brand:'Local Farm', unit:'piece', packageSize:'Medium', quantity:20, costPrice:8, sellingPrice:9.6, lowStockThreshold:12 },
-      { id:'s47', name:'Free Range Chicken Egg', category:'eggs', brand:'Free Range Farm', unit:'piece', packageSize:'Large', quantity:20, costPrice:12, sellingPrice:14.4, lowStockThreshold:12 },
-      { id:'s48', name:'Organic Chicken Egg', category:'eggs', brand:'Organic Farm', unit:'piece', packageSize:'Large', quantity:20, costPrice:13, sellingPrice:15.6, lowStockThreshold:12 },
-      // ── Bread / Pandesal (6) ──
-      { id:'s49', name:'Gardenia Pinoy Tasty', category:'bread', brand:'Gardenia', unit:'loaf', packageSize:'400g', quantity:20, costPrice:45, sellingPrice:54, lowStockThreshold:4 },
-      { id:'s50', name:'Gardenia Classic White Bread', category:'bread', brand:'Gardenia', unit:'loaf', packageSize:'400g', quantity:20, costPrice:48, sellingPrice:57.6, lowStockThreshold:4 },
-      { id:'s51', name:'Pinoy Tasty White Bread', category:'bread', brand:'Pinoy Tasty', unit:'loaf', packageSize:'450g', quantity:0, costPrice:40, sellingPrice:48, lowStockThreshold:4 },
-      { id:'s52', name:'Marby White Bread', category:'bread', brand:'Marby', unit:'loaf', packageSize:'400g', quantity:2, costPrice:38, sellingPrice:45.6, lowStockThreshold:4 },
-      { id:'s53', name:'Julie\u2019s Pandesal', category:'bread', brand:'Julie\u2019s', unit:'pack', packageSize:'10pcs', quantity:20, costPrice:30, sellingPrice:36, lowStockThreshold:4 },
-      { id:'s54', name:'Local Bakery Pandesal', category:'bread', brand:'Local Bakery', unit:'pack', packageSize:'10pcs', quantity:20, costPrice:25, sellingPrice:30, lowStockThreshold:4 },
-      // ── Biscuits / Cookies (6) ──
-      { id:'s55', name:'Fita Crackers', category:'biscuits', brand:'Fita', unit:'pack', packageSize:'30g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
-      { id:'s56', name:'SkyFlakes Crackers', category:'biscuits', brand:'SkyFlakes', unit:'pack', packageSize:'25g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
-      { id:'s57', name:'Cream-O Chocolate Sandwich', category:'biscuits', brand:'Cream-O', unit:'pack', packageSize:'33g', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:6 },
-      { id:'s58', name:'Oreo Original', category:'biscuits', brand:'Oreo', unit:'pack', packageSize:'27g', quantity:3, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
-      { id:'s59', name:'Marie Biscuits', category:'biscuits', brand:'Marie', unit:'pack', packageSize:'30g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
-      { id:'s60', name:'Rebisco Crackers', category:'biscuits', brand:'Rebisco', unit:'pack', packageSize:'32g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
-      // ── Chocolate / Candy (6) ──
-      { id:'s61', name:'Choc-Nut', category:'chocolate', brand:'Choc-Nut', unit:'piece', packageSize:'24g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:8 },
-      { id:'s62', name:'Flat Tops Chocolate', category:'chocolate', brand:'Flat Tops', unit:'piece', packageSize:'24g', quantity:20, costPrice:7, sellingPrice:9.1, lowStockThreshold:8 },
-      { id:'s63', name:'Cloud 9 Chocolate Bar', category:'chocolate', brand:'Cloud 9', unit:'piece', packageSize:'27g', quantity:20, costPrice:10, sellingPrice:13, lowStockThreshold:8 },
-      { id:'s64', name:'Maxx Candy', category:'chocolate', brand:'Maxx', unit:'piece', packageSize:'single', quantity:20, costPrice:2.5, sellingPrice:3.5, lowStockThreshold:15 },
-      { id:'s65', name:'White Rabbit Candy', category:'chocolate', brand:'White Rabbit', unit:'piece', packageSize:'single', quantity:20, costPrice:3, sellingPrice:4.05, lowStockThreshold:15 },
-      { id:'s66', name:'Kendi Mint Candy', category:'chocolate', brand:'Kendi Mint', unit:'piece', packageSize:'single', quantity:0, costPrice:2, sellingPrice:2.8, lowStockThreshold:15 },
-      // ── Chips / Snacks (6) ──
-      { id:'s67', name:'Piattos Cheese', category:'chips', brand:'Piattos', unit:'pack', packageSize:'85g', quantity:20, costPrice:30, sellingPrice:37.5, lowStockThreshold:6 },
-      { id:'s68', name:'Nova Multigrain Snacks', category:'chips', brand:'Nova', unit:'pack', packageSize:'78g', quantity:20, costPrice:30, sellingPrice:37.5, lowStockThreshold:6 },
-      { id:'s69', name:'Clover Chips Cheese', category:'chips', brand:'Clover Chips', unit:'pack', packageSize:'55g', quantity:20, costPrice:20, sellingPrice:25, lowStockThreshold:6 },
-      { id:'s70', name:'Chippy Barbecue', category:'chips', brand:'Chippy', unit:'pack', packageSize:'110g', quantity:20, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
-      { id:'s71', name:'Oishi Prawn Crackers', category:'chips', brand:'Oishi', unit:'pack', packageSize:'60g', quantity:3, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
-      { id:'s72', name:'Mang Juan Espesyal', category:'chips', brand:'Mang Juan', unit:'pack', packageSize:'90g', quantity:20, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
-      // ── Salt (6) ──
-      { id:'s73', name:'La Filipina Iodized Salt', category:'salt', brand:'La Filipina', unit:'pack', packageSize:'500g', quantity:20, costPrice:15, sellingPrice:19.5, lowStockThreshold:5 },
-      { id:'s74', name:'Diamond Crystal Salt', category:'salt', brand:'Diamond Crystal', unit:'pack', packageSize:'500g', quantity:20, costPrice:18, sellingPrice:23.4, lowStockThreshold:5 },
-      { id:'s75', name:'Morton Iodized Salt', category:'salt', brand:'Morton', unit:'pack', packageSize:'500g', quantity:20, costPrice:22, sellingPrice:28.6, lowStockThreshold:5 },
-      { id:'s76', name:'Local Sea Salt', category:'salt', brand:'Sea Salt', unit:'pack', packageSize:'500g', quantity:20, costPrice:12, sellingPrice:15.6, lowStockThreshold:5 },
-      { id:'s77', name:'Iodized Salt', category:'salt', brand:'Iodized Salt', unit:'pack', packageSize:'500g', quantity:0, costPrice:13, sellingPrice:16.9, lowStockThreshold:5 },
-      { id:'s78', name:'Fine Table Salt', category:'salt', brand:'Fine Salt', unit:'pack', packageSize:'500g', quantity:20, costPrice:12, sellingPrice:15.6, lowStockThreshold:5 },
-      // ── Sugar (6) ──
-      { id:'s79', name:'Victorias Refined Sugar', category:'sugar', brand:'Victorias', unit:'pack', packageSize:'1kg', quantity:20, costPrice:80, sellingPrice:96, lowStockThreshold:5 },
-      { id:'s80', name:'Central Refined Sugar', category:'sugar', brand:'Central Azucarera', unit:'pack', packageSize:'1kg', quantity:20, costPrice:78, sellingPrice:93.6, lowStockThreshold:5 },
-      { id:'s81', name:'Sweet Crystal Sugar', category:'sugar', brand:'Sweet Crystal', unit:'pack', packageSize:'1kg', quantity:20, costPrice:75, sellingPrice:90, lowStockThreshold:5 },
-      { id:'s82', name:'C&H Sugar', category:'sugar', brand:'C&H', unit:'pack', packageSize:'1kg', quantity:0, costPrice:95, sellingPrice:114, lowStockThreshold:5 },
-      { id:'s83', name:'Domino Sugar', category:'sugar', brand:'Domino', unit:'pack', packageSize:'1kg', quantity:2, costPrice:90, sellingPrice:108, lowStockThreshold:5 },
-      { id:'s84', name:'Brown Sugar', category:'sugar', brand:'Brown Sugar', unit:'pack', packageSize:'1kg', quantity:20, costPrice:75, sellingPrice:90, lowStockThreshold:5 },
-      // ── Shampoo Sachets (6) ──
-      { id:'s85', name:'Sunsilk Shampoo', category:'shampoo', brand:'Sunsilk', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:7, sellingPrice:9.45, lowStockThreshold:8 },
-      { id:'s86', name:'Cream Silk Conditioner', category:'shampoo', brand:'Cream Silk', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:7, sellingPrice:9.45, lowStockThreshold:8 },
-      { id:'s87', name:'Pantene Shampoo', category:'shampoo', brand:'Pantene', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:8, sellingPrice:10.8, lowStockThreshold:8 },
-      { id:'s88', name:'Head & Shoulders Shampoo', category:'shampoo', brand:'Head & Shoulders', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:8, sellingPrice:10.8, lowStockThreshold:8 },
-      { id:'s89', name:'Palmolive Shampoo', category:'shampoo', brand:'Palmolive', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:6.5, sellingPrice:8.78, lowStockThreshold:8 },
-      { id:'s90', name:'Rejoice Shampoo', category:'shampoo', brand:'Rejoice', unit:'sachet', packageSize:'12ml', quantity:3, costPrice:7, sellingPrice:9.45, lowStockThreshold:8 },
-      // ── Bath Soap (6) ──
-      { id:'s91', name:'Safeguard Classic', category:'bath_soap', brand:'Safeguard', unit:'bar', packageSize:'60g', quantity:20, costPrice:22, sellingPrice:27.5, lowStockThreshold:6 },
-      { id:'s92', name:'Dove Beauty Bar', category:'bath_soap', brand:'Dove', unit:'bar', packageSize:'90g', quantity:20, costPrice:45, sellingPrice:56.25, lowStockThreshold:5 },
-      { id:'s93', name:'Palmolive Naturals', category:'bath_soap', brand:'Palmolive', unit:'bar', packageSize:'90g', quantity:20, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
-      { id:'s94', name:'Bioderm Soap', category:'bath_soap', brand:'Bioderm', unit:'bar', packageSize:'90g', quantity:0, costPrice:20, sellingPrice:25, lowStockThreshold:6 },
-      { id:'s95', name:'Silka Papaya Soap', category:'bath_soap', brand:'Silka', unit:'bar', packageSize:'65g', quantity:20, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
-      { id:'s96', name:'Kojic Acid Soap', category:'bath_soap', brand:'Kojic', unit:'bar', packageSize:'65g', quantity:4, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
-      // ── Laundry Detergent (6) ──
-      { id:'s97', name:'Surf Powder Detergent', category:'laundry', brand:'Surf', unit:'sachet', packageSize:'40g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:8 },
-      { id:'s98', name:'Ariel Powder Detergent', category:'laundry', brand:'Ariel', unit:'sachet', packageSize:'40g', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:8 },
-      { id:'s99', name:'Tide Powder Detergent', category:'laundry', brand:'Tide', unit:'sachet', packageSize:'40g', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:8 },
-      { id:'s100', name:'Champion Powder Detergent', category:'laundry', brand:'Champion', unit:'sachet', packageSize:'40g', quantity:20, costPrice:7, sellingPrice:9.1, lowStockThreshold:8 },
-      { id:'s101', name:'Pride Powder Detergent', category:'laundry', brand:'Pride', unit:'sachet', packageSize:'40g', quantity:0, costPrice:7, sellingPrice:9.1, lowStockThreshold:8 },
-      { id:'s102', name:'Breeze Powder Detergent', category:'laundry', brand:'Breeze', unit:'sachet', packageSize:'40g', quantity:3, costPrice:9, sellingPrice:11.7, lowStockThreshold:8 },
-      // ── Toothpaste / Toothbrush (6) ──
-      { id:'s103', name:'Colgate Toothpaste', category:'toothcare', brand:'Colgate', unit:'tube', packageSize:'50g', quantity:20, costPrice:45, sellingPrice:56.25, lowStockThreshold:5 },
-      { id:'s104', name:'Closeup Toothpaste', category:'toothcare', brand:'Closeup', unit:'tube', packageSize:'50g', quantity:20, costPrice:42, sellingPrice:52.5, lowStockThreshold:5 },
-      { id:'s105', name:'Hapee Toothpaste', category:'toothcare', brand:'Hapee', unit:'tube', packageSize:'50g', quantity:20, costPrice:35, sellingPrice:43.75, lowStockThreshold:5 },
-      { id:'s106', name:'Oral-B Toothbrush', category:'toothcare', brand:'Oral-B', unit:'piece', packageSize:'1pc', quantity:20, costPrice:35, sellingPrice:43.75, lowStockThreshold:5 },
-      { id:'s107', name:'Pepsodent Toothpaste', category:'toothcare', brand:'Pepsodent', unit:'tube', packageSize:'50g', quantity:20, costPrice:35, sellingPrice:43.75, lowStockThreshold:5 },
-      { id:'s108', name:'Systema Toothbrush', category:'toothcare', brand:'Systema', unit:'piece', packageSize:'1pc', quantity:2, costPrice:30, sellingPrice:37.5, lowStockThreshold:5 },
-      // ── Mosquito Coils (6) ──
-      { id:'s109', name:'Katol Mosquito Coil', category:'mosquito', brand:'Katol', unit:'pack', packageSize:'10 coils', quantity:20, costPrice:22, sellingPrice:28.6, lowStockThreshold:5 },
-      { id:'s110', name:'Baygon Mosquito Coil', category:'mosquito', brand:'Baygon', unit:'pack', packageSize:'10 coils', quantity:20, costPrice:35, sellingPrice:45.5, lowStockThreshold:5 },
-      { id:'s111', name:'Off! Mosquito Repellent', category:'mosquito', brand:'Off!', unit:'sachet', packageSize:'1pc', quantity:20, costPrice:12, sellingPrice:15.6, lowStockThreshold:5 },
-      { id:'s112', name:'Raid Mosquito Coil', category:'mosquito', brand:'Raid', unit:'pack', packageSize:'10 coils', quantity:20, costPrice:30, sellingPrice:39, lowStockThreshold:5 },
-      { id:'s113', name:'Lion Tiger Mosquito Coil', category:'mosquito', brand:'Lion Tiger', unit:'pack', packageSize:'10 coils', quantity:0, costPrice:20, sellingPrice:26, lowStockThreshold:5 },
-      { id:'s114', name:'Local Mosquito Coil', category:'mosquito', brand:'Local Brand', unit:'pack', packageSize:'10 coils', quantity:4, costPrice:18, sellingPrice:23.4, lowStockThreshold:5 },
-      // ── Cigarettes (6) ──
-      { id:'s115', name:'Marlboro Red', category:'cigarettes', brand:'Marlboro', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:140, sellingPrice:154, lowStockThreshold:5 },
-      { id:'s116', name:'Fortune Red', category:'cigarettes', brand:'Fortune', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:120, sellingPrice:132, lowStockThreshold:5 },
-      { id:'s117', name:'Winston Red', category:'cigarettes', brand:'Winston', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:130, sellingPrice:143, lowStockThreshold:5 },
-      { id:'s118', name:'Camel Blue', category:'cigarettes', brand:'Camel', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:130, sellingPrice:143, lowStockThreshold:5 },
-      { id:'s119', name:'Philip Morris Red', category:'cigarettes', brand:'Philip Morris', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:125, sellingPrice:137.5, lowStockThreshold:5 },
-      { id:'s120', name:'Mighty Red', category:'cigarettes', brand:'Mighty', unit:'pack', packageSize:'20 sticks', quantity:0, costPrice:110, sellingPrice:121, lowStockThreshold:5 }
+      // ── Beverages · Soft Drinks (6) ──
+      { id:'s1', name:'Coca-Cola Original Taste', category:'beverages', subcategory:'soft_drinks', brand:'Coca-Cola', unit:'bottle', packageSize:'290ml', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
+      { id:'s2', name:'Pepsi', category:'beverages', subcategory:'soft_drinks', brand:'Pepsi', unit:'bottle', packageSize:'330ml', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
+      { id:'s3', name:'Royal Tru-Orange', category:'beverages', subcategory:'soft_drinks', brand:'Royal', unit:'bottle', packageSize:'330ml', quantity:0, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
+      { id:'s4', name:'Sprite', category:'beverages', subcategory:'soft_drinks', brand:'Sprite', unit:'bottle', packageSize:'330ml', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
+      { id:'s5', name:'Mountain Dew', category:'beverages', subcategory:'soft_drinks', brand:'Mountain Dew', unit:'bottle', packageSize:'330ml', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
+      { id:'s6', name:'RC Cola', category:'beverages', subcategory:'soft_drinks', brand:'RC Cola', unit:'bottle', packageSize:'330ml', quantity:3, costPrice:15, sellingPrice:18.75, lowStockThreshold:6 },
+      // ── Beverages · Bottled Water (6) ──
+      { id:'s7', name:'Wilkins Pure', category:'beverages', subcategory:'bottled_water', brand:'Wilkins', unit:'bottle', packageSize:'500ml', quantity:20, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
+      { id:'s8', name:'Absolute Purified Water', category:'beverages', subcategory:'bottled_water', brand:'Absolute', unit:'bottle', packageSize:'500ml', quantity:20, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
+      { id:'s9', name:'Nature\u2019s Spring', category:'beverages', subcategory:'bottled_water', brand:'Nature\u2019s Spring', unit:'bottle', packageSize:'500ml', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:6 },
+      { id:'s10', name:'Summit Water', category:'beverages', subcategory:'bottled_water', brand:'Summit', unit:'bottle', packageSize:'500ml', quantity:0, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
+      { id:'s11', name:'Viva Mineral Water', category:'beverages', subcategory:'bottled_water', brand:'Viva', unit:'bottle', packageSize:'500ml', quantity:4, costPrice:9, sellingPrice:11.7, lowStockThreshold:6 },
+      { id:'s12', name:'Aquabest Purified Water', category:'beverages', subcategory:'bottled_water', brand:'Aquabest', unit:'bottle', packageSize:'500ml', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
+      // ── Beverages · Coffee Mix (6) ──
+      { id:'s13', name:'Nescaf\u00e9 Classic', category:'beverages', subcategory:'coffee_mix', brand:'Nescaf\u00e9', unit:'sachet', packageSize:'25g', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:6 },
+      { id:'s14', name:'Great Taste 3-in-1', category:'beverages', subcategory:'coffee_mix', brand:'Great Taste', unit:'sachet', packageSize:'25g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
+      { id:'s15', name:'Kopiko Brown Coffee', category:'beverages', subcategory:'coffee_mix', brand:'Kopiko', unit:'sachet', packageSize:'25g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
+      { id:'s16', name:'San Mig Coffee 3-in-1', category:'beverages', subcategory:'coffee_mix', brand:'San Mig Coffee', unit:'sachet', packageSize:'20g', quantity:3, costPrice:7, sellingPrice:9.1, lowStockThreshold:6 },
+      { id:'s17', name:'Caf\u00e9 Puro', category:'beverages', subcategory:'coffee_mix', brand:'Caf\u00e9 Puro', unit:'sachet', packageSize:'25g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
+      { id:'s18', name:'UCC 3-in-1 Coffee', category:'beverages', subcategory:'coffee_mix', brand:'UCC', unit:'sachet', packageSize:'20g', quantity:20, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
+      // ── Instant & Dry Goods · Instant Noodles (6) ──
+      { id:'s19', name:'Lucky Me! Pancit Canton Original', category:'instant_dry_goods', subcategory:'instant_noodles', brand:'Lucky Me!', unit:'pack', packageSize:'60g', quantity:20, costPrice:11, sellingPrice:13.75, lowStockThreshold:6 },
+      { id:'s20', name:'Payless Pancit Canton', category:'instant_dry_goods', subcategory:'instant_noodles', brand:'Payless', unit:'pack', packageSize:'60g', quantity:0, costPrice:9, sellingPrice:11.25, lowStockThreshold:6 },
+      { id:'s21', name:'Nissin Ramen', category:'instant_dry_goods', subcategory:'instant_noodles', brand:'Nissin', unit:'pack', packageSize:'55g', quantity:20, costPrice:10, sellingPrice:12.5, lowStockThreshold:6 },
+      { id:'s22', name:'QuickChow Pancit Canton', category:'instant_dry_goods', subcategory:'instant_noodles', brand:'QuickChow', unit:'pack', packageSize:'60g', quantity:20, costPrice:9, sellingPrice:11.25, lowStockThreshold:6 },
+      { id:'s23', name:'Ho-Mi Instant Noodles', category:'instant_dry_goods', subcategory:'instant_noodles', brand:'Ho-Mi', unit:'pack', packageSize:'55g', quantity:4, costPrice:8, sellingPrice:10, lowStockThreshold:6 },
+      { id:'s24', name:'Yakisoba Instant Noodles', category:'instant_dry_goods', subcategory:'instant_noodles', brand:'Yakisoba', unit:'pack', packageSize:'60g', quantity:20, costPrice:11, sellingPrice:13.75, lowStockThreshold:6 },
+      // ── Pantry Staples · Rice (6) ──
+      { id:'s25', name:'Do\u00f1a Maria Jasponica', category:'pantry_staples', subcategory:'rice', brand:'Do\u00f1a Maria', unit:'sack', packageSize:'5kg', quantity:20, costPrice:360, sellingPrice:414, lowStockThreshold:2 },
+      { id:'s26', name:'Dinorado Rice', category:'pantry_staples', subcategory:'rice', brand:'Dinarado', unit:'sack', packageSize:'5kg', quantity:20, costPrice:330, sellingPrice:379.5, lowStockThreshold:2 },
+      { id:'s27', name:'Sinandomeng Rice', category:'pantry_staples', subcategory:'rice', brand:'Sinandomeng', unit:'sack', packageSize:'5kg', quantity:20, costPrice:300, sellingPrice:345, lowStockThreshold:2 },
+      { id:'s28', name:'Maharlika Rice', category:'pantry_staples', subcategory:'rice', brand:'Maharlika', unit:'sack', packageSize:'5kg', quantity:0, costPrice:320, sellingPrice:368, lowStockThreshold:2 },
+      { id:'s29', name:'Jasmine Rice', category:'pantry_staples', subcategory:'rice', brand:'Jasmine', unit:'sack', packageSize:'5kg', quantity:1, costPrice:350, sellingPrice:402.5, lowStockThreshold:2 },
+      { id:'s30', name:'Jasmate Rice', category:'pantry_staples', subcategory:'rice', brand:'Jasmate', unit:'sack', packageSize:'5kg', quantity:20, costPrice:340, sellingPrice:391, lowStockThreshold:2 },
+      // ── Canned Goods · Sardines (6) ──
+      { id:'s31', name:'Ligo Sardines in Tomato Sauce', category:'canned_goods', subcategory:'sardines', brand:'Ligo', unit:'can', packageSize:'155g', quantity:20, costPrice:20, sellingPrice:25, lowStockThreshold:4 },
+      { id:'s32', name:'Mega Sardines in Tomato Sauce', category:'canned_goods', subcategory:'sardines', brand:'Mega', unit:'can', packageSize:'155g', quantity:20, costPrice:20, sellingPrice:25, lowStockThreshold:4 },
+      { id:'s33', name:'Young\u2019s Town Sardines', category:'canned_goods', subcategory:'sardines', brand:'Young\u2019s Town', unit:'can', packageSize:'155g', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:4 },
+      { id:'s34', name:'555 Sardines', category:'canned_goods', subcategory:'sardines', brand:'555', unit:'can', packageSize:'155g', quantity:20, costPrice:21, sellingPrice:26.25, lowStockThreshold:4 },
+      { id:'s35', name:'Argentina Sardines', category:'canned_goods', subcategory:'sardines', brand:'Argentina', unit:'can', packageSize:'155g', quantity:2, costPrice:19, sellingPrice:23.75, lowStockThreshold:4 },
+      { id:'s36', name:'Atami Sardines', category:'canned_goods', subcategory:'sardines', brand:'Atami', unit:'can', packageSize:'155g', quantity:20, costPrice:18, sellingPrice:22.5, lowStockThreshold:4 },
+      // ── Canned Goods · Tuna (6) ──
+      { id:'s37', name:'Century Tuna Flakes', category:'canned_goods', subcategory:'tuna', brand:'Century Tuna', unit:'can', packageSize:'180g', quantity:20, costPrice:34, sellingPrice:42.5, lowStockThreshold:4 },
+      { id:'s38', name:'555 Tuna Flakes', category:'canned_goods', subcategory:'tuna', brand:'555', unit:'can', packageSize:'155g', quantity:20, costPrice:28, sellingPrice:35, lowStockThreshold:4 },
+      { id:'s39', name:'Mega Tuna Flakes', category:'canned_goods', subcategory:'tuna', brand:'Mega', unit:'can', packageSize:'180g', quantity:20, costPrice:30, sellingPrice:37.5, lowStockThreshold:4 },
+      { id:'s40', name:'San Marino Tuna Flakes', category:'canned_goods', subcategory:'tuna', brand:'San Marino', unit:'can', packageSize:'180g', quantity:0, costPrice:29, sellingPrice:36.25, lowStockThreshold:4 },
+      { id:'s41', name:'Ligo Tuna Flakes', category:'canned_goods', subcategory:'tuna', brand:'Ligo', unit:'can', packageSize:'180g', quantity:3, costPrice:30, sellingPrice:37.5, lowStockThreshold:4 },
+      { id:'s42', name:'Family\u2019s Choice Tuna', category:'canned_goods', subcategory:'tuna', brand:'Family\u2019s Choice', unit:'can', packageSize:'180g', quantity:20, costPrice:27, sellingPrice:33.75, lowStockThreshold:4 },
+      // ── Fresh Section · Eggs (6) ──
+      { id:'s43', name:'Bounty Fresh Chicken Egg', category:'fresh_section', subcategory:'eggs', brand:'Bounty Fresh', unit:'piece', packageSize:'Large', quantity:20, costPrice:9, sellingPrice:10.8, lowStockThreshold:12 },
+      { id:'s44', name:'Magnolia Chicken Egg', category:'fresh_section', subcategory:'eggs', brand:'Magnolia', unit:'piece', packageSize:'Large', quantity:20, costPrice:9.5, sellingPrice:11.4, lowStockThreshold:12 },
+      { id:'s45', name:'Sarimanok Chicken Egg', category:'fresh_section', subcategory:'eggs', brand:'Sarimanok', unit:'piece', packageSize:'Large', quantity:8, costPrice:8.5, sellingPrice:10.2, lowStockThreshold:12 },
+      { id:'s46', name:'Local Farm Chicken Egg', category:'fresh_section', subcategory:'eggs', brand:'Local Farm', unit:'piece', packageSize:'Medium', quantity:20, costPrice:8, sellingPrice:9.6, lowStockThreshold:12 },
+      { id:'s47', name:'Free Range Chicken Egg', category:'fresh_section', subcategory:'eggs', brand:'Free Range Farm', unit:'piece', packageSize:'Large', quantity:20, costPrice:12, sellingPrice:14.4, lowStockThreshold:12 },
+      { id:'s48', name:'Organic Chicken Egg', category:'fresh_section', subcategory:'eggs', brand:'Organic Farm', unit:'piece', packageSize:'Large', quantity:20, costPrice:13, sellingPrice:15.6, lowStockThreshold:12 },
+      // ── Pantry Staples · Bread (6) ──
+      { id:'s49', name:'Gardenia Pinoy Tasty', category:'pantry_staples', subcategory:'bread', brand:'Gardenia', unit:'loaf', packageSize:'400g', quantity:20, costPrice:45, sellingPrice:54, lowStockThreshold:4 },
+      { id:'s50', name:'Gardenia Classic White Bread', category:'pantry_staples', subcategory:'bread', brand:'Gardenia', unit:'loaf', packageSize:'400g', quantity:20, costPrice:48, sellingPrice:57.6, lowStockThreshold:4 },
+      { id:'s51', name:'Pinoy Tasty White Bread', category:'pantry_staples', subcategory:'bread', brand:'Pinoy Tasty', unit:'loaf', packageSize:'450g', quantity:0, costPrice:40, sellingPrice:48, lowStockThreshold:4 },
+      { id:'s52', name:'Marby White Bread', category:'pantry_staples', subcategory:'bread', brand:'Marby', unit:'loaf', packageSize:'400g', quantity:2, costPrice:38, sellingPrice:45.6, lowStockThreshold:4 },
+      { id:'s53', name:'Julie\u2019s Pandesal', category:'pantry_staples', subcategory:'bread', brand:'Julie\u2019s', unit:'pack', packageSize:'10pcs', quantity:20, costPrice:30, sellingPrice:36, lowStockThreshold:4 },
+      { id:'s54', name:'Local Bakery Pandesal', category:'pantry_staples', subcategory:'bread', brand:'Local Bakery', unit:'pack', packageSize:'10pcs', quantity:20, costPrice:25, sellingPrice:30, lowStockThreshold:4 },
+      // ── Snacks · Crackers & Cookies (6) ──
+      { id:'s55', name:'Fita Crackers', category:'snacks_sweets', subcategory:'crackers', brand:'Fita', unit:'pack', packageSize:'30g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
+      { id:'s56', name:'SkyFlakes Crackers', category:'snacks_sweets', subcategory:'crackers', brand:'SkyFlakes', unit:'pack', packageSize:'25g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
+      { id:'s57', name:'Cream-O Chocolate Sandwich', category:'snacks_sweets', subcategory:'cookies', brand:'Cream-O', unit:'pack', packageSize:'33g', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:6 },
+      { id:'s58', name:'Oreo Original', category:'snacks_sweets', subcategory:'cookies', brand:'Oreo', unit:'pack', packageSize:'27g', quantity:3, costPrice:10, sellingPrice:13, lowStockThreshold:6 },
+      { id:'s59', name:'Marie Biscuits', category:'snacks_sweets', subcategory:'crackers', brand:'Marie', unit:'pack', packageSize:'30g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
+      { id:'s60', name:'Rebisco Crackers', category:'snacks_sweets', subcategory:'crackers', brand:'Rebisco', unit:'pack', packageSize:'32g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:6 },
+      // ── Snacks · Chocolates & Candies (6) ──
+      { id:'s61', name:'Choc-Nut', category:'snacks_sweets', subcategory:'chocolates', brand:'Choc-Nut', unit:'piece', packageSize:'24g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:8 },
+      { id:'s62', name:'Flat Tops Chocolate', category:'snacks_sweets', subcategory:'chocolates', brand:'Flat Tops', unit:'piece', packageSize:'24g', quantity:20, costPrice:7, sellingPrice:9.1, lowStockThreshold:8 },
+      { id:'s63', name:'Cloud 9 Chocolate Bar', category:'snacks_sweets', subcategory:'chocolates', brand:'Cloud 9', unit:'piece', packageSize:'27g', quantity:20, costPrice:10, sellingPrice:13, lowStockThreshold:8 },
+      { id:'s64', name:'Maxx Candy', category:'snacks_sweets', subcategory:'candies', brand:'Maxx', unit:'piece', packageSize:'single', quantity:20, costPrice:2.5, sellingPrice:3.5, lowStockThreshold:15 },
+      { id:'s65', name:'White Rabbit Candy', category:'snacks_sweets', subcategory:'candies', brand:'White Rabbit', unit:'piece', packageSize:'single', quantity:20, costPrice:3, sellingPrice:4.05, lowStockThreshold:15 },
+      { id:'s66', name:'Kendi Mint Candy', category:'snacks_sweets', subcategory:'candies', brand:'Kendi Mint', unit:'piece', packageSize:'single', quantity:0, costPrice:2, sellingPrice:2.8, lowStockThreshold:15 },
+      // ── Snacks · Chips (6) ──
+      { id:'s67', name:'Piattos Cheese', category:'snacks_sweets', subcategory:'chips', brand:'Piattos', unit:'pack', packageSize:'85g', quantity:20, costPrice:30, sellingPrice:37.5, lowStockThreshold:6 },
+      { id:'s68', name:'Nova Multigrain Snacks', category:'snacks_sweets', subcategory:'chips', brand:'Nova', unit:'pack', packageSize:'78g', quantity:20, costPrice:30, sellingPrice:37.5, lowStockThreshold:6 },
+      { id:'s69', name:'Clover Chips Cheese', category:'snacks_sweets', subcategory:'chips', brand:'Clover Chips', unit:'pack', packageSize:'55g', quantity:20, costPrice:20, sellingPrice:25, lowStockThreshold:6 },
+      { id:'s70', name:'Chippy Barbecue', category:'snacks_sweets', subcategory:'chips', brand:'Chippy', unit:'pack', packageSize:'110g', quantity:20, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
+      { id:'s71', name:'Oishi Prawn Crackers', category:'snacks_sweets', subcategory:'chips', brand:'Oishi', unit:'pack', packageSize:'60g', quantity:3, costPrice:18, sellingPrice:22.5, lowStockThreshold:6 },
+      { id:'s72', name:'Mang Juan Espesyal', category:'snacks_sweets', subcategory:'chips', brand:'Mang Juan', unit:'pack', packageSize:'90g', quantity:20, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
+      // ── Pantry Staples · Salt (6) ──
+      { id:'s73', name:'La Filipina Iodized Salt', category:'pantry_staples', subcategory:'salt', brand:'La Filipina', unit:'pack', packageSize:'500g', quantity:20, costPrice:15, sellingPrice:19.5, lowStockThreshold:5 },
+      { id:'s74', name:'Diamond Crystal Salt', category:'pantry_staples', subcategory:'salt', brand:'Diamond Crystal', unit:'pack', packageSize:'500g', quantity:20, costPrice:18, sellingPrice:23.4, lowStockThreshold:5 },
+      { id:'s75', name:'Morton Iodized Salt', category:'pantry_staples', subcategory:'salt', brand:'Morton', unit:'pack', packageSize:'500g', quantity:20, costPrice:22, sellingPrice:28.6, lowStockThreshold:5 },
+      { id:'s76', name:'Local Sea Salt', category:'pantry_staples', subcategory:'salt', brand:'Sea Salt', unit:'pack', packageSize:'500g', quantity:20, costPrice:12, sellingPrice:15.6, lowStockThreshold:5 },
+      { id:'s77', name:'Iodized Salt', category:'pantry_staples', subcategory:'salt', brand:'Iodized Salt', unit:'pack', packageSize:'500g', quantity:0, costPrice:13, sellingPrice:16.9, lowStockThreshold:5 },
+      { id:'s78', name:'Fine Table Salt', category:'pantry_staples', subcategory:'salt', brand:'Fine Salt', unit:'pack', packageSize:'500g', quantity:20, costPrice:12, sellingPrice:15.6, lowStockThreshold:5 },
+      // ── Pantry Staples · Sugar (6) ──
+      { id:'s79', name:'Victorias Refined Sugar', category:'pantry_staples', subcategory:'sugar', brand:'Victorias', unit:'pack', packageSize:'1kg', quantity:20, costPrice:80, sellingPrice:96, lowStockThreshold:5 },
+      { id:'s80', name:'Central Refined Sugar', category:'pantry_staples', subcategory:'sugar', brand:'Central Azucarera', unit:'pack', packageSize:'1kg', quantity:20, costPrice:78, sellingPrice:93.6, lowStockThreshold:5 },
+      { id:'s81', name:'Sweet Crystal Sugar', category:'pantry_staples', subcategory:'sugar', brand:'Sweet Crystal', unit:'pack', packageSize:'1kg', quantity:20, costPrice:75, sellingPrice:90, lowStockThreshold:5 },
+      { id:'s82', name:'C&H Sugar', category:'pantry_staples', subcategory:'sugar', brand:'C&H', unit:'pack', packageSize:'1kg', quantity:0, costPrice:95, sellingPrice:114, lowStockThreshold:5 },
+      { id:'s83', name:'Domino Sugar', category:'pantry_staples', subcategory:'sugar', brand:'Domino', unit:'pack', packageSize:'1kg', quantity:2, costPrice:90, sellingPrice:108, lowStockThreshold:5 },
+      { id:'s84', name:'Brown Sugar', category:'pantry_staples', subcategory:'sugar', brand:'Brown Sugar', unit:'pack', packageSize:'1kg', quantity:20, costPrice:75, sellingPrice:90, lowStockThreshold:5 },
+      // ── Personal Care · Shampoo & Conditioner (6) ──
+      { id:'s85', name:'Sunsilk Shampoo', category:'personal_care', subcategory:'shampoo', brand:'Sunsilk', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:7, sellingPrice:9.45, lowStockThreshold:8 },
+      { id:'s86', name:'Cream Silk Conditioner', category:'personal_care', subcategory:'conditioner', brand:'Cream Silk', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:7, sellingPrice:9.45, lowStockThreshold:8 },
+      { id:'s87', name:'Pantene Shampoo', category:'personal_care', subcategory:'shampoo', brand:'Pantene', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:8, sellingPrice:10.8, lowStockThreshold:8 },
+      { id:'s88', name:'Head & Shoulders Shampoo', category:'personal_care', subcategory:'shampoo', brand:'Head & Shoulders', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:8, sellingPrice:10.8, lowStockThreshold:8 },
+      { id:'s89', name:'Palmolive Shampoo', category:'personal_care', subcategory:'shampoo', brand:'Palmolive', unit:'sachet', packageSize:'12ml', quantity:20, costPrice:6.5, sellingPrice:8.78, lowStockThreshold:8 },
+      { id:'s90', name:'Rejoice Shampoo', category:'personal_care', subcategory:'conditioner', brand:'Rejoice', unit:'sachet', packageSize:'12ml', quantity:3, costPrice:7, sellingPrice:9.45, lowStockThreshold:8 },
+      // ── Personal Care · Bath Soap (6) ──
+      { id:'s91', name:'Safeguard Classic', category:'personal_care', subcategory:'bath_soap', brand:'Safeguard', unit:'bar', packageSize:'60g', quantity:20, costPrice:22, sellingPrice:27.5, lowStockThreshold:6 },
+      { id:'s92', name:'Dove Beauty Bar', category:'personal_care', subcategory:'bath_soap', brand:'Dove', unit:'bar', packageSize:'90g', quantity:20, costPrice:45, sellingPrice:56.25, lowStockThreshold:5 },
+      { id:'s93', name:'Palmolive Naturals', category:'personal_care', subcategory:'bath_soap', brand:'Palmolive', unit:'bar', packageSize:'90g', quantity:20, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
+      { id:'s94', name:'Bioderm Soap', category:'personal_care', subcategory:'bath_soap', brand:'Bioderm', unit:'bar', packageSize:'90g', quantity:0, costPrice:20, sellingPrice:25, lowStockThreshold:6 },
+      { id:'s95', name:'Silka Papaya Soap', category:'personal_care', subcategory:'bath_soap', brand:'Silka', unit:'bar', packageSize:'65g', quantity:20, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
+      { id:'s96', name:'Kojic Acid Soap', category:'personal_care', subcategory:'bath_soap', brand:'Kojic', unit:'bar', packageSize:'65g', quantity:4, costPrice:25, sellingPrice:31.25, lowStockThreshold:6 },
+      // ── Household & Home Care · Laundry (6) ──
+      { id:'s97', name:'Surf Powder Detergent', category:'household_care', subcategory:'laundry', brand:'Surf', unit:'sachet', packageSize:'40g', quantity:20, costPrice:8, sellingPrice:10.4, lowStockThreshold:8 },
+      { id:'s98', name:'Ariel Powder Detergent', category:'household_care', subcategory:'laundry', brand:'Ariel', unit:'sachet', packageSize:'40g', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:8 },
+      { id:'s99', name:'Tide Powder Detergent', category:'household_care', subcategory:'laundry', brand:'Tide', unit:'sachet', packageSize:'40g', quantity:20, costPrice:9, sellingPrice:11.7, lowStockThreshold:8 },
+      { id:'s100', name:'Champion Powder Detergent', category:'household_care', subcategory:'laundry', brand:'Champion', unit:'sachet', packageSize:'40g', quantity:20, costPrice:7, sellingPrice:9.1, lowStockThreshold:8 },
+      { id:'s101', name:'Pride Powder Detergent', category:'household_care', subcategory:'laundry', brand:'Pride', unit:'sachet', packageSize:'40g', quantity:0, costPrice:7, sellingPrice:9.1, lowStockThreshold:8 },
+      { id:'s102', name:'Breeze Powder Detergent', category:'household_care', subcategory:'laundry', brand:'Breeze', unit:'sachet', packageSize:'40g', quantity:3, costPrice:9, sellingPrice:11.7, lowStockThreshold:8 },
+      // ── Personal Care · Oral Care (6) ──
+      { id:'s103', name:'Colgate Toothpaste', category:'personal_care', subcategory:'toothpaste', brand:'Colgate', unit:'tube', packageSize:'50g', quantity:20, costPrice:45, sellingPrice:56.25, lowStockThreshold:5 },
+      { id:'s104', name:'Closeup Toothpaste', category:'personal_care', subcategory:'toothpaste', brand:'Closeup', unit:'tube', packageSize:'50g', quantity:20, costPrice:42, sellingPrice:52.5, lowStockThreshold:5 },
+      { id:'s105', name:'Hapee Toothpaste', category:'personal_care', subcategory:'toothpaste', brand:'Hapee', unit:'tube', packageSize:'50g', quantity:20, costPrice:35, sellingPrice:43.75, lowStockThreshold:5 },
+      { id:'s106', name:'Oral-B Toothbrush', category:'personal_care', subcategory:'toothbrush', brand:'Oral-B', unit:'piece', packageSize:'1pc', quantity:20, costPrice:35, sellingPrice:43.75, lowStockThreshold:5 },
+      { id:'s107', name:'Pepsodent Toothpaste', category:'personal_care', subcategory:'toothpaste', brand:'Pepsodent', unit:'tube', packageSize:'50g', quantity:20, costPrice:35, sellingPrice:43.75, lowStockThreshold:5 },
+      { id:'s108', name:'Systema Toothbrush', category:'personal_care', subcategory:'toothbrush', brand:'Systema', unit:'piece', packageSize:'1pc', quantity:2, costPrice:30, sellingPrice:37.5, lowStockThreshold:5 },
+      // ── Household & Home Care · Mosquito Control (6) ──
+      { id:'s109', name:'Katol Mosquito Coil', category:'household_care', subcategory:'mosquito_control', brand:'Katol', unit:'pack', packageSize:'10 coils', quantity:20, costPrice:22, sellingPrice:28.6, lowStockThreshold:5 },
+      { id:'s110', name:'Baygon Mosquito Coil', category:'household_care', subcategory:'mosquito_control', brand:'Baygon', unit:'pack', packageSize:'10 coils', quantity:20, costPrice:35, sellingPrice:45.5, lowStockThreshold:5 },
+      { id:'s111', name:'Off! Mosquito Repellent', category:'household_care', subcategory:'mosquito_control', brand:'Off!', unit:'sachet', packageSize:'1pc', quantity:20, costPrice:12, sellingPrice:15.6, lowStockThreshold:5 },
+      { id:'s112', name:'Raid Mosquito Coil', category:'household_care', subcategory:'mosquito_control', brand:'Raid', unit:'pack', packageSize:'10 coils', quantity:20, costPrice:30, sellingPrice:39, lowStockThreshold:5 },
+      { id:'s113', name:'Lion Tiger Mosquito Coil', category:'household_care', subcategory:'mosquito_control', brand:'Lion Tiger', unit:'pack', packageSize:'10 coils', quantity:0, costPrice:20, sellingPrice:26, lowStockThreshold:5 },
+      { id:'s114', name:'Local Mosquito Coil', category:'household_care', subcategory:'mosquito_control', brand:'Local Brand', unit:'pack', packageSize:'10 coils', quantity:4, costPrice:18, sellingPrice:23.4, lowStockThreshold:5 },
+      // ── Liquor, Wine & Tobacco · Cigarettes (6) ──
+      { id:'s115', name:'Marlboro Red', category:'liquor_wine', subcategory:'cigarettes', brand:'Marlboro', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:140, sellingPrice:154, lowStockThreshold:5 },
+      { id:'s116', name:'Fortune Red', category:'liquor_wine', subcategory:'cigarettes', brand:'Fortune', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:120, sellingPrice:132, lowStockThreshold:5 },
+      { id:'s117', name:'Winston Red', category:'liquor_wine', subcategory:'cigarettes', brand:'Winston', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:130, sellingPrice:143, lowStockThreshold:5 },
+      { id:'s118', name:'Camel Blue', category:'liquor_wine', subcategory:'cigarettes', brand:'Camel', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:130, sellingPrice:143, lowStockThreshold:5 },
+      { id:'s119', name:'Philip Morris Red', category:'liquor_wine', subcategory:'cigarettes', brand:'Philip Morris', unit:'pack', packageSize:'20 sticks', quantity:20, costPrice:125, sellingPrice:137.5, lowStockThreshold:5 },
+      { id:'s120', name:'Mighty Red', category:'liquor_wine', subcategory:'cigarettes', brand:'Mighty', unit:'pack', packageSize:'20 sticks', quantity:0, costPrice:110, sellingPrice:121, lowStockThreshold:5 },
+      // ── Pantry Staples & Cooking · Cooking Oil (3) ──
+      { id:'s121', name:'Minola Cooking Oil', category:'pantry_staples', subcategory:'cooking_oil', brand:'Minola', unit:'bottle', packageSize:'1L', quantity:20, costPrice:120, sellingPrice:132, lowStockThreshold:5 },
+      { id:'s122', name:'Baguio Oil', category:'pantry_staples', subcategory:'cooking_oil', brand:'Baguio', unit:'bottle', packageSize:'1L', quantity:20, costPrice:110, sellingPrice:121, lowStockThreshold:5 },
+      { id:'s123', name:'Palm Oil Cooking Oil', category:'pantry_staples', subcategory:'cooking_oil', brand:'Palm Oil', unit:'bottle', packageSize:'1L', quantity:20, costPrice:115, sellingPrice:126.5, lowStockThreshold:5 },
+      // ── Pantry Staples & Cooking · Vinegar (3) ──
+      { id:'s124', name:'Datu Puti Vinegar', category:'pantry_staples', subcategory:'vinegar', brand:'Datu Puti', unit:'bottle', packageSize:'1L', quantity:20, costPrice:60, sellingPrice:66, lowStockThreshold:5 },
+      { id:'s125', name:'Silver Swan Vinegar', category:'pantry_staples', subcategory:'vinegar', brand:'Silver Swan', unit:'bottle', packageSize:'1L', quantity:20, costPrice:58, sellingPrice:63.8, lowStockThreshold:5 },
+      { id:'s126', name:'Mafran Cane Vinegar', category:'pantry_staples', subcategory:'vinegar', brand:'Mafran', unit:'bottle', packageSize:'1L', quantity:20, costPrice:55, sellingPrice:60.5, lowStockThreshold:5 },
+      // ── Canned Goods · Corned Beef (3) ──
+      { id:'s127', name:'Purefoods Corned Beef', category:'canned_goods', subcategory:'corned_beef', brand:'Purefoods', unit:'can', packageSize:'150g', quantity:20, costPrice:80, sellingPrice:88, lowStockThreshold:5 },
+      { id:'s128', name:'Argentina Corned Beef', category:'canned_goods', subcategory:'corned_beef', brand:'Argentina', unit:'can', packageSize:'155g', quantity:20, costPrice:75, sellingPrice:82.5, lowStockThreshold:5 },
+      { id:'s129', name:'CDO Corned Beef', category:'canned_goods', subcategory:'corned_beef', brand:'CDO', unit:'can', packageSize:'150g', quantity:20, costPrice:72, sellingPrice:79.2, lowStockThreshold:5 },
+      // ── Canned Goods · Meat Loaf (3) ──
+      { id:'s130', name:'CDO Meat Loaf Plain', category:'canned_goods', subcategory:'meat_loaf', brand:'CDO', unit:'can', packageSize:'150g', quantity:20, costPrice:50, sellingPrice:55, lowStockThreshold:5 },
+      { id:'s131', name:'CDO Meat Loaf Sweet Style', category:'canned_goods', subcategory:'meat_loaf', brand:'CDO', unit:'can', packageSize:'150g', quantity:20, costPrice:50, sellingPrice:55, lowStockThreshold:5 },
+      { id:'s132', name:'Purefoods Luncheon Meat', category:'canned_goods', subcategory:'meat_loaf', brand:'Purefoods', unit:'can', packageSize:'150g', quantity:20, costPrice:55, sellingPrice:60.5, lowStockThreshold:5 },
+      // ── Canned Goods · Sausage (3) ──
+      { id:'s133', name:'Argentina Sausage', category:'canned_goods', subcategory:'sausage', brand:'Argentina', unit:'can', packageSize:'150g', quantity:20, costPrice:45, sellingPrice:49.5, lowStockThreshold:5 },
+      { id:'s134', name:'Purefoods Sausage', category:'canned_goods', subcategory:'sausage', brand:'Purefoods', unit:'can', packageSize:'150g', quantity:20, costPrice:48, sellingPrice:52.8, lowStockThreshold:5 },
+      { id:'s135', name:'CDO Vienna Sausage', category:'canned_goods', subcategory:'sausage', brand:'CDO', unit:'can', packageSize:'150g', quantity:20, costPrice:46, sellingPrice:50.6, lowStockThreshold:5 },
+      // ── Instant & Dry Goods · Cup Noodles (3) ──
+      // ── Instant & Dry Goods · Soup Mixes (3) ──
+      { id:'s142', name:'Knorr Chicken Soup Mix', category:'instant_dry_goods', subcategory:'soup_mixes', brand:'Knorr', unit:'pack', packageSize:'30g', quantity:20, costPrice:15, sellingPrice:16.5, lowStockThreshold:5 },
+      { id:'s143', name:'Knorr Beef Soup Mix', category:'instant_dry_goods', subcategory:'soup_mixes', brand:'Knorr', unit:'pack', packageSize:'30g', quantity:20, costPrice:15, sellingPrice:16.5, lowStockThreshold:5 },
+      { id:'s144', name:'Mama Sita\'s Sinigang Mix', category:'instant_dry_goods', subcategory:'soup_mixes', brand:'Mama Sita\'s', unit:'pack', packageSize:'40g', quantity:20, costPrice:20, sellingPrice:22, lowStockThreshold:5 },
+      // ── Beverages · Powdered Milk (3) ──
+      { id:'s145', name:'Bear Brand Powdered Milk', category:'beverages', subcategory:'powdered_milk', brand:'Bear Brand', unit:'pack', packageSize:'600g', quantity:20, costPrice:380, sellingPrice:418, lowStockThreshold:5 },
+      { id:'s146', name:'Nido 3+ Powdered Milk', category:'beverages', subcategory:'powdered_milk', brand:'Nido', unit:'pack', packageSize:'700g', quantity:20, costPrice:420, sellingPrice:462, lowStockThreshold:5 },
+      { id:'s147', name:'Nestlé Milkady', category:'beverages', subcategory:'powdered_milk', brand:'Nestlé', unit:'pack', packageSize:'650g', quantity:20, costPrice:400, sellingPrice:440, lowStockThreshold:5 },
+      // ── Beverages · Chocolate Drink (3) ──
+      { id:'s148', name:'Milo Chocolate Drink', category:'beverages', subcategory:'chocolate_drink', brand:'Milo', unit:'pack', packageSize:'500g', quantity:20, costPrice:280, sellingPrice:308, lowStockThreshold:5 },
+      { id:'s149', name:'Ovaltine Chocolate Drink', category:'beverages', subcategory:'chocolate_drink', brand:'Ovaltine', unit:'pack', packageSize:'500g', quantity:20, costPrice:270, sellingPrice:297, lowStockThreshold:5 },
+      { id:'s150', name:'Nestlé Nesquik', category:'beverages', subcategory:'chocolate_drink', brand:'Nesquik', unit:'pack', packageSize:'400g', quantity:20, costPrice:260, sellingPrice:286, lowStockThreshold:5 },
+      // ── Dairy & Refrigerated · Cheese (3) ──
+      { id:'s154', name:'Eden Cheese', category:'dairy_refrigerated', subcategory:'cheese', brand:'Eden', unit:'pack', packageSize:'160g', quantity:20, costPrice:95, sellingPrice:104.5, lowStockThreshold:5 },
+      { id:'s155', name:'Magnolia Cheese', category:'dairy_refrigerated', subcategory:'cheese', brand:'Magnolia', unit:'pack', packageSize:'160g', quantity:20, costPrice:90, sellingPrice:99, lowStockThreshold:5 },
+      { id:'s156', name:'Quickmelt Cheese', category:'dairy_refrigerated', subcategory:'cheese', brand:'Quickmelt', unit:'pack', packageSize:'150g', quantity:20, costPrice:88, sellingPrice:96.8, lowStockThreshold:5 },
+      // ── Dairy & Refrigerated · Butter (3) ──
+      { id:'s157', name:'Buttercup', category:'dairy_refrigerated', subcategory:'butter', brand:'Buttercup', unit:'bar', packageSize:'200g', quantity:20, costPrice:65, sellingPrice:71.5, lowStockThreshold:5 },
+      { id:'s158', name:'Dari Creme Butter', category:'dairy_refrigerated', subcategory:'butter', brand:'Dari Creme', unit:'bar', packageSize:'200g', quantity:20, costPrice:60, sellingPrice:66, lowStockThreshold:5 },
+      { id:'s159', name:'Anchor Butter', category:'dairy_refrigerated', subcategory:'butter', brand:'Anchor', unit:'bar', packageSize:'250g', quantity:20, costPrice:240, sellingPrice:264, lowStockThreshold:5 },
+      // ── Dairy & Refrigerated · Margarine (3) ──
+      { id:'s160', name:'Star Margarine', category:'dairy_refrigerated', subcategory:'margarine', brand:'Star', unit:'bar', packageSize:'200g', quantity:20, costPrice:45, sellingPrice:49.5, lowStockThreshold:5 },
+      { id:'s161', name:'Dari Creme Margarine', category:'dairy_refrigerated', subcategory:'margarine', brand:'Dari Creme', unit:'bar', packageSize:'200g', quantity:20, costPrice:42, sellingPrice:46.2, lowStockThreshold:5 },
+      { id:'s162', name:'Reyes Margarine', category:'dairy_refrigerated', subcategory:'margarine', brand:'Reyes', unit:'bar', packageSize:'200g', quantity:20, costPrice:40, sellingPrice:44, lowStockThreshold:5 },
+      // ── Dairy & Refrigerated · Chilled Meats (3) ──
+      { id:'s163', name:'Purefoods Vienna Sausage', category:'dairy_refrigerated', subcategory:'chilled_meats', brand:'Purefoods', unit:'pack', packageSize:'125g', quantity:20, costPrice:40, sellingPrice:44, lowStockThreshold:5 },
+      { id:'s164', name:'CDO Chicken Hotdog', category:'dairy_refrigerated', subcategory:'chilled_meats', brand:'CDO', unit:'pack', packageSize:'500g', quantity:20, costPrice:120, sellingPrice:132, lowStockThreshold:5 },
+      { id:'s165', name:'Purefoods Star Hotdog', category:'dairy_refrigerated', subcategory:'chilled_meats', brand:'Purefoods', unit:'pack', packageSize:'500g', quantity:20, costPrice:130, sellingPrice:143, lowStockThreshold:5 },
+      // ── Fresh Section · Fresh Meat (3) ──
+      { id:'s166', name:'Pork Belly', category:'fresh_section', subcategory:'fresh_meat', brand:'Local', unit:'kg', packageSize:'1kg', quantity:20, costPrice:280, sellingPrice:308, lowStockThreshold:5 },
+      { id:'s167', name:'Chicken Leg Quarter', category:'fresh_section', subcategory:'fresh_meat', brand:'Local', unit:'kg', packageSize:'1kg', quantity:20, costPrice:180, sellingPrice:198, lowStockThreshold:5 },
+      { id:'s168', name:'Beef Sirloin', category:'fresh_section', subcategory:'fresh_meat', brand:'Local', unit:'kg', packageSize:'1kg', quantity:20, costPrice:420, sellingPrice:462, lowStockThreshold:5 },
+      // ── Fresh Section · Fresh Seafood (3) ──
+      { id:'s169', name:'Tilapia', category:'fresh_section', subcategory:'fresh_seafood', brand:'Local', unit:'kg', packageSize:'1kg', quantity:20, costPrice:150, sellingPrice:165, lowStockThreshold:5 },
+      { id:'s170', name:'Galunggong', category:'fresh_section', subcategory:'fresh_seafood', brand:'Local', unit:'kg', packageSize:'1kg', quantity:20, costPrice:160, sellingPrice:176, lowStockThreshold:5 },
+      { id:'s171', name:'Sugpo Shrimp', category:'fresh_section', subcategory:'fresh_seafood', brand:'Local', unit:'kg', packageSize:'1kg', quantity:20, costPrice:450, sellingPrice:495, lowStockThreshold:5 },
+      // ── Liquor, Wine & Tobacco · Beer (3) ──
+      { id:'s178', name:'San Miguel Pale Pilsen', category:'liquor_wine', subcategory:'beer', brand:'San Miguel', unit:'bottle', packageSize:'330mL', quantity:20, costPrice:55, sellingPrice:60.5, lowStockThreshold:5 },
+      { id:'s179', name:'Red Horse Beer', category:'liquor_wine', subcategory:'beer', brand:'Red Horse', unit:'bottle', packageSize:'500mL', quantity:20, costPrice:65, sellingPrice:71.5, lowStockThreshold:5 },
+      { id:'s180', name:'San Mig Light', category:'liquor_wine', subcategory:'beer', brand:'San Miguel', unit:'bottle', packageSize:'330mL', quantity:20, costPrice:55, sellingPrice:60.5, lowStockThreshold:5 },
+      // ── Liquor, Wine & Tobacco · Gin (3) ──
+      { id:'s181', name:'Ginebra San Miguel', category:'liquor_wine', subcategory:'gin', brand:'Ginebra', unit:'bottle', packageSize:'350mL', quantity:20, costPrice:95, sellingPrice:104.5, lowStockThreshold:5 },
+      { id:'s182', name:'Ginebra Premium Gin', category:'liquor_wine', subcategory:'gin', brand:'Ginebra', unit:'bottle', packageSize:'350mL', quantity:20, costPrice:130, sellingPrice:143, lowStockThreshold:5 },
+      { id:'s183', name:'Ginebra Flavors', category:'liquor_wine', subcategory:'gin', brand:'Ginebra', unit:'bottle', packageSize:'350mL', quantity:20, costPrice:140, sellingPrice:154, lowStockThreshold:5 },
+      // ── Liquor, Wine & Tobacco · Brandy (3) ──
+      { id:'s184', name:'Fundador Brandy', category:'liquor_wine', subcategory:'brandy', brand:'Fundador', unit:'bottle', packageSize:'350mL', quantity:20, costPrice:180, sellingPrice:198, lowStockThreshold:5 },
+      { id:'s185', name:'Emperador Brandy', category:'liquor_wine', subcategory:'brandy', brand:'Emperador', unit:'bottle', packageSize:'350mL', quantity:20, costPrice:150, sellingPrice:165, lowStockThreshold:5 },
+      { id:'s186', name:'Generoso Brandy', category:'liquor_wine', subcategory:'brandy', brand:'Generoso', unit:'bottle', packageSize:'350mL', quantity:20, costPrice:140, sellingPrice:154, lowStockThreshold:5 },
+      // ── Personal Care · Lotion (3) ──
+      { id:'s190', name:'Vaseline Body Lotion', category:'personal_care', subcategory:'lotion', brand:'Vaseline', unit:'bottle', packageSize:'200mL', quantity:20, costPrice:180, sellingPrice:198, lowStockThreshold:5 },
+      { id:'s191', name:'Jergens Body Lotion', category:'personal_care', subcategory:'lotion', brand:'Jergens', unit:'bottle', packageSize:'200mL', quantity:20, costPrice:220, sellingPrice:242, lowStockThreshold:5 },
+      { id:'s192', name:'Nivea Body Lotion', category:'personal_care', subcategory:'lotion', brand:'Nivea', unit:'bottle', packageSize:'200mL', quantity:20, costPrice:240, sellingPrice:264, lowStockThreshold:5 },
+      // ── Personal Care · Cosmetics (3) ──
+      { id:'s193', name:'Ever Bilena Lipstick', category:'personal_care', subcategory:'cosmetics', brand:'Ever Bilena', unit:'piece', packageSize:'1 pc', quantity:20, costPrice:120, sellingPrice:132, lowStockThreshold:5 },
+      { id:'s194', name:'Nichido Pressed Powder', category:'personal_care', subcategory:'cosmetics', brand:'Nichido', unit:'piece', packageSize:'1 pc', quantity:20, costPrice:180, sellingPrice:198, lowStockThreshold:5 },
+      { id:'s195', name:'Ever Bilena Face Powder', category:'personal_care', subcategory:'cosmetics', brand:'Ever Bilena', unit:'piece', packageSize:'1 pc', quantity:20, costPrice:150, sellingPrice:165, lowStockThreshold:5 },
+      // ── Household & Home Care · Fabric Softener (3) ──
+      { id:'s196', name:'Downy Fabric Conditioner', category:'household_care', subcategory:'fabric_softener', brand:'Downy', unit:'sachet', packageSize:'1L', quantity:20, costPrice:150, sellingPrice:165, lowStockThreshold:5 },
+      { id:'s197', name:'Comfort Fabric Conditioner', category:'household_care', subcategory:'fabric_softener', brand:'Comfort', unit:'sachet', packageSize:'1L', quantity:20, costPrice:145, sellingPrice:159.5, lowStockThreshold:5 },
+      { id:'s198', name:'Surf Fabric Conditioner', category:'household_care', subcategory:'fabric_softener', brand:'Surf', unit:'sachet', packageSize:'1L', quantity:20, costPrice:140, sellingPrice:154, lowStockThreshold:5 },
+      // ── Household & Home Care · Dishwashing (3) ──
+      { id:'s199', name:'Joy Dishwashing Liquid', category:'household_care', subcategory:'dishwashing', brand:'Joy', unit:'sachet', packageSize:'170mL', quantity:20, costPrice:30, sellingPrice:33, lowStockThreshold:5 },
+      { id:'s200', name:'Surf Dishwashing Liquid', category:'household_care', subcategory:'dishwashing', brand:'Surf', unit:'sachet', packageSize:'170mL', quantity:20, costPrice:28, sellingPrice:30.8, lowStockThreshold:5 },
+      { id:'s201', name:'Zonrox Dishwashing', category:'household_care', subcategory:'dishwashing', brand:'Zonrox', unit:'sachet', packageSize:'170mL', quantity:20, costPrice:29, sellingPrice:31.9, lowStockThreshold:5 },
+      // ── Household & Home Care · Cleaners (3) ──
+      { id:'s202', name:'Zonrox Bleach', category:'household_care', subcategory:'cleaners', brand:'Zonrox', unit:'bottle', packageSize:'1L', quantity:20, costPrice:85, sellingPrice:93.5, lowStockThreshold:5 },
+      // ── Baby Care · Diapers (3) ──
+      { id:'s208', name:'Pampers Diapers Medium', category:'baby_care', subcategory:'diapers', brand:'Pampers', unit:'pack', packageSize:'30 pcs', quantity:20, costPrice:280, sellingPrice:308, lowStockThreshold:5 },
+      { id:'s209', name:'EQ Diapers Medium', category:'baby_care', subcategory:'diapers', brand:'EQ', unit:'pack', packageSize:'30 pcs', quantity:20, costPrice:260, sellingPrice:286, lowStockThreshold:5 },
+      { id:'s210', name:'Baby Love Diapers', category:'baby_care', subcategory:'diapers', brand:'Baby Love', unit:'pack', packageSize:'30 pcs', quantity:20, costPrice:240, sellingPrice:264, lowStockThreshold:5 },
+      // ── Baby Care · Baby Wipes (3) ──
+      { id:'s211', name:'Pampers Baby Wipes', category:'baby_care', subcategory:'baby_wipes', brand:'Pampers', unit:'pack', packageSize:'48 pcs', quantity:20, costPrice:80, sellingPrice:88, lowStockThreshold:5 },
+      { id:'s212', name:'EQ Baby Wipes', category:'baby_care', subcategory:'baby_wipes', brand:'EQ', unit:'pack', packageSize:'48 pcs', quantity:20, costPrice:70, sellingPrice:77, lowStockThreshold:5 },
+      { id:'s213', name:'Baby Care Wipes', category:'baby_care', subcategory:'baby_wipes', brand:'Baby Care', unit:'pack', packageSize:'40 pcs', quantity:20, costPrice:65, sellingPrice:71.5, lowStockThreshold:5 },
+      // ── Baby Care · Baby Toiletries (3) ──
+      { id:'s214', name:'Johnson\'s Baby Lotion', category:'baby_care', subcategory:'baby_toiletries', brand:'Johnson\'s', unit:'bottle', packageSize:'200mL', quantity:20, costPrice:180, sellingPrice:198, lowStockThreshold:5 },
+      { id:'s215', name:'Johnson\'s Baby Powder', category:'baby_care', subcategory:'baby_toiletries', brand:'Johnson\'s', unit:'bottle', packageSize:'200g', quantity:20, costPrice:120, sellingPrice:132, lowStockThreshold:5 },
+      { id:'s216', name:'Cetaphil Baby Wash', category:'baby_care', subcategory:'baby_toiletries', brand:'Cetaphil', unit:'bottle', packageSize:'400mL', quantity:20, costPrice:280, sellingPrice:308, lowStockThreshold:5 },
+      // ── Paper & Sanitary · Tissue (3) ──
+      { id:'s217', name:'CDO Facial Tissue', category:'paper_sanitary', subcategory:'tissue', brand:'CDO', unit:'pack', packageSize:'100 pcs', quantity:20, costPrice:40, sellingPrice:44, lowStockThreshold:5 },
+      { id:'s218', name:'Kleenex Tissues', category:'paper_sanitary', subcategory:'tissue', brand:'Kleenex', unit:'pack', packageSize:'100 pcs', quantity:20, costPrice:60, sellingPrice:66, lowStockThreshold:5 },
+      { id:'s219', name:'Scott Tissues', category:'paper_sanitary', subcategory:'tissue', brand:'Scott', unit:'pack', packageSize:'100 pcs', quantity:20, costPrice:55, sellingPrice:60.5, lowStockThreshold:5 },
+      // ── Paper & Sanitary · Paper Towels (3) ──
+      { id:'s220', name:'Velvex Paper Towel', category:'paper_sanitary', subcategory:'paper_towels', brand:'Velvex', unit:'piece', packageSize:'1 roll', quantity:20, costPrice:45, sellingPrice:49.5, lowStockThreshold:5 },
+      { id:'s221', name:'Scott Paper Towel', category:'paper_sanitary', subcategory:'paper_towels', brand:'Scott', unit:'piece', packageSize:'1 roll', quantity:20, costPrice:60, sellingPrice:66, lowStockThreshold:5 },
+      { id:'s222', name:'Bounty Paper Towel', category:'paper_sanitary', subcategory:'paper_towels', brand:'Bounty', unit:'piece', packageSize:'1 roll', quantity:20, costPrice:65, sellingPrice:71.5, lowStockThreshold:5 },
+      // ── Paper & Sanitary · Sanitary Pads (3) ──
+      { id:'s223', name:'Nurse Beauty Sanitary Pads', category:'paper_sanitary', subcategory:'sanitary_pads', brand:'Nurse Beauty', unit:'pack', packageSize:'10 pcs', quantity:20, costPrice:25, sellingPrice:27.5, lowStockThreshold:5 },
+      { id:'s224', name:'Modess Sanitary Pads', category:'paper_sanitary', subcategory:'sanitary_pads', brand:'Modess', unit:'pack', packageSize:'10 pcs', quantity:20, costPrice:55, sellingPrice:60.5, lowStockThreshold:5 },
+      { id:'s225', name:'Whisper Sanitary Pads', category:'paper_sanitary', subcategory:'sanitary_pads', brand:'Whisper', unit:'pack', packageSize:'10 pcs', quantity:20, costPrice:50, sellingPrice:55, lowStockThreshold:5 },
+
+      { id:'s203', name:'Mr. Muscle Cleaner', category:'household_care', subcategory:'cleaners', brand:'Mr. Muscle', unit:'bottle', packageSize:'500mL', quantity:20, costPrice:120, sellingPrice:132, lowStockThreshold:5 },
+      { id:'s204', name:'Lysol Disinfectant', category:'household_care', subcategory:'cleaners', brand:'Lysol', unit:'bottle', packageSize:'1L', quantity:20, costPrice:150, sellingPrice:165, lowStockThreshold:5 },
+      // ── Household & Home Care · Trash Bags (3) ──
+      { id:'s205', name:'Champion Trash Bags', category:'household_care', subcategory:'trash_bags', brand:'Champion', unit:'pack', packageSize:'14 pcs', quantity:20, costPrice:60, sellingPrice:66, lowStockThreshold:5 },
+      { id:'s206', name:'Green Trash Bags', category:'household_care', subcategory:'trash_bags', brand:'Green', unit:'pack', packageSize:'14 pcs', quantity:20, costPrice:55, sellingPrice:60.5, lowStockThreshold:5 },
+      { id:'s207', name:'Ecobag Trash Bags', category:'household_care', subcategory:'trash_bags', brand:'Ecobag', unit:'pack', packageSize:'14 pcs', quantity:20, costPrice:58, sellingPrice:63.8, lowStockThreshold:5 },
+
+      // ── Liquor, Wine & Tobacco · Wine (3) ──
+      { id:'s187', name:'Moscato d\'Asti', category:'liquor_wine', subcategory:'wine', brand:'Moscato', unit:'bottle', packageSize:'750mL', quantity:20, costPrice:320, sellingPrice:352, lowStockThreshold:5 },
+      { id:'s188', name:'Sangria Red Wine', category:'liquor_wine', subcategory:'wine', brand:'Sangria', unit:'bottle', packageSize:'750mL', quantity:20, costPrice:280, sellingPrice:308, lowStockThreshold:5 },
+      { id:'s189', name:'Chardonnay White Wine', category:'liquor_wine', subcategory:'wine', brand:'Chardonnay', unit:'bottle', packageSize:'750mL', quantity:20, costPrice:300, sellingPrice:330, lowStockThreshold:5 },
+
+      // ── Fresh Section · Fruits (3) ──
+      { id:'s172', name:'Lakatan Banana', category:'fresh_section', subcategory:'fruits', brand:'Local', unit:'kg', packageSize:'1kg', quantity:20, costPrice:70, sellingPrice:77, lowStockThreshold:5 },
+      { id:'s173', name:'Carabao Mango', category:'fresh_section', subcategory:'fruits', brand:'Local', unit:'kg', packageSize:'1kg', quantity:20, costPrice:120, sellingPrice:132, lowStockThreshold:5 },
+      { id:'s174', name:'Red Apple', category:'fresh_section', subcategory:'fruits', brand:'Imported', unit:'kg', packageSize:'1kg', quantity:20, costPrice:180, sellingPrice:198, lowStockThreshold:5 },
+      // ── Fresh Section · Vegetables (3) ──
+      { id:'s175', name:'Kangkong', category:'fresh_section', subcategory:'vegetables', brand:'Local', unit:'bundle', packageSize:'1 bundle', quantity:20, costPrice:20, sellingPrice:22, lowStockThreshold:5 },
+      { id:'s176', name:'Ampalaya', category:'fresh_section', subcategory:'vegetables', brand:'Local', unit:'kg', packageSize:'1kg', quantity:20, costPrice:60, sellingPrice:66, lowStockThreshold:5 },
+      { id:'s177', name:'Sitaw', category:'fresh_section', subcategory:'vegetables', brand:'Local', unit:'bundle', packageSize:'1 bundle', quantity:20, costPrice:25, sellingPrice:27.5, lowStockThreshold:5 },
+
+      // ── Beverages · Juice (3) ──
+      { id:'s151', name:'Zesto Orange Juice', category:'beverages', subcategory:'juice', brand:'Zesto', unit:'bottle', packageSize:'1L', quantity:20, costPrice:65, sellingPrice:71.5, lowStockThreshold:5 },
+      { id:'s152', name:'Tang Orange', category:'beverages', subcategory:'juice', brand:'Tang', unit:'pack', packageSize:'500g', quantity:20, costPrice:120, sellingPrice:132, lowStockThreshold:5 },
+      { id:'s153', name:'Sunkist Apple Juice', category:'beverages', subcategory:'juice', brand:'Sunkist', unit:'bottle', packageSize:'1L', quantity:20, costPrice:70, sellingPrice:77, lowStockThreshold:5 },
+
+      { id:'s136', name:'Nissin Cup Noodles Beef', category:'instant_dry_goods', subcategory:'cup_noodles', brand:'Nissin', unit:'piece', packageSize:'65g', quantity:20, costPrice:25, sellingPrice:27.5, lowStockThreshold:5 },
+      { id:'s137', name:'Lucky Me! Cup Noodles', category:'instant_dry_goods', subcategory:'cup_noodles', brand:'Lucky Me!', unit:'piece', packageSize:'55g', quantity:20, costPrice:18, sellingPrice:19.8, lowStockThreshold:5 },
+      { id:'s138', name:'Payless Cup Noodles', category:'instant_dry_goods', subcategory:'cup_noodles', brand:'Payless', unit:'piece', packageSize:'55g', quantity:20, costPrice:15, sellingPrice:16.5, lowStockThreshold:5 },
+      // ── Instant & Dry Goods · Pasta (3) ──
+      { id:'s139', name:'Royal Spaghetti', category:'instant_dry_goods', subcategory:'pasta', brand:'Royal', unit:'pack', packageSize:'500g', quantity:20, costPrice:35, sellingPrice:38.5, lowStockThreshold:5 },
+      { id:'s140', name:'San Remo Spaghetti', category:'instant_dry_goods', subcategory:'pasta', brand:'San Remo', unit:'pack', packageSize:'500g', quantity:20, costPrice:40, sellingPrice:44, lowStockThreshold:5 },
+      { id:'s141', name:'Del Monte Spaghetti', category:'instant_dry_goods', subcategory:'pasta', brand:'Del Monte', unit:'pack', packageSize:'500g', quantity:20, costPrice:38, sellingPrice:41.8, lowStockThreshold:5 },
+
     ];
   }
 
@@ -2204,6 +2496,92 @@
       state.products = getSampleProducts();
     } else if (state.products[0] && /^p\d+$/.test(state.products[0].id)) {
       state.products = getSampleProducts();
+    } else {
+      // R1+R3 fix: detect stale s* DB (missing fields, unknown category, or a
+      // subcategory that doesn't belong to its category) and repair it in place
+      // (merge-and-correct). Wherever a stored sample row carries an invalid or
+      // missing category/subcategory we restore the correct 12-key value from
+      // the same-id sample so the taxonomy drill-down always matches; other
+      // descriptive fields are only back-filled when missing so user edits and
+      // genuinely custom (non-sample) products are preserved.
+      try {
+        var _sample = getSampleProducts();
+        var _hasStale = false;
+        var _catSet = {};
+        PRODUCT_CATEGORIES.forEach(function(k){ _catSet[k]=true; });
+        _catSet[''] = true;
+        // Valid subcategory membership per category (used to spot mis-tagged rows).
+        var _subByCat = {};
+        Object.keys(PRODUCT_SUBCATEGORIES).forEach(function(cat){
+          var m = {}; _subByCat[cat]=m;
+          PRODUCT_SUBCATEGORIES[cat].forEach(function(sk){ m[sk]=true; });
+        });
+        for (var _i=0; _i < state.products.length; _i++) {
+          var _p = state.products[_i];
+          if (_p.category===undefined || _p.subcategory===undefined || _p.brand===undefined || _p.unit===undefined || _p.packageSize===undefined) { _hasStale=true; break; }
+          if (_p.category && !_catSet[_p.category]) { _hasStale=true; break; }
+          // Subcategory must exist AND belong to the product's category.
+          if (_p.subcategory && _p.category && !(_subByCat[_p.category] && _subByCat[_p.category][_p.subcategory])) { _hasStale=true; break; }
+        }
+        if (!_hasStale && state.products.length>0 && state.products.length < Math.floor(_sample.length*0.3)) {
+          var _idSet={}; state.products.forEach(function(p){ _idSet[p.id]=true; });
+          var _missing=0; _sample.forEach(function(p){ if(!_idSet[p.id]) _missing++; });
+          if (_missing > _sample.length*0.7) _hasStale=true;
+        }
+        if (_hasStale) {
+          var _byId={}; state.products.forEach(function(p){ _byId[p.id]=p; });
+          var _merged=[];
+          var _repaired = false;
+          _sample.forEach(function(sp){
+            if (_byId[sp.id]) {
+              var _ep=_byId[sp.id];
+              var _before = (_ep.category||'') + '|' + (_ep.subcategory||'');
+              // Category: restore when missing OR not a valid 12-key value.
+              if (!_ep.category || (_ep.category && !_catSet[_ep.category])) _ep.category = sp.category;
+              // Subcategory: restore when missing OR not valid within the (corrected) category.
+              if (!_ep.subcategory || (_subByCat[_ep.category] && !_subByCat[_ep.category][_ep.subcategory])) _ep.subcategory = sp.subcategory;
+              // Back-fill remaining descriptive fields only when missing.
+              if (_ep.brand===undefined) _ep.brand=sp.brand;
+              if (_ep.unit===undefined) _ep.unit=sp.unit;
+              if (_ep.packageSize===undefined) _ep.packageSize=sp.packageSize;
+              var _after = (_ep.category||'') + '|' + (_ep.subcategory||'');
+              if (_before !== _after) _repaired = true;
+              _merged.push(_ep); delete _byId[sp.id];
+            } else { _merged.push(sp); }
+          });
+          Object.keys(_byId).forEach(function(k){ _merged.push(_byId[k]); });
+          state.products=_merged;
+          // Only write back when a stale row actually got corrected.
+          if (_repaired) {
+            try{ localStorage.setItem('sss_v3_products', JSON.stringify(state.products)); }catch(e){}
+          }
+        }
+      } catch(e){}
+      // R1+R4 fix: append new sample products (s121-s225) that were added to the
+      // 225-product catalog but are absent from an existing (non-stale) s* store.
+      // The merge-above only runs when the store is "stale", so a healthy 120-item
+      // store never received the newly introduced rows. This step ONLY appends the
+      // newly-added sample rows (ids s121+) that are missing; it never re-adds an
+      // old product a user deliberately deleted (those ids are <= s120) and never
+      // overwrites user edits or custom products already present.
+      try {
+        var __sample = getSampleProducts();
+        var __have = {};
+        state.products.forEach(function(p){ if (p && p.id) __have[p.id]=true; });
+        var __newAdded = false;
+        __sample.forEach(function(sp){
+          var __n = sp.id && /^s(\d+)$/.exec(sp.id);
+          if (!__n) return;
+          if (Number(__n[1]) > 120 && !__have[sp.id]) {
+            state.products.push(sp);
+            __have[sp.id] = true;
+            __newAdded = true;
+          }
+        });
+        if (__newAdded) {
+          try{ localStorage.setItem('sss_v3_products', JSON.stringify(state.products)); }catch(e){}
+        }
+      } catch(e){}
     }
 
     // ── Legacy debt migration: ensure createdAt, updatedAt, transactions ──
@@ -2480,6 +2858,20 @@
         if (restockDesc) restockDesc.textContent = days + ' day(s) since restock. Tap to check inventory!';
       }
     }
+    // ML urgent-restock card (Stage 4) — top restocks to buy, 7-day window.
+    var fcCard = document.getElementById('morningForecastCard');
+    if (fcCard) {
+      var urgentHtml = '';
+      if (window.ForecastEngine) {
+        try {
+          var fcSales = window.ForecastEngine.buildAllSalesFromWeb(state);
+          var urgent = window.ForecastEngine.urgentRestocks(state.products, fcSales, todayStr(), 7, 5);
+          urgentHtml = forecastUrgentCardHtml(urgent, 'forecastRestockSoonTitle', 'forecastRestockSoonDesc');
+        } catch(e) { urgentHtml = ''; }
+      }
+      fcCard.innerHTML = urgentHtml;
+      fcCard.style.display = urgentHtml ? '' : 'none';
+    }
     updateHeader();
   }
 
@@ -2721,51 +3113,131 @@
     window.location.href = dest;
   }
 
+  window.checkoutSelectedCategory = '';
+  window.checkoutSelectedSubcategory = '';
+  var checkoutSelectedCategory = window.checkoutSelectedCategory;
+  var checkoutSelectedSubcategory = window.checkoutSelectedSubcategory;
+  window.__checkoutFilter = {
+    getCategory: function(){ return checkoutSelectedCategory; },
+    getSub: function(){ return checkoutSelectedSubcategory; },
+    setCategory: function(v){ checkoutSelectedCategory = v; window.checkoutSelectedCategory = v; },
+    setSub: function(v){ checkoutSelectedSubcategory = v; window.checkoutSelectedSubcategory = v; }
+  };
+  window.clearCheckoutProductSelection = function(silent){
+    var _prev='';
+    try{ _prev = state.selectedProduct && state.selectedProduct.name || ''; }catch(e){}
+    try{ state.selectedProduct = null; }catch(e){}
+    try{
+      if(dom.saleProductName){
+        var _cur = dom.saleProductName.value;
+        var _focused=false;
+        try{ _focused=(document.activeElement===dom.saleProductName); }catch(e){}
+        var _sm=false;
+        try{ var _sc=document.getElementById('checkoutSearchControl'); _sm=_sc && _sc.classList.contains('search-mode'); }catch(e){}
+        if(silent && _cur && _focused && _sm && (!_prev || _cur!==_prev)){
+        } else { dom.saleProductName.value=''; }
+        if(silent && _focused && _sm){ try{ dom.saleProductName.focus(); }catch(e){} }
+      }
+    }catch(e){}
+    try{ if(dom.saleStockHint) dom.saleStockHint.textContent = ''; }catch(e){}
+    try{ if(dom.saleQty) dom.saleQty.value = '1'; }catch(e){}
+    try{ if(dom.productSuggestions && !silent) dom.productSuggestions.classList.remove('open'); }catch(e){}
+    try{ var qs=document.querySelector('.qty-selector'); if(qs) qs.classList.add('disabled'); }catch(e){}
+    try{ updateSaleTotal(); }catch(e){}
+  };
+
+  // Shared bilingual hay builder — single source for checkout + inventory search.
+  // Covers name + categoryEn/Fil + subcategoryEn/Fil + brand + unitEn/Fil + packageSize.
+  // Keeps checkout suggestions === inventory list for same q/cat/sub (bilingual "pampalasa"/"condiments").
+  function buildProductSearchHay(p) {
+    var hay = p.name ? p.name.toLowerCase() : '';
+    if (p.category) {
+      var _ck = p.category;
+      var _catMap = {pantry_staples:'catPantryStaples',canned_goods:'catCannedGoods',instant_dry_goods:'catInstantDryGoods',snacks_sweets:'catSnacksSweets',beverages:'catBeverages',dairy_refrigerated:'catDairyRefrigerated',fresh_section:'catFreshSection',liquor_wine:'catLiquorWine',personal_care:'catPersonalCare',household_care:'catHouseholdCare',baby_care:'catBabyCare',paper_sanitary:'catPaperSanitary'};
+      var _catKey = _catMap[_ck] || 'catOther';
+      hay += ' ' + _ck.toLowerCase();
+      try { if (strings.en[_catKey]) hay += ' ' + strings.en[_catKey].toLowerCase(); } catch(e){}
+      try { if (strings.fil[_catKey]) hay += ' ' + strings.fil[_catKey].toLowerCase(); } catch(e){}
+      try { var _cur = productCategoryLabel(_ck).toLowerCase(); if (_cur && hay.indexOf(_cur)===-1) hay += ' ' + _cur; } catch(e){}
+    }
+    if (p.subcategory) {
+      var _sk = p.subcategory;
+      var _subMap = {rice:'subRice',cooking_oil:'subCookingOil',sugar:'subSugar',salt:'subSalt',vinegar:'subVinegar',bread:'subBread',sardines:'subSardines',corned_beef:'subCornedBeef',tuna:'subTuna',meat_loaf:'subMeatLoaf',sausage:'subSausage',instant_noodles:'subInstantNoodles',cup_noodles:'subCupNoodles',pasta:'subPasta',soup_mixes:'subSoupMixes',chips:'subChips',crackers:'subCrackers',candies:'subCandies',chocolates:'subChocolates',cookies:'subCookies',coffee_mix:'subCoffeeMix',powdered_milk:'subPowderedMilk',chocolate_drink:'subChocolateDrink',juice:'subJuice',soft_drinks:'subSoftDrinks',bottled_water:'subBottledWater',cheese:'subCheese',butter:'subButter',margarine:'subMargarine',chilled_meats:'subChilledMeats',fresh_meat:'subFreshMeat',fresh_seafood:'subFreshSeafood',fruits:'subFruits',vegetables:'subVegetables',eggs:'subEggs',beer:'subBeer',gin:'subGin',brandy:'subBrandy',wine:'subWine',cigarettes:'subCigarettes',shampoo:'subShampoo',conditioner:'subConditioner',bath_soap:'subBathSoap',toothpaste:'subToothpaste',toothbrush:'subToothbrush',lotion:'subLotion',cosmetics:'subCosmetics',laundry:'subLaundry',fabric_softener:'subFabricSoftener',dishwashing:'subDishwashing',cleaners:'subCleaners',trash_bags:'subTrashBags',mosquito_control:'subMosquitoControl',diapers:'subDiapers',baby_wipes:'subBabyWipes',baby_toiletries:'subBabyToiletries',tissue:'subTissue',paper_towels:'subPaperTowels',sanitary_pads:'subSanitaryPads'};
+      var _subKey = _subMap[_sk];
+      hay += ' ' + _sk.toLowerCase();
+      if (_subKey) {
+        try { if (strings.en[_subKey]) hay += ' ' + strings.en[_subKey].toLowerCase(); } catch(e){}
+        try { if (strings.fil[_subKey]) hay += ' ' + strings.fil[_subKey].toLowerCase(); } catch(e){}
+      }
+      try { var _curSub = productSubcategoryLabel(_sk).toLowerCase(); if (_curSub && hay.indexOf(_curSub)===-1) hay += ' ' + _curSub; } catch(e){}
+    }
+    if (p.brand) hay += ' ' + p.brand.toLowerCase();
+    if (p.unit) {
+      var _uk = p.unit;
+      var _unitMap = {piece:'unitPiece',sachet:'unitSachet',pack:'unitPack',box:'unitBox',bottle:'unitBottle',can:'unitCan',kg:'unitKg',g:'unitG',L:'unitL',mL:'unitMl',bundle:'unitBundle',dozen:'unitDozen',sack:'unitSack',loaf:'unitLoaf',tube:'unitTube',bar:'unitBar',sticks:'unitSticks'};
+      var _unitKey = _unitMap[_uk] || _uk;
+      hay += ' ' + _uk.toLowerCase();
+      try { if (strings.en[_unitKey]) hay += ' ' + strings.en[_unitKey].toLowerCase(); } catch(e){}
+      try { if (strings.fil[_unitKey]) hay += ' ' + strings.fil[_unitKey].toLowerCase(); } catch(e){}
+      try { var _curU = productUnitLabel(_uk).toLowerCase(); if (_curU && hay.indexOf(_curU)===-1) hay += ' ' + _curU; } catch(e){}
+    }
+    if (p.packageSize) hay += ' ' + p.packageSize.toLowerCase();
+    return hay;
+  }
+
+  function getCheckoutFilteredProducts(query, category, subcategory) {
+    // allow direct window mutations to feed closure (bridge)
+    try { if (!category && !subcategory && typeof window.checkoutSelectedCategory === 'string') { category = window.checkoutSelectedCategory; subcategory = window.checkoutSelectedSubcategory; checkoutSelectedCategory = category; checkoutSelectedSubcategory = subcategory; } } catch(e){}
+    var byCategory;
+    if (subcategory) byCategory = state.products.filter(function(p){ return p.subcategory === subcategory; });
+    else if (category) byCategory = state.products.filter(function(p){ return p.category === category; });
+    else byCategory = state.products;
+    if (!query) return byCategory;
+    var q = query.toLowerCase();
+    return byCategory.filter(function(p){ return buildProductSearchHay(p).includes(q); });
+  }
   function onProductSearch() {
+    // sync checkout window -> closure (morph bridge)
+    try { if (typeof window.checkoutSelectedCategory === 'string') checkoutSelectedCategory = window.checkoutSelectedCategory; if (typeof window.checkoutSelectedSubcategory === 'string') checkoutSelectedSubcategory = window.checkoutSelectedSubcategory; } catch(e){}
     if (!dom.saleProductName || !dom.productSuggestions) return;
     var query = dom.saleProductName.value.toLowerCase().trim();
-    if (!query) {
+    var hasCategory = !!(checkoutSelectedCategory || checkoutSelectedSubcategory);
+    if (!query && !hasCategory) {
       dom.productSuggestions.classList.remove('open');
       return;
     }
-    var matches = state.products.filter(function(p) {
-      // v2.59 cleanup: search covers ALL product identity fields (name,
-      // category, brand, unit, package size) — not just the name — so an
-      // owner can find products by category (e.g. "condiments"), brand, or size.
-      var hay = p.name.toLowerCase();
-      if (p.category) hay += ' ' + p.category.toLowerCase() + ' ' + productCategoryLabel(p.category).toLowerCase();
-      if (p.brand) hay += ' ' + p.brand.toLowerCase();
-      if (p.unit) hay += ' ' + p.unit.toLowerCase() + ' ' + productUnitLabel(p.unit).toLowerCase();
-      if (p.packageSize) hay += ' ' + p.packageSize.toLowerCase();
-      return hay.includes(query);
-    });
-    // Prioritize sellable items so out-of-stock rows never crowd the
-    // in-stock ones out of the visible 6 (v2.58 review fix).
+    var matches = getCheckoutFilteredProducts(query, checkoutSelectedCategory, checkoutSelectedSubcategory);
+    // Stage 5 — Checkout vs Inventory vs Native trichotomy:
+    // Inventory (renderManageInventory): no cap, alpha sort localeCompare.
+    // Checkout (here): cap 8 + outOfStockLast, matching the native CheckoutScreen
+    // suggestions card (filteredProducts … .take(8)), which shows no overflow row.
     matches.sort(function(a, b) {
       var ao = a.quantity <= 0 ? 1 : 0;
       var bo = b.quantity <= 0 ? 1 : 0;
-      return ao - bo;
+      return (ao - bo) || a.name.localeCompare(b.name);
     });
-    matches = matches.slice(0, 6);
-
+    matches = matches.slice(0, 8);
     if (matches.length === 0) {
       dom.productSuggestions.classList.remove('open');
       return;
     }
-
+    // Row markup mirrors the native suggestions card: name, brand·size subline,
+    // a colour-coded stock line (⛔ / ⚠️ N left / ✅ N left) and the price.
     dom.productSuggestions.innerHTML = matches.map(function(p) {
       var status = getStockStatus(p);
       var out = status === 'out';
-      // Out-of-stock items are shown but NOT selectable (v2.58) — tapping
-      // them only flashes the "no stock" toast.
+      var low = status === 'low';
       var click = out ? 'window.selectProductOutOfStock()' : 'window.selectProduct(\'' + p.id + '\')';
-      // Brand · size sub-line so variants are distinguishable at a glance
       var subline = productSubline(p);
+      var stock = out
+        ? '<div class="product-suggestion-stock out">\u26d4 ' + t('noStock') + '</div>'
+        : '<div class="product-suggestion-stock ' + (low ? 'low' : 'ok') + '">' +
+            (low ? '\u26a0\ufe0f ' : '\u2705 ') + p.quantity + ' left</div>';
       return '<div class="product-suggestion-item' + (out ? ' disabled' : '') + '" onclick="' + click + '">' +
-        '<div>' +
+        '<div class="product-suggestion-info">' +
           '<div class="product-suggestion-name">' + p.name + '</div>' +
           (subline ? '<div class="product-suggestion-brand">' + subline + '</div>' : '') +
-          '<div class="product-suggestion-stock">' + (out ? t('noStock') : p.quantity + ' left') + '</div>' +
+          stock +
         '</div>' +
         '<div class="product-suggestion-price">' + formatCurrency(p.sellingPrice) + '</div>' +
       '</div>';
@@ -2784,6 +3256,7 @@
     state.selectedProduct = product;
     if (dom.saleProductName) dom.saleProductName.value = product.name;
     if (dom.productSuggestions) dom.productSuggestions.classList.remove('open');
+    try { if (window.__checkoutCloseDropdown) window.__checkoutCloseDropdown(); } catch(e){}
     // Enable qty-selector now that a product is selected
     var qtySelector = document.querySelector('.qty-selector');
     if (qtySelector) qtySelector.classList.remove('disabled');
@@ -2943,6 +3416,26 @@
   function addToCart() {
     var product = state.selectedProduct;
     if (!product) {
+      try{
+        var hasFilter = !!(checkoutSelectedCategory || checkoutSelectedSubcategory || window.checkoutSelectedCategory || window.checkoutSelectedSubcategory);
+        if(hasFilter){
+          if(typeof onProductSearch==='function') onProductSearch();
+          try{ var _ps=document.getElementById('productSuggestions'); if(_ps && !_ps.classList.contains('open')){ _ps.classList.add('open'); setTimeout(function(){ try{ _ps.scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(_){} },60); } else if(_ps){ setTimeout(function(){ try{ _ps.scrollIntoView({behavior:'smooth',block:'nearest'}); }catch(_){} },60); } }catch(_){}
+          var lbl='';
+          try{ var sub=window.checkoutSelectedSubcategory||checkoutSelectedSubcategory; var cat=window.checkoutSelectedCategory||checkoutSelectedCategory; if(sub) lbl=productSubcategoryLabel(sub); else if(cat) lbl=productCategoryLabel(cat); }catch(e){}
+          if(lbl) {
+            try{
+              var _q2 = (dom.saleProductName && dom.saleProductName.value || '').toLowerCase().trim();
+              var _c2 = checkoutSelectedCategory || window.checkoutSelectedCategory || '';
+              var _s2 = checkoutSelectedSubcategory || window.checkoutSelectedSubcategory || '';
+              var _m2 = typeof getCheckoutFilteredProducts==='function' ? getCheckoutFilteredProducts(_q2, _c2, _s2) : [];
+              if(_m2 && _m2.length===0){ showToast(t('noProductsInList', {label: lbl}), 'error'); return; }
+            }catch(e){}
+            showToast(t('selectFromList', {label: lbl}), 'error');
+            return;
+          }
+        }
+      }catch(e){}
       showToast(t('selectProductFirst'), 'error');
       return;
     }
@@ -3415,13 +3908,19 @@
   // Inventory category filter ('' = all). Persisted so the filter survives
   // page navigation within the tab (matches the report-period pattern).
   var inventoryCatFilter = '';
+  // Inventory subcategory drill-down ('' = all within the selected category).
+  // Set by the search-control dropdown; cleared whenever the category chip changes.
+  var inventorySubcatFilter = '';
   function loadInventoryCatFilter() {
     try { inventoryCatFilter = sessionStorage.getItem('sss_v3_inventoryCat') || ''; } catch(e) { inventoryCatFilter = ''; }
+    try { inventorySubcatFilter = sessionStorage.getItem('sss_v3_inventorySubcat') || ''; } catch(e) { inventorySubcatFilter = ''; }
   }
   function saveInventoryCatFilter() {
     try {
       if (inventoryCatFilter) sessionStorage.setItem('sss_v3_inventoryCat', inventoryCatFilter);
       else sessionStorage.removeItem('sss_v3_inventoryCat');
+      if (inventorySubcatFilter) sessionStorage.setItem('sss_v3_inventorySubcat', inventorySubcatFilter);
+      else sessionStorage.removeItem('sss_v3_inventorySubcat');
     } catch(e) {}
   }
 
@@ -3508,34 +4007,296 @@
 
   function setInventoryCatFilter(cat) {
     inventoryCatFilter = cat;
+    // A new category chip invalidates the previous subcategory drill-down.
+    inventorySubcatFilter = '';
     saveInventoryCatFilter();
     renderInventoryCatFilters();
     renderManageInventory();
   }
+
+  // Subcategory drill-down from the search-control dropdown (checkout parity).
+  function setInventorySubcatFilter(subcat) {
+    inventorySubcatFilter = subcat || '';
+    saveInventoryCatFilter();
+    renderManageInventory();
+  }
+
+  // ─── Demand Forecast sort (offline ML) ───
+  // When enabled, the inventory list is ordered by learned restock urgency
+  // (predictedDaysUntilOut ascending — out-of-stock / soon-to-run-out first)
+  // instead of by name. Persisted so the choice survives page navigation
+  // within the tab, matching the category-filter pattern.
+  var inventoryForecastSort = false;
+  function loadInventoryForecastSort() {
+    // Read from localStorage (long-lived) first; fall back to sessionStorage for
+    // back-compat with the old tab-only preference.
+    try {
+      inventoryForecastSort = localStorage.getItem('sss_v3_inventoryForecastSort') === '1';
+    } catch(e) {}
+    if (inventoryForecastSort === false) {
+      try {
+        inventoryForecastSort = sessionStorage.getItem('sss_v3_inventoryForecastSort') === '1';
+      } catch(e) {}
+    }
+  }
+  function saveInventoryForecastSort() {
+    try {
+      // Write to localStorage (survives full browser close/reload) and sessionStorage
+      // (back-compat). Use '' removal on both so a full reset clears both keys.
+      if (inventoryForecastSort) {
+        localStorage.setItem('sss_v3_inventoryForecastSort', '1');
+        sessionStorage.setItem('sss_v3_inventoryForecastSort', '1');
+      } else {
+        localStorage.removeItem('sss_v3_inventoryForecastSort');
+        sessionStorage.removeItem('sss_v3_inventoryForecastSort');
+      }
+    } catch(e) {}
+  }
+  function toggleInventoryForecastSort() {
+    inventoryForecastSort = !inventoryForecastSort;
+    saveInventoryForecastSort();
+    renderManageInventory();
+  }
+  window.toggleInventoryForecastSort = toggleInventoryForecastSort;
+
+  // Renders the "Sort by Forecast" toggle row shown above the inventory list.
+  function renderInventoryForecastToggle() {
+    if (!dom.inventoryListToolbar) return;
+    var on = !!inventoryForecastSort;
+    dom.inventoryListToolbar.innerHTML =
+      '<button class="inventory-sort-toggle' + (on ? ' active' : '') + '" onclick="toggleInventoryForecastSort()" type="button">' +
+        '\ud83d\udd2e <span>' + t('forecastSortOff') + '</span>' +
+      '</button>';
+  }
+
+  // Forecast badge for one product — mirrors the mobile ForecastBadge.kt:
+  //   INSUFFICIENT / no-demand  -> gray "Collecting data…" / "No demand"
+  //   out-of-stock / out-today  -> red
+  //   days <= 3 red, <= 7 amber, else green ("{n}d left • Avg x/day")
+  function forecastBadgeHtml(result) {
+    if (!result) return '';
+    var engine = window.ForecastEngine;
+    var confInsufficient = (engine && engine.CONF && engine.CONF.INSUFFICIENT) || 'INSUFFICIENT';
+    var minAvg = (engine && engine.MIN_AVG_THRESHOLD) || 0.15;
+    var days = result.predictedDaysUntilOut;
+    var html;
+    if (result.confidence === confInsufficient) {
+      html = '<span class="inv-forecast-badge fc-gray">' + t('forecastInsufficientData') + '</span>';
+    } else if (result.avgDaily < minAvg) {
+      html = '<span class="inv-forecast-badge fc-gray">' + t('forecastNoDemand') + '</span>';
+    } else if (result.currentStock <= 0) {
+      html = '<span class="inv-forecast-badge fc-red">' + t('forecastOutOfStock') + '</span>';
+    } else if (days == null) {
+      html = '<span class="inv-forecast-badge fc-gray">' + t('forecastNoDemand') + '</span>';
+    } else if (days === 0) {
+      html = '<span class="inv-forecast-badge fc-red">' + t('forecastOutToday') + '</span>';
+    } else {
+      var daysText = t('forecastDaysLeftShort').replace('{n}', days);
+      var avgText = t('forecastAvgPerDay').replace('{n}', result.avgDaily.toFixed(1));
+      var cls = days <= 3 ? 'fc-red' : (days <= 7 ? 'fc-amber' : 'fc-green');
+      html = '<span class="inv-forecast-badge ' + cls + '">' + daysText + ' \u2022 ' + avgText + '</span>';
+    }
+    return '\ud83d\udd2e ' + html;
+  }
+
+  // Urgency rank for sorting — a numeric, monotonic "risk" key derived from the
+  // forecast. Lower = more urgent (appears first). Non-demanded / cold-start
+  // items are deprioritised behind any item that will actually run out.
+  function forecastUrgencyRank(result) {
+    if (!result) return 1e9;
+    if (result.currentStock <= 0) return 0;                        // out of stock
+    if (result.predictedDaysUntilOut == null) return 1e9;          // no demand / collecting
+    return result.predictedDaysUntilOut;                           // days until out (ascending)
+  }
+
+  // Numeric rank for stock status — mirrors mobile StocksScreen.kt statusRank:
+  //   out-of-stock(0) < LOW(1) < PLENTY(2) — lower ranks sort first.
+  function stkRank(status) {
+    if (status === 'out')  return 0;
+    if (status === 'low')  return 1;
+    return 2; // 'plenty' or unknown
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // Stage 4 — Forecast detail card (Product Detail) + urgent-restock
+  // cards (Morning 7d / Reports 14d). Reuses the real engine; safe
+  // no-ops whenever forecast.js isn't loaded or the engine throws.
+  // ────────────────────────────────────────────────────────────────
+  function _fcConfChip(conf) {
+    if (conf === 'HIGH') return { label: t('forecastConfidenceHigh'), color: '#16a34a', bg: '#f0fdf4' };
+    if (conf === 'MEDIUM') return { label: t('forecastConfidenceMedium'), color: '#d97706', bg: '#fffbeb' };
+    if (conf === 'LOW') return { label: t('forecastConfidenceLow'), color: '#475569', bg: '#f8fafc' };
+    return { label: t('forecastInsufficientData'), color: '#64748b', bg: '#f1f5f9' };
+  }
+
+  function _fcBarColor(days) {
+    if (days != null && days <= 3) return '#dc2626';   // red   (<=3d)
+    if (days != null && days <= 7) return '#d97706';   // amber (<=7d)
+    return '#16a34a';                                  // green
+  }
+
+  // Mini 7-bar history sparkline from result.dailyHistory (oldest → newest).
+  function _fcMiniBarsHtml(result) {
+    var hist = result.dailyHistory || [];
+    var dates = result.dailyDates || [];
+    var max = 0, i;
+    for (i = 0; i < hist.length; i++) if (hist[i] > max) max = hist[i];
+    var barColor = _fcBarColor(result.predictedDaysUntilOut);
+    var bars = '';
+    for (i = 0; i < 7; i++) {
+      var v = (i < hist.length) ? hist[i] : 0;
+      var h = (max > 0 && v > 0) ? Math.max(5, Math.round((v / max) * 100)) : 5;
+      var op = v === 0 ? 0.15 : 0.9;
+      var label = (i < dates.length) ? dates[i].slice(5).replace('-', '/') : '';
+      bars += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;" title="' + (label || '') + '">' +
+        '<div style="width:100%;max-width:18px;height:' + h + 'px;background:' + barColor + ';opacity:' + op + ';border-radius:3px;"></div>' +
+        (i === 0 || i === 6 ? '<span style="font-size:9px;color:#94a3b8;">' + esc(label) + '</span>' : '<span style="font-size:9px;">&nbsp;</span>') +
+      '</div>';
+    }
+    return '<div style="display:flex;align-items:flex-end;gap:4px;height:52px;padding:8px 0;">' + bars + '</div>';
+  }
+
+  // Stats row: Avg / EMA / Trend (each to 1 decimal).
+  function _fcStatRowHtml(result) {
+    function st(label, val) {
+      return '<div style="flex:1;text-align:center;"><div style="font-size:var(--text-xs);color:#94a3b8;">' + label + '</div>' +
+        '<div style="font-weight:700;color:#1e293b;font-size:var(--text-sm);">' + val.toFixed(1) + '</div></div>';
+    }
+    return '<div style="display:flex;background:#f8fafc;border-radius:10px;padding:8px 4px;margin-top:4px;">' +
+      st(t('forecastAvgLabel'), result.avgDaily) +
+      st(t('forecastEmaLabel'), result.emaDaily) +
+      st(t('forecastTrendLabel'), result.trendDaily) +
+    '</div>';
+  }
+
+  // Whether the engine has enough demand to show a real prediction.
+  function _fcHasPrediction(result, engine) {
+    if (!result) return false;
+    var minAvg = (engine && engine.MIN_AVG_THRESHOLD != null) ? engine.MIN_AVG_THRESHOLD : 0.15;
+    return result.confidence !== 'INSUFFICIENT' && result.avgDaily >= minAvg;
+  }
+
+  // Full ForecastDetailCard HTML used by Product Detail.
+  function forecastDetailCardHtml(result, product) {
+    if (!result || !window.ForecastEngine) return '';
+    var engine = window.ForecastEngine;
+    var chip = _fcConfChip(result.confidence);
+
+    var predHtml;
+    if (!_fcHasPrediction(result, engine)) {
+      predHtml = '<div style="background:#f1f5f9;border-radius:10px;padding:10px;text-align:center;">' +
+        '<div style="font-weight:700;color:#475569;font-size:var(--text-sm);">' + t('forecastInsufficientData') + '</div>' +
+        '<div style="font-size:var(--text-xs);color:#94a3b8;margin-top:2px;">' + t('forecastInsufficientHint') + '</div></div>';
+    } else {
+      var days = result.predictedDaysUntilOut;
+      var daysText;
+      if (days == null) daysText = t('forecastNoDemand');
+      else if (days === 0) daysText = t('forecastOutToday');
+      else daysText = t('forecastDaysLeftFull', { n: days });
+      var daysColor = _fcBarColor(days);
+      predHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:10px;background:#f8fafc;border-radius:10px;">' +
+        '<div><div style="font-size:var(--text-xs);color:#94a3b8;">' + t('forecastAvgLabel') + ' ' + result.avgDaily.toFixed(1) + '/day</div>' +
+        '<div style="font-weight:700;color:' + daysColor + ';font-size:var(--text-md);">' + daysText + '</div></div>' +
+        '<div style="text-align:right;"><div style="font-size:var(--text-xs);color:#94a3b8;">' + t('forecastSuggestedRestock', { n: result.suggestedRestockQty }) + '</div>' +
+        '<div style="font-weight:700;color:#16a34a;">' + t('forecastFor7Days') + '</div></div>' +
+      '</div>';
+    }
+
+    var methodLine = t('forecastMethod') + ' \u00b7 ' + t('forecastHistory');
+
+    return '<div style="background:linear-gradient(135deg,#f0f9ff,#eff6ff);border:1px solid #bfdbfe;border-radius:12px;padding:16px;margin-bottom:16px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+        '<div style="font-weight:700;color:#1e3a8a;">\ud83d\udd2e ' + t('forecastDetailTitle') + '</div>' +
+        '<span style="font-size:var(--text-xs);font-weight:700;color:' + chip.color + ';background:' + chip.bg + ';padding:3px 8px;border-radius:999px;text-transform:uppercase;">' + chip.label + '</span>' +
+      '</div>' +
+      '<div style="font-size:var(--text-xs);color:#64748b;margin-bottom:4px;">' + methodLine + '</div>' +
+      _fcMiniBarsHtml(result) +
+      _fcStatRowHtml(result) +
+      predHtml +
+      '<div style="margin-top:10px;display:flex;gap:8px;">' +
+        '<a href="restock.html" class="btn btn-primary" style="flex:1;text-decoration:none;font-size:var(--text-sm);">\ud83d\ude9a ' + t('restockBtn') + '</a>' +
+      '</div>' +
+      '<div style="margin-top:10px;font-size:10px;color:#94a3b8;text-align:center;">' + t('forecastHowItWorks') + '</div>' +
+    '</div>';
+  }
+
+  // Item row shared by Morning (7d) and Reports (14d) urgent cards.
+  function _fcUrgentRowHtml(item) {
+    var r = item.result;
+    var days = r.predictedDaysUntilOut;
+    var daysText, dot;
+    if (days === 0)            { daysText = t('forecastUrgentOutToday');   dot = '#dc2626'; }
+    else if (r.currentStock <= 0) { daysText = t('forecastUrgentOutOfStock'); dot = '#dc2626'; }
+    else                       { daysText = t('forecastDaysLeftShort', { n: days }); dot = (days <= 3) ? '#dc2626' : '#d97706'; }
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f1f5f9;">' +
+      '<span style="width:9px;height:9px;border-radius:50%;background:' + dot + ';flex-shrink:0;"></span>' +
+      '<div style="flex:1;min-width:0;"><div style="font-size:var(--text-sm);color:#1e293b;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + esc(r.productName || item.product.name) + '</div>' +
+        '<div style="font-size:var(--text-xs);color:#94a3b8;">' + daysText + ' \u00b7 ' + t('forecastAvgPerDay', { n: r.avgDaily.toFixed(1) }) + '</div></div>' +
+      '<span style="font-size:var(--text-xs);font-weight:700;color:#16a34a;white-space:nowrap;">+' + r.suggestedRestockQty + '</span>' +
+    '</div>';
+  }
+
+  // Urgent-restock card body (list of urgent rows) + header hint.
+  function forecastUrgentCardHtml(list, titleKey, descKey) {
+    if (!list || list.length === 0) return '';
+    var rows = list.map(_fcUrgentRowHtml).join('');
+    return '<div style="background:linear-gradient(135deg,#fff7ed,#fffbeb);border:1px solid #fed7aa;border-radius:12px;padding:16px;margin-bottom:12px;">' +
+      '<div style="font-weight:700;color:#7c2d12;margin-bottom:2px;">' + t(titleKey) + '</div>' +
+      '<div style="font-size:var(--text-xs);color:#b45309;margin-bottom:6px;">' + t(descKey) + '</div>' +
+      rows +
+    '</div>';
+  }
+
 
   function renderManageInventory() {
     if (!dom.manageInventoryList) return;
     var query = dom.manageStockSearch ? dom.manageStockSearch.value.toLowerCase() : '';
     var products = state.products;
     if (query) {
-      products = products.filter(function(p) {
-        // v2.59 cleanup: inventory search also matches category and unit,
-        // including their localized labels (e.g. "Pampalasa"), matching the
-        // sale-sheet search behavior.
-        return p.name.toLowerCase().includes(query) ||
-          (p.brand && p.brand.toLowerCase().includes(query)) ||
-          (p.packageSize && p.packageSize.toLowerCase().includes(query)) ||
-          (p.category && (p.category.toLowerCase().includes(query) ||
-            productCategoryLabel(p.category).toLowerCase().includes(query))) ||
-          (p.unit && (p.unit.toLowerCase().includes(query) ||
-            productUnitLabel(p.unit).toLowerCase().includes(query)));
-      });
+      products = products.filter(function(p){ return buildProductSearchHay(p).includes(query); });
     }
     // Category filter ('' = all) — products without a category only match 'all'.
     if (inventoryCatFilter) {
       products = products.filter(function(p) { return p.category === inventoryCatFilter; });
     }
-    products = products.slice().sort(function(a, b) { return a.name.localeCompare(b.name); });
+    // Subcategory drill-down ('' = all within the category).
+    if (inventorySubcatFilter) {
+      products = products.filter(function(p) { return p.subcategory === inventorySubcatFilter; });
+    }
+    // Offline demand forecast (Stage 2). Safe no-op when forecast.js isn't
+    // loaded or the engine is unavailable — the inventory renders as before.
+    var forecasts = null;
+    if (window.ForecastEngine) {
+      try {
+        var allSales = window.ForecastEngine.buildAllSalesFromWeb(state);
+        forecasts = window.ForecastEngine.forecastAll(products, allSales, todayStr());
+      } catch(e) { forecasts = null; }
+    }
+
+    products = products.slice();
+    if (inventoryForecastSort && forecasts) {
+      // Sort by learned restock urgency (not quantity / not name).
+      products.sort(function(a, b) {
+        var ra = forecastUrgencyRank(forecasts[a.id]);
+        var rb = forecastUrgencyRank(forecasts[b.id]);
+        if (ra !== rb) return ra - rb;
+        return a.name.localeCompare(b.name); // stable tie-break
+      });
+    } else {
+      // Default = stock status → quantity ascending → name (mobile StocksScreen parity).
+      // stkRank: out=0, low=1, plenty=2.
+      products.sort(function(a, b) {
+        var sa = getStockStatus(a);
+        var sb = getStockStatus(b);
+        var ra = stkRank(sa);
+        var rb = stkRank(sb);
+        if (ra !== rb) return ra - rb;
+        if (a.quantity !== b.quantity) return a.quantity - b.quantity;
+        return a.name.localeCompare(b.name); // stable tie-break
+      });
+    }
+
+    renderInventoryForecastToggle();
 
     if (products.length === 0) {
       dom.manageInventoryList.innerHTML = '<div class="empty-state">' + t('noProducts') + '</div>';
@@ -3547,10 +4308,12 @@
       var icon = status === 'plenty' ? '\u2705' : (status === 'low' ? '\u26a0\ufe0f' : '\ud83d\udd34');
       var margin = p.costPrice > 0 ? Math.round(((p.sellingPrice - p.costPrice) / p.costPrice) * 100) : 0;
       var subline = productSubline(p);
+      var badge = forecasts ? forecastBadgeHtml(forecasts[p.id]) : '';
       return '<div class="inv-manage-item" onclick="location.href=\'product_detail.html?id=' + p.id + '\'" style="cursor:pointer;">' +
         '<div class="inv-manage-icon ' + status + '">' + icon + '</div>' +
         '<div class="inv-manage-info">' +
           '<div class="inv-manage-name">' + p.name + '</div>' +
+          (badge ? badge : '') +
           (subline ? '<div class="inv-manage-sub">' + subline + '</div>' : '') +
           '<div class="inv-manage-detail">Stock: ' + p.quantity + ' | +' + margin + '% | ' + formatCurrency(p.sellingPrice) + '</div>' +
         '</div>' +
@@ -4642,8 +5405,20 @@
     var detailsHtml = details.length ?
       '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">' + details.join('') + '</div>' : '';
 
+    // Offline demand-forecast detail card (Stage 4). Safe no-op when
+    // forecast.js isn't loaded or the engine is unavailable.
+    var forecastHtml = '';
+    if (window.ForecastEngine) {
+      try {
+        var fcAllSales = window.ForecastEngine.buildAllSalesFromWeb(state);
+        var fcResult = window.ForecastEngine.forecastForProduct(product, fcAllSales, todayStr(), 7);
+        forecastHtml = forecastDetailCardHtml(fcResult, product);
+      } catch(e) { forecastHtml = ''; }
+    }
+
     container.innerHTML =
       alertHtml +
+      forecastHtml +
       '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;">' +
         '<div style="display:flex;align-items:center;gap:14px;">' +
           '<div style="width:56px;height:56px;border-radius:10px;background:' + statusBg + ';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:' + statusColor + ';">' + product.quantity + '</div>' +
@@ -5100,6 +5875,7 @@
     var best = document.getElementById('reportBestSellers');
     var recent = document.getElementById('reportRecentTx');
     var low = document.getElementById('reportLowStock');
+    var urgent = document.getElementById('reportUrgent');
     var summaryLine = document.getElementById('reportSummary');
     var chart = document.getElementById('reportChart');
     var utang = document.getElementById('reportUtang');
@@ -5285,6 +6061,36 @@
           return '<div style="display:flex;justify-content:space-between;padding:6px 0;"><span>' + esc(p.name) + '</span><span style="color:' + (st2 === 'out' ? '#dc2626' : '#d97706') + ';font-weight:600;">' + val + '</span></div>';
         }).join('');
     low.innerHTML = reportCollapsibleCard(t('lowStockItems'), lowBody, 'reportLowStockBody');
+
+    // ML urgent-restock (Stage 4) — 14-day learning window + 14-day threshold.
+    // Computed inline (not via urgentRestocks) because urgentRestocks hardcodes
+    // the 7-day window; Reports deliberately uses a 2-week baseline.
+    if (urgent) {
+      urgent.innerHTML = '';
+      if (window.ForecastEngine) {
+        var urgentList = [];
+        try {
+          var fcRSales = window.ForecastEngine.buildAllSalesFromWeb(state);
+          var fcRAll = window.ForecastEngine;
+          for (var ui = 0; ui < state.products.length; ui++) {
+            var pu = state.products[ui];
+            var ru = fcRAll.forecastForProduct(pu, fcRSales, todayStr(), 14);
+            if (ru.confidence !== 'INSUFFICIENT' && ru.predictedDaysUntilOut != null && ru.predictedDaysUntilOut <= 14) {
+              urgentList.push({ product: pu, result: ru });
+            }
+          }
+          urgentList.sort(function(a, b) { return a.result.predictedDaysUntilOut - b.result.predictedDaysUntilOut; });
+          urgentList = urgentList.slice(0, 5);
+        } catch(e) { urgentList = []; }
+        if (urgentList.length > 0) {
+          urgent.innerHTML = reportCollapsibleCard(
+            t('forecastReportTitle') + (urgentList.length ? ' <span style="color:#dc2626;">(' + urgentList.length + ')</span>' : ''),
+            urgentList.map(_fcUrgentRowHtml).join(''),
+            'reportUrgentBody'
+          );
+        }
+      }
+    }
 
     // Stock health (value on shelves + slow movers)
     if (stock) {
@@ -5525,6 +6331,7 @@
       try { localStorage.removeItem('sss_v3_editProductId'); } catch(e) {}
       applyTranslations();
       loadInventoryCatFilter();
+      loadInventoryForecastSort();
       renderInventoryCatFilters();
       renderManageInventory();
       // Back-to-top: show when cat filters scroll out of view.
@@ -5537,8 +6344,7 @@
           var catRect = catFilters.getBoundingClientRect();
           var contentRect = content.getBoundingClientRect();
           btn.style.display = catRect.bottom < contentRect.top ? 'flex' : 'none';
-        });
-      })();
+        });})();
       // bfcache: Chrome's back/forward cache restores the frozen DOM with
       // stale quantities. DOMContentLoaded does not fire on restore, so
       // re-run loadState + render when the page comes back from bfcache.
@@ -5546,6 +6352,7 @@
         if (!ev.persisted) return;   // normal first load handled by init()
         loadState();
         loadInventoryCatFilter();
+        loadInventoryForecastSort();
         renderInventoryCatFilters();
         renderManageInventory();
         applyTranslations();
@@ -5757,6 +6564,7 @@
   window.savePayment = savePayment;
   window.renderManageInventory = renderManageInventory;
   window.setInventoryCatFilter = setInventoryCatFilter;
+  window.setInventorySubcatFilter = setInventorySubcatFilter;
   window.toggleCatFilters = toggleCatFilters;
   window.editProduct = editProduct;
   window.openAddProduct = openAddProduct;
@@ -5790,4 +6598,14 @@
   window.setSetupLanguage = setSetupLanguage;
   window.historyBack = historyBack;
 
-})();
+  // Bridge: expose checkout taxonomy to window for checkout_morph.js (IIFE scope)
+  try{window.PRODUCT_CATEGORIES=PRODUCT_CATEGORIES;}catch(e){}
+  try{window.PRODUCT_SUBCATEGORIES=PRODUCT_SUBCATEGORIES;}catch(e){}
+  try{window.PRODUCT_UNITS=PRODUCT_UNITS;}catch(e){}
+  try{window.productCategoryLabel=productCategoryLabel;}catch(e){}
+  try{window.productSubcategoryLabel=productSubcategoryLabel;}catch(e){}
+  try{window.t=t;}catch(e){}
+  try{ window.dispatchEvent(new CustomEvent('tindago:taxonomyReady')); }catch(e){}
+
+}
+)();

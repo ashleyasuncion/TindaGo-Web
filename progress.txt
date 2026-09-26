@@ -926,3 +926,178 @@ PENDING — SUPPORT EMAIL UPDATE
 - Current placeholder: support@tindago.com
 
 ================================================================================
+
+================================================================================
+V3.5d - Inventory Search-Control Taxonomy Fix (Stage 1 + 2)
+================================================================================
+Goal: Fix the Inventory search-control dropdown/filter mismatch by re-implementing
+it on the 12-key taxonomy (category + subcategory drill-down) with proper data
+migration and persistence.
+
+STAGE 1 - FIX DATA MIGRATION (root cause) - DONE
+--------------------------------------------------------------------------------
+Root cause: loadState() migration only back-filled *undefined* fields. Users with
+stale localStorage carrying defined-but-wrong taxonomy values (e.g. old hybrid
+category:'soft_drinks', or a subcategory not belonging to its category) were never
+corrected -> empty inventory list for the new 12-key drill-down.
+
+WHAT CHANGED (code) - app.js loadState() (lines ~2283-2350):
+  - Detection now flags a row as stale when its subcategory is missing OR does
+    not belong to its category (added per-category membership map _subByCat).
+  - Merge-and-correct (confirmed approach): for each stored row matching a built-in
+    sample by id, restore category when missing/invalid (12-key set) and restore
+    subcategory when missing/invalid within the corrected category; brand/unit/
+    packageSize still back-filled only when missing; custom non-sample products
+    are preserved untouched.
+  - localStorage is written back only when a stale row actually changed (_repaired).
+
+VERIFICATION (standalone Node harness, 6/6 assertions passed):
+  - Old hybrid data (category:'soft_drinks', no subcategory) -> corrected to
+    beverages/soft_drinks, user quantity preserved.
+  - Valid fresh data -> untouched, not re-persisted.
+  - Valid category but wrong subcategory (eggs on a beverage) -> corrected.
+  - Custom non-sample product preserved intact.
+
+FILES AFFECTED:
+  app.js
+
+STAGE 2 - FIX DROPDOWN LABEL DESYNC - DONE
+--------------------------------------------------------------------------------
+Root cause: inventory.html inline script initialized currentCategoryFilter /
+currentSubcatFilter to '' on every load, so a persisted filter (sessionStorage
+sss_v3_inventoryCat / sss_v3_inventorySubcat) was applied to the list by app.js
+but NOT reflected in the button label / dropdown active row.
+
+WHAT CHANGED (code) - inventory.html inline script init block:
+  - Initialize currentCategoryFilter / currentSubcatFilter from the same
+    sessionStorage keys app.js uses, with validation against the live 12-key
+    taxonomy (resolveCats / resolveSubs). Stale/unknown persisted values are
+    safely ignored so the UI always falls back coherently (All Categories).
+
+VERIFICATION (standalone Node harness, 5/5 assertions passed):
+  - Persisted cat+sub valid -> label shows "Soft Drinks".
+  - Persisted cat only -> label shows the category.
+  - Persisted sub invalid for its category -> sub ignored, label = category.
+  - Persisted unknown category (old taxonomy) -> ignored, label = All Categories.
+  - Nothing persisted -> All Categories.
+
+FILES AFFECTED:
+  inventory.html
+
+STAGE 3 - ACTIVE-ROW VISUAL HIGHLIGHT - DONE
+--------------------------------------------------------------------------------
+Root cause: render() already outputs the " active" class on the currently
+selected .category-item row (All vs category vs subcategory), but no CSS rule
+existed for .category-item.active, so the selected row was visually
+indistinguishable - the label and the actual selection were still correct after
+Stage 2, only the highlight was invisible.
+
+WHAT CHANGED (code) - inventory.html <style> (after .category-item:hover):
+  .category-item.active { background:#dcfce7; color:#15803d; font-weight:600; }
+  - Uses the app's green primary theme, distinct from the lighter hover tint
+    (#f0fdf4 / #16a34a) so the selected row reads clearly as "current".
+
+FILES AFFECTED:
+  inventory.html
+
+STAGE 4 - REMOVE DUPLICATE SEARCH TRIGGER - DONE
+--------------------------------------------------------------------------------
+Root cause: the search input (#manageStockSearch) wired renderManageInventory()
+TWICE on every keystroke - once via the inline oninput="renderManageInventory()"
+attribute on the input element, and again via a searchInput.addEventListener('input')
+listener. Every keystroke caused a redundant double render of the inventory list.
+
+WHAT CHANGED (code) - inventory.html:
+  - Removed the inline oninput="renderManageInventory()" attribute from the
+    #manageStockSearch <input>.
+  - Kept the single searchInput.addEventListener('input', ...) listener as the one
+    and only render path for search typing. (Category/subcategory selection and
+    exitSearchMode()'s value-clear call window.renderManageInventory() directly -
+    these are separate, legitimate triggers, not duplicates.)
+
+VERIFICATION (static + syntax):
+  - inline oninput renderManageInventory count: 0
+  - searchInput input listener count: 1  -> PASS: exactly one render path for search typing.
+  - node --check on the inline script: syntax OK.
+
+FILES AFFECTED:
+  inventory.html
+
+STAGE 5 - END-TO-END BROWSER-BEHAVIOUR VERIFICATION - DONE
+--------------------------------------------------------------------------------
+Goal: verify the whole drill-down/filter change set from a real DOM, exactly the
+way a user would drive the inventory screen, including persistence and the
+stale-data migration path.
+
+METHOD:
+  Fresh jsdom window (real DOM + event dispatch, runScripts="dangerously")
+  loading the REAL inventory.html inline script, with a faithful reproduction of
+  the app.js integration surface (the 12-key taxonomy + productCategoryLabel /
+  productSubcategoryLabel / window.t / setInventoryCatFilter /
+  setInventorySubcatFilter / renderManageInventory, persisted to sessionStorage
+  under the real keys). jsdom was given an https:// origin because a file://
+  origin exposes sessionStorage as "opaque" (SecurityError) - irrelevant on real
+  browsers but required for realistic jsdom persistence.
+  The stale-data path ran the REAL R1+R3 loadState repair code (verbatim) via a
+  Function bound in the window realm with its dependencies (PRODUCT_CATEGORIES,
+  PRODUCT_SUBCATEGORIES, getSampleProducts, state, localStorage) as parameters.
+
+RESULT: 36/36 assertions passed, exit code 0.
+
+  Test A - Search typing
+    A1 initial label "All Categories" (no persisted filter) ........... PASS
+    A2 dropdown starts closed .......................................... PASS
+    A3 ONE renderManageInventory per input event (not two) ............ PASS  [Stage 4]
+    A4 search value reached the render path ........................... PASS
+    A5 no jsdom errors ................................................ PASS
+
+  Test B - Category drill-down, selection, label + active highlight
+    B1 dropdown opens (.open class) ................................... PASS
+    B2 All + 12 category rows rendered (13) ........................... PASS
+    B3 "All Categories" row active at top level ....................... PASS  [Stage 3]
+    B4 category persisted to sessionStorage (sss_v3_inventoryCat) ..... PASS
+    B5 label synced to category label (Beverages) ..................... PASS  [Stage 2]
+    B6 after category select, dropdown RE-OPENS in subcategory view .......... PASS
+       NOTE: this is intended - selectCategory() calls openDropdown() to show the
+       subcategory drill-down straight after choosing a category (checkout parity).
+    B7 selecting a new category clears the subcategory filter .......... PASS
+    B8 subcategory view shown ......................................... PASS
+    B9 "All <cat>" active when no subcategory chosen .................. PASS
+    B10 subcategory persisted (sss_v3_inventorySubcat) ................ PASS
+    B11 label synced to subcategory label (Soft Drinks) ............... PASS
+    B12 dropdown closes after subcategory selection (no re-open) ...... PASS
+    B13 no jsdom errors ............................................... PASS
+
+  Test C - Back navigation
+    C1 subcategory view before back ................................... PASS
+    C2 back returns to category list (13 rows) ........................ PASS
+    C3 the previously chosen category row stays active after back ..... PASS
+    C4 no jsdom errors ................................................ PASS
+
+  Test D - Persistence across reload
+    D1 session 1 persisted category ................................... PASS
+    D2 session 1 persisted subcategory ................................ PASS
+    D3 fresh window (same sessionStorage) restores the label .......... PASS  [Stage 2]
+    D4 reloaded label = "Soft Drinks" ................................. PASS
+    D5 reload highlights the persisted subcategory row ................ PASS  [Stage 3]
+
+  Test E - Stale-data migration (real loadState R1+R3 repair code)
+    E1 invalid (old 17-key) category repaired to a valid 12-key ...... PASS  [Stage 1]
+    E2 missing subcategory back-filled from same-id sample ............ PASS
+    E3 missing category back-filled ................................... PASS
+    E4 mis-tagged subcategory corrected to belong to its category ..... PASS
+    E5 custom (non-sample) product preserved .......................... PASS
+    E6 custom product's subcategory NOT clobbered ..................... PASS
+    E7 repaired DB written back to localStorage ....................... PASS
+    E8 written-back DB still contains the custom product .............. PASS
+    E9 every sample row now uses a valid 12-key category .............. PASS
+
+FILES AFFECTED:
+  none (verification only; temp jsdom harness under _stage5/ was cleaned up).
+  inventory.html / app.js unchanged by this stage.
+
+ALL STAGES 1-5 COMPLETE.
+
+
+================================================================================
+

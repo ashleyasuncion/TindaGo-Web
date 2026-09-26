@@ -440,17 +440,22 @@ body {
 }
 .product-suggestions.open { display: block; }
 .product-suggestion-item {
-  padding: 10px 14px; cursor: pointer; font-size: var(--text-sm);
-  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px; cursor: pointer; font-size: var(--text-sm);
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
   transition: background var(--transition);
 }
 .product-suggestion-item:hover { background: var(--primary-bg); }
 .product-suggestion-item.disabled { opacity: 0.5; cursor: not-allowed; }
 .product-suggestion-item.disabled:hover { background: transparent; }
 .product-suggestion-item:not(:last-child) { border-bottom: 1px solid var(--border-light); }
+.product-suggestion-info { flex: 1; min-width: 0; }
 .product-suggestion-name { font-weight: 500; }
-.product-suggestion-price { color: var(--primary); font-weight: 600; font-size: var(--text-sm); }
-.product-suggestion-stock { color: var(--text-muted); font-size: var(--text-xs); }
+.product-suggestion-price { color: var(--primary); font-weight: 600; font-size: var(--text-sm); flex-shrink: 0; }
+.product-suggestion-stock { font-size: var(--text-xs); margin-top: 2px; }
+/* Stock line colours mirror the native card: Red500 / Amber700 / Green600 */
+.product-suggestion-stock.out { color: #ef4444; }
+.product-suggestion-stock.low { color: #b45309; }
+.product-suggestion-stock.ok { color: var(--primary); }
 
 .customer-suggestions {
   display: none; position: absolute; z-index: 10;
@@ -816,6 +821,32 @@ body {
 .inv-manage-btn.sell:hover { background: var(--primary-bg); }
 .inv-manage-btn.danger { color: var(--danger); border-color: var(--danger); }
 .inv-manage-btn.danger:hover { background: var(--danger-light); }
+
+/* ─── Inventory toolbar + forecast sort toggle (offline ML) ─── */
+.inventory-list-toolbar { display: flex; align-items: center; }
+.inventory-sort-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 12px; font-size: var(--text-xs); font-weight: 600;
+  background: var(--surface); color: var(--text-secondary);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; font-family: var(--font); transition: all var(--transition);
+}
+.inventory-sort-toggle:hover { border-color: var(--primary); color: var(--primary); }
+.inventory-sort-toggle.active { background: var(--primary-bg); border-color: var(--primary); color: var(--primary); }
+
+/* Demand forecast badge shown in each inventory row. Mirrors the mobile
+   ForecastBadge palette: gray (collecting/no demand), red (<=3d/out),
+   amber (<=7d), green (comfortable). */
+.inv-forecast-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; margin-top: 2px; margin-bottom: 1px;
+  font-size: 11px; font-weight: 600;
+  border-radius: 999px; line-height: 1.4;
+}
+.inv-forecast-badge.fc-gray  { background: var(--border-light); color: var(--text-muted); }
+.inv-forecast-badge.fc-red   { background: var(--danger-light); color: var(--danger); }
+.inv-forecast-badge.fc-amber { background: var(--accent-light); color: #b45309; }
+.inv-forecast-badge.fc-green { background: var(--primary-bg); color: var(--primary); }
 
 /* ─── OVERLAY ─── */
 .overlay {
@@ -1518,7 +1549,7 @@ select.form-input {
 }
 .product-suggestion-brand {
   font-size: var(--text-xs);
-  color: var(--primary);
+  color: var(--primary-dark);
   font-weight: 600;
 }
 .pd-tag {
