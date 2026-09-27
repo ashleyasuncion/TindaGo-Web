@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suppliers — TindaGo Back Office</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
+  <style>
+    :root { --primary:#16a34a; --primary-dark:#15803d; --primary-light:#dcfce7; --primary-bg:#f0fdf4; --danger:#dc2626; --danger-light:#fef2f2; --bg:#f8faf9; --surface:#ffffff; --text:#1e293b; --text-secondary:#64748b; --border:#e2e8f0; --shadow:0 2px 8px rgba(0,0,0,0.08); --shadow-lg:0 8px 24px rgba(0,0,0,0.12); --radius:12px; --radius-lg:16px; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:100vh;overflow:auto;-webkit-font-smoothing:antialiased}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+    .topbar-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;color:var(--primary);text-decoration:none}
+    .topbar-brand img{width:30px;height:30px;border-radius:8px}
+    .topbar-right{display:flex;align-items:center;gap:12px}
+    .topbar-hint{font-size:12px;font-weight:600;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);padding:6px 12px;border-radius:20px}
+    .btn-signout{padding:8px 16px;background:var(--surface);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:color 0.2s,border-color 0.2s}
+    .btn-signout:hover{color:var(--danger);border-color:#fecaca}
+    .layout{display:flex;min-height:calc(100vh - 59px)}
+    .sidenav{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:6px}
+    .sidenav a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--text-secondary);text-decoration:none;transition:background 0.15s,color 0.15s}
+    .sidenav a:hover{background:var(--bg);color:var(--text)}
+    .sidenav a.active{background:var(--primary-light);color:var(--primary-dark)}
+    .content{flex:1;min-width:0;padding:28px}
+    .page-title{font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px}
+    .page-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
+    .error-box{display:none;background:var(--danger-light);color:var(--danger);border:1px solid #fecaca;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+    .error-box.show{display:block}
+    .success-box{display:none;background:var(--primary-light);color:var(--primary-dark);border:1px solid #bbf7d0;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+    .success-box.show{display:block}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+    .card h2{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .card .hint{font-size:13px;color:var(--text-secondary);margin-bottom:16px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .form-group{display:flex;flex-direction:column;gap:6px}
+    .form-group.full{grid-column:1 / -1}
+    .form-group label{font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px}
+    .form-input,.form-textarea{width:100%;padding:10px 12px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--surface);border:1.5px solid var(--border);border-radius:10px;outline:none;transition:border-color 0.2s,box-shadow 0.2s}
+    .form-input:focus,.form-textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,163,74,0.12)}
+    .form-textarea{min-height:64px;resize:vertical}
+    .form-actions{display:flex;align-items:center;gap:10px;margin-top:14px}
+    .btn-primary{padding:10px 18px;background:var(--primary);color:#fff;font-size:14px;font-weight:700;font-family:var(--font);border:none;border-radius:10px;cursor:pointer;transition:background 0.15s,opacity 0.15s}
+    .btn-primary:hover{background:var(--primary-dark)}
+    .btn-primary:disabled{opacity:0.6;cursor:not-allowed}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;min-width:640px}
+    th,td{text-align:left;padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:top}
+    th{font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.4px;background:var(--bg);white-space:nowrap}
+    td{color:var(--text)}
+    .empty-row td{text-align:center;color:var(--text-secondary);padding:28px 12px;font-style:italic}
+    .btn-delete{padding:6px 10px;background:var(--surface);color:var(--danger);font-size:12px;font-weight:600;font-family:var(--font);border:1px solid #fecaca;border-radius:8px;cursor:pointer;transition:background 0.15s}
+    .btn-delete:hover{background:var(--danger-light)}
+    .btn-delete:disabled{opacity:0.5;cursor:not-allowed}
+    @media (max-width:900px){.form-grid{grid-template-columns:1fr}}
+    @media (max-width:640px){.layout{flex-direction:column}.sidenav{width:100%;flex-direction:row;border-right:none;border-bottom:1px solid var(--border);padding:10px;overflow-x:auto}.sidenav a{white-space:nowrap}.content{padding:16px}.topbar{padding:10px 14px}.topbar-hint{display:none}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="topbar-brand" href="dashboard.html"><img src="../img/TindaGo_logo.png" alt="TindaGo">TindaGo Back Office</a>
+    <div class="topbar-right"><span class="topbar-hint" title="Web-only table — never synced to the phone">Web-only &middot; per-store</span><button class="btn-signout" id="btnSignout">Sign Out</button></div>
+  </header>
+  <div class="layout">
+    <nav class="sidenav"><a href="dashboard.html">Dashboard</a><a href="suppliers.html" class="active">Suppliers</a></nav>
+    <main class="content">
+      <h1 class="page-title">Suppliers</h1>
+      <p class="page-subtitle" id="pageSubtitle">Web-exclusive supplier contacts — stored per-store (user_id-scoped), never synced to the Android counter app.</p>
+      <div class="error-box" id="errorBox"></div>
+      <div class="success-box" id="successBox"></div>
+      <section class="card">
+        <h2>Add Supplier</h2>
+        <p class="hint">Add a supplier contact. The store is stamped from your signed-in session — one store can never see another store's suppliers.</p>
+        <form id="supplierForm" autocomplete="off">
+          <div class="form-grid">
+            <div class="form-group"><label for="fName">Supplier name *</label><input class="form-input" id="fName" placeholder="e.g. Puregold Wholesale" required maxlength="120"></div>
+            <div class="form-group"><label for="fContact">Contact person</label><input class="form-input" id="fContact" placeholder="e.g. Ana Reyes" maxlength="120"></div>
+            <div class="form-group"><label for="fPhone">Phone</label><input class="form-input" id="fPhone" placeholder="09xx xxx xxxx" maxlength="40"></div>
+            <div class="form-group"><label for="fEmail">Email</label><input class="form-input" id="fEmail" type="email" placeholder="supplier@example.com" maxlength="120"></div>
+            <div class="form-group full"><label for="fAddress">Address</label><input class="form-input" id="fAddress" placeholder="e.g. 123 Market St, Brgy. San Roque" maxlength="200"></div>
+            <div class="form-group full"><label for="fNotes">Notes</label><textarea class="form-textarea" id="fNotes" placeholder="Payment terms, delivery schedule, etc." maxlength="500"></textarea></div>
+          </div>
+          <div class="form-actions"><button type="submit" class="btn-primary" id="btnAdd">Add Supplier</button></div>
+        </form>
+      </section>
+      <section class="card">
+        <h2>Saved Suppliers</h2>
+        <p class="hint" id="tableHint">Loading...</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Contact</th><th>Phone</th><th>Email</th><th>Address</th><th>Notes</th><th style="width:84px">Action</th></tr></thead>
+            <tbody id="suppliersBody"><tr class="empty-row"><td colspan="7">Loading suppliers...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    function esc(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    function showError(msg) {
+      const box = $('errorBox');
+      box.textContent = msg;
+      box.classList.add('show');
+      $('successBox').classList.remove('show');
+    }
+    function showSuccess(msg) {
+      const box = $('successBox');
+      box.textContent = msg;
+      box.classList.add('show');
+      $('errorBox').classList.remove('show');
+      setTimeout(() => box.classList.remove('show'), 3000);
+    }
+    function clearBanners() {
+      $('errorBox').classList.remove('show');
+      $('successBox').classList.remove('show');
+    }
+    function renderTable(rows) {
+      const tbody = $('suppliersBody');
+      const hint = $('tableHint');
+      if (!rows || rows.length === 0) {
+        hint.textContent = 'No suppliers yet — add your first contact above.';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No suppliers yet. Add one above to get started.</td></tr>';
+        return;
+      }
+      hint.textContent = rows.length + ' supplier' + (rows.length === 1 ? '' : 's') + ' saved for this store.';
+      tbody.innerHTML = rows.map(r =>
+        '<tr><td><strong>' + esc(r.name) + '</strong></td>' +
+          '<td>' + esc(r.contact_person || '') + '</td>' +
+          '<td>' + esc(r.phone || '') + '</td>' +
+          '<td>' + esc(r.email || '') + '</td>' +
+          '<td>' + esc(r.address || '') + '</td>' +
+          '<td>' + esc(r.notes || '') + '</td>' +
+          '<td><button class="btn-delete" data-id="' + esc(String(r.id)) + '">Delete</button></td></tr>'
+      ).join('');
+    }
+    async function main() {
+      const session = await requireAuth();
+      if (!session) return;
+      $('btnSignout').addEventListener('click', signOut);
+      DB.init(session);
+      $('pageSubtitle').textContent =
+        'Web-exclusive supplier contacts — stored per-store (user_id-scoped), never synced to the Android counter app · signed in as ' + (session.user.email || 'store');
+      let suppliers = [];
+      try {
+        suppliers = await DB.getSuppliers();
+      } catch (err) {
+        console.error('suppliers load:', err);
+        showError('Could not load suppliers: ' + (err.message || 'unknown error') + '. The portal needs internet plus a signed-in session.');
+        renderTable([]);
+        return;
+      }
+      renderTable(suppliers);
+      const form = $('supplierForm');
+      const btnAdd = $('btnAdd');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        clearBanners();
+        const name = $('fName').value.trim();
+        if (!name) { showError('Supplier name is required.'); return; }
+        const payload = {
+          name: name,
+          contact_person: $('fContact').value.trim(),
+          phone: $('fPhone').value.trim(),
+          email: $('fEmail').value.trim(),
+          address: $('fAddress').value.trim(),
+          notes: $('fNotes').value.trim()
+        };
+        btnAdd.disabled = true;
+        btnAdd.textContent = 'Adding...';
+        try {
+          const row = await DB.addSupplier(payload);
+          if (!row) { showError('Could not add supplier — check your connection and try again.'); return; }
+          form.reset();
+          showSuccess('Supplier "' + name + '" added.');
+          suppliers = await DB.getSuppliers();
+          renderTable(suppliers);
+        } catch (err) {
+          console.error('addSupplier:', err);
+          showError('Add failed: ' + (err.message || 'unknown error'));
+        } finally {
+          btnAdd.disabled = false;
+          btnAdd.textContent = 'Add Supplier';
+        }
+      });
+      $('suppliersBody').addEventListener('click', async (e) => {
+        const btn = e.target.closest('.btn-delete');
+        if (!btn) return;
+        const idRaw = btn.getAttribute('data-id');
+        const id = Number(idRaw);
+        if (!idRaw || Number.isNaN(id)) return;
+        if (!confirm('Delete this supplier? This cannot be undone.')) return;
+        clearBanners();
+        btn.disabled = true;
+        btn.textContent = 'Deleting...';
+        try {
+          const err = await DB.deleteSupplier(id);
+          if (err) {
+            showError('Delete failed: ' + (err.message || 'unknown error'));
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+            return;
+          }
+          showSuccess('Supplier deleted.');
+          suppliers = await DB.getSuppliers();
+          renderTable(suppliers);
+        } catch (err) {
+          console.error('deleteSupplier:', err);
+          showError('Delete failed: ' + (err.message || 'unknown error'));
+          btn.disabled = false;
+          btn.textContent = 'Delete';
+        }
+      });
+    }
+    main().catch(err => {
+      console.error('suppliers fatal:', err);
+      const box = document.getElementById('errorBox');
+      if (box) { box.textContent = 'Suppliers page failed to start: ' + (err.message || 'unknown error'); box.classList.add('show'); }
+    });
+  </script>
+</body>
+</html>

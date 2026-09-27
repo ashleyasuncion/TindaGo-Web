@@ -910,11 +910,200 @@ VERIFICATION:
 - All HTML pages render logo as favicon in browser tab
 - download.html loads correctly with phone mockup + feature cards
 - APK download link works from download.html
-- No broken image references
+================================================================================
+PHASE 3 — TASK 8: BACK-OFFICE CONFIG & SUPABASE AUTH HELPERS — DONE
+Date: 2026-09-27
+Status: IMPLEMENTED & VERIFIED (Syntax check clean)
+Plan: docs/Phase3_Backoffice_Web_Portal_Plan.md Task 8 (renumbered 7->8 on
+2026-09-27 to continue the global sequence after Phase 2 Tasks 1-7)
+Type: Isolated web back-office tier (two-tier architecture with Android counter terminal)
+
+WHAT WAS DONE:
+1) Created directory: git/TindaGo/backoffice/
+   - Leaves all 18 existing prototype HTML files, app.js, style.css, and
+     localStorage (sss_v3_*) 100% untouched.
+2) Created file: git/TindaGo/backoffice/config.js (37 lines)
+   - Pre-wired real Supabase cloud project credentials:
+     * SUPABASE_URL = "https://gncnluxjrpmbjmtzcwsv.supabase.co"
+     * SUPABASE_ANON_KEY = "eyJhbGciOi...16_Ris"
+   - Initialized global client: sb = window.supabase.createClient(...)
+   - requireAuth(): Asynchronously verifies active session; redirects to
+     login.html if null.
+   - getUserId(session): Returns authenticated user's UUID for Schema v2 queries.
+   - signOut(): Calls sb.auth.signOut() and redirects to login.html.
+
+AFFECTED FILES:
+- git/TindaGo/backoffice/config.js (new)
+
+VERIFICATION:
+- Node syntax check: `node -c backoffice/config.js` -> EXIT CODE 0 (clean).
+- Read-back verified.
+
+Next: Task 8 (backoffice/login.html → now Task 9 after renumber 2026-09-27).
+================================================================================
 
 ================================================================================
+PHASE 3 — TASK 9: BACK-OFFICE SIGN-IN PAGE — DONE
+================================================================================
+Date: 2026-09-27
+Status: IMPLEMENTED (HTML structure + CSS + JS verified)
+Plan: docs/Phase3_Backoffice_Web_Portal_Plan.md Task 9 (renumbered 8->9 on
+2026-09-27; global sequence after Phase 2 Tasks 1-7)
+Type: Isolated web back-office tier (does NOT touch prototype files)
+
+WHAT WAS DONE:
+1) Created file: git/TindaGo/backoffice/login.html
+   - Private :root token block (values mirror style.css) + responsive
+     sign-in card (see bullets below).
+   - Card: max-width 420px, centered; <=480px top-aligned compact layout.
+     Prototype files remain 100% untouched (stylesheet NOT linked).
+   - Google Fonts Inter (400-800) + logo: ../img/TindaGo_logo.png (path
+     verified on disk).
+2) Authentication (per plan spec):
+   - On page load: sb.auth.getSession() -> if a session already exists,
+     auto-redirects to dashboard.html (no manual re-login needed).
+   - On form submit: sb.auth.signInWithPassword({ email, password }).
+   - Error handling:
+     * Supabase auth error  -> shown verbatim in the error banner
+       (e.g. "Invalid login credentials", "Email not confirmed").
+     * data.session null    -> fallback message ("no session was returned").
+     * Network/throw        -> "Network error — could not reach the
+       authentication server…" banner.
+   - Loading state: button disabled + label "Signing in…" while the request
+     is in-flight (prevents double submits).
+3) Error banner: hidden by default (display:none); .show class toggles it.
+   Real-time inline feedback — no browser alert() dialogs used.
+4) Scripts loaded: Supabase CDN (https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)
+   then config.js (global `sb` client) before the inline sign-in logic.
+
+AFFECTED FILES:
+- git/TindaGo/backoffice/login.html (new)
+
+VERIFICATION:
+- Read-back verified: ends </html>; tag balance, 5 getElementById targets,
+  and script load order (Supabase CDN -> config.js -> inline) checked by
+  script C:\temp\check_login.py (no mismatches, all IDs resolved).
+- Logo asset confirmed on disk: git/TindaGo/img/TindaGo_logo.png.
+- No changes to any of the 18 prototype HTML files, app.js, style.css, or
+  localStorage (sss_v3_*) — isolation rule preserved.
+
+Next: Task 10 (backoffice/db.js — renumbered 9->10 on 2026-09-27).
+================================================================================
+
+================================================================================
+PHASE 3 — TASK 10: DATA LAYER (SCHEMA V2, USER-SCOPED) — DONE
+================================================================================
+Date: 2026-09-27
+Status: IMPLEMENTED (280 lines; node --check EXIT 0; 14 queries verified)
+Plan: docs/Phase3_Backoffice_Web_Portal_Plan.md Task 10 (renumbered 9->10 on
+2026-09-27; global sequence after Phase 2 Tasks 1-7)
+Type: Isolated web back-office tier (does NOT touch prototype files)
+
+WHAT WAS DONE:
+1) Created file: git/TindaGo/backoffice/db.js (280 lines)
+   - Async Supabase PostgREST layer replacing localStorage for the portal.
+   - Caches the authenticated UUID once via DB.init(session); everything else
+     is scoped or stamped through uid() (which throws if uninitialized,
+     instead of silently querying with an undefined filter).
+2) Schema v2 strict adherence (vs live v2 SQL in
+   Phase2_Android_Sync_Plan.md lines 169-343):
+   - READS (11, all with .eq('user_id', uid())): getProducts, getSales,
+     getDebts, getPayments, getDebtTransactions, getExpenses, getDailyEntries
+     (bonus: needed by future daily views), getEndOfDay, getRestockLog,
+     getSettings, getSuppliers.
+   - getEndOfDay() maps ALL 12 v2 columns incl. stockCheckDone,
+     debtPaymentsDone, salesDiff (these were missing from the original draft).
+   - getSettings() uses .eq('user_id', uid()).maybeSingle() — NOT .eq('id',1)
+     (no id column exists in v2; maybeSingle for stores with no row yet).
+   - upsertProduct() stamps user_id and uses onConflict 'user_id,id' (matches
+     the composite v2 PK — an id-only conflict key would cross-store collide).
+   - addSupplier() spreads caller fields then injects user_id: this.uid().
+   - deleteSupplier(id) uses .eq('user_id', uid()).eq('id', id) — user_id
+     first, id second (id-only predicate would 400 against the v2 PK).
+   - Read methods return [] on error; write methods return null/error — pages
+     never crash on a failed query.
+3) Script contract: companion to config.js (global `sb`); pages must load
+   Supabase CDN -> config.js -> db.js, then call DB.init(session) once after
+   requireAuth() (this is what dashboard.html + suppliers.html will do).
+
+AFFECTED FILES:
+- git/TindaGo/backoffice/db.js (new)
+
+VERIFICATION:
+- `node --check backoffice/db.js` -> EXIT 0 (clean).
+- Anchor scan: init:15, uid, errMessage, + 14 query methods (getProducts:41,
+  upsertProduct:63, getSales:88, getDebts:110, getPayments:130,
+  getDebtTransactions:147, getExpenses:165, getDailyEntries:183,
+  getEndOfDay:198, getRestockLog:221, getSettings:232, getSuppliers:244,
+  addSupplier:254, deleteSupplier:268).
+- Table coverage: 13 distinct .from() call sites covering all 11 v2 data
+  tables; 15 user_id scoping hits (eq/onConflict/maybeSingle paths).
+- No changes to any of the 18 prototype HTML files, app.js, style.css, or
+  localStorage (sss_v3_*) — isolation rule preserved.
+
+Next: Task 11 (backoffice/dashboard.html).
+================================================================================
+
+================================================================================
+PHASE 3 — TASK 11: STORE ANALYTICS DASHBOARD — DONE
+================================================================================
+Date: 2026-09-27
+Status: IMPLEMENTED (468 lines; node --check EXIT 0; 15/15 IDs resolve)
+Plan: docs/Phase3_Backoffice_Web_Portal_Plan.md Task 11 (renumbered 10->11 on
+2026-09-27; global sequence after Phase 2 Tasks 1-7)
+Type: Isolated web back-office tier (does NOT touch prototype files)
+
+WHAT WAS DONE:
+1) Created file: git/TindaGo/backoffice/dashboard.html (468 lines)
+   - Standalone responsive desktop shell: sticky topbar (logo + sync pill +
+     Sign Out), side nav (Dashboard active / Suppliers), content column.
+   - Private :root token block (values mirror style.css; prototype stylesheet
+     is NOT linked). Same isolation pattern as login.html.
+   - Grid: 4 KPI cards -> 2 charts; collapses 2x2/1-col at 900/640px; sidenav
+     hides on phones. No phone-frame wrapper anywhere.
+2) JS contract (script order on page: Supabase CDN -> Chart.js CDN ->
+   config.js -> db.js -> inline):
+   - Auth gate FIRST: requireAuth() -> bounce to login.html if null.
+   - DB.init(session) once; Sign Out wired to global signOut().
+   - One Promise.all([DB.getProducts(), DB.getSales(), DB.getDebts()]);
+     any throw lands in the error box (never a blank page).
+3) Per plan spec, all driven ONLY by synced Supabase rows:
+   - KPI 1 Total Sales = sum(sales.amount); sub = N synced line items.
+   - KPI 2 Total Estimated Profit = sum(sales.profit); sub = ~% margin
+     (guarded: "no sales yet" when total is 0, no divide-by-zero).
+   - KPI 3 Outstanding Debt = sum(remainingBalance>0); sub = N open
+     accounts (settled/zero balances excluded; singular/plural handled).
+   - KPI 4 Low Stock Alert = count(quantity<=lowStockThreshold) using the
+     PER-PRODUCT threshold from the synced row; sub = "of N products".
+   - Sync pill: green fresh (<24h since newest sale timestamp), amber stale,
+     grey nodata; tooltip shows the exact newest-sale local datetime.
+     Documented as best-effort freshness (device-epoch millis), not a sync
+     protocol guarantee.
+   - Chart 1 (bar): last 7 calendar days built in LOCAL time (not UTC slice),
+     matched against each sale's yyyy-MM-dd `date` column.
+   - Chart 2 (doughnut): top 5 sale descriptions by summed quantity; empty
+     stores get a readable single-slice "No sales yet" placeholder.
+   - Chart.js missing (CDN blocked) -> KPIs stay live; charts skipped with an
+     explicit error-box message.
+   - All money via peso() (₱, en-PH, 2 decimals); every reducer guards
+     Number(x)||0 so malformed rows can't poison a KPI.
+
+AFFECTED FILES:
+- git/TindaGo/backoffice/dashboard.html (new)
+
+VERIFICATION:
+- `node --check` on the extracted inline script -> EXIT 0 (clean).
+- Anchor scan: 15/15 id="..." targets resolve from the inline JS (zero
+  missing); zero undefined CSS vars; script-src order = Supabase, Chart.js,
+  config.js, db.js (matches the DB.init-after-requireAuth contract).
+- Read-back verified: topbar/nav/KPI/chart markup lines 219-284; ends </html>.
+- No changes to any of the 18 prototype HTML files, app.js, style.css, or
+  localStorage (sss_v3_*) — isolation rule preserved.
+
+Next: Task 12 (backoffice/suppliers.html).
+================================================================================
+
 PENDING — SUPPORT EMAIL UPDATE
-─────────────────────────────────────────────────────────────────────────────
 - support@tindago.com is a placeholder — domain not yet registered
 - Must be changed to a real email before shipping
 - 4 files affected:
@@ -1099,5 +1288,70 @@ FILES AFFECTED:
 ALL STAGES 1-5 COMPLETE.
 
 
+================================================================================
+
+================================================================================
+PHASE 3 — TASK 12: SUPPLIER MANAGEMENT (TWO-TIER PROOF) — DONE
+================================================================================
+Date: 2026-09-27
+Status: IMPLEMENTED (235 lines; node --check EXIT 0; esc()-safe, user_id-scoped)
+Plan: docs/Phase3_Backoffice_Web_Portal_Plan.md Task 12 (renumbered 11->12 on
+2026-09-27; global final task of Phase 3, after Phase 2 Tasks 1-7)
+Type: Isolated web back-office tier — web-exclusive table (never phone-synced)
+
+WHAT WAS DONE:
+1) Created file: git/TindaGo/backoffice/suppliers.html (235 lines, 14544 bytes)
+   - Standalone responsive desktop shell: sticky topbar (logo + "Web-only" pill +
+     Sign Out), side nav (Dashboard / Suppliers active), content column.
+   - Private :root token block (values mirror style.css; prototype stylesheet
+     is NOT linked). Same isolation pattern as login.html + dashboard.html.
+   - Add Supplier card: 6-field form (name*=required, contact_person, phone,
+     email, address, notes) in 2-col grid (1-col <=900px, stacked <=640px).
+   - Saved Suppliers card: scrollable table (Name/Contact/Phone/Email/Address/
+     Notes/Action), empty-row copy, live hint "N supplier(s) saved".
+2) Security + Schema v2 (Schema v2: PK (user_id,id), RLS auth.uid()=user_id):
+   - XSS-safe esc(str) helper: escapes &, <, >, ", ' before any innerHTML
+     injection (renderTable writes through esc() on every column + data-id).
+     8 call sites in the file; no raw interpolation.
+   - addSupplier: payload built from trimmed inputs, then DB.addSupplier()
+     stamps user_id: this.uid() server-side (defense-in-depth: RLS enforces
+     auth.uid() on the suppliers table as well).
+   - deleteSupplier: composite predicate .eq('user_id',this.uid()).eq('id',id)
+     — id-only would 400 and could leak across stores if policies changed.
+     Table body uses event delegation; row id is esc(String(r.id)).
+   - Form reset + success banner + table re-load from cloud after each write
+     (server is source of truth; avoids local divergence).
+   - Delete has confirm() guard ("This cannot be undone.") + per-row disabled
+     state while the request is in-flight.
+3) JS contract (script order: Supabase CDN -> config.js -> db.js -> inline):
+   - Auth gate FIRST: requireAuth() -> bounce to login.html if null (same as
+     dashboard.html).
+   - DB.init(session) once; Sign Out wired to global signOut().
+   - One await DB.getSuppliers() on load; errors land in the error box (never
+     a blank page). defense-demo rule: always explain the state on screen.
+   - Pure $-helper alias (const $ = id=>getElementById(id)); no direct
+     localStorage/app.js/style.css coupling anywhere.
+
+AFFECTED FILES:
+- git/TindaGo/backoffice/suppliers.html (new)
+
+VERIFICATION:
+- Node syntax check: inline <script> block (5194 chars) -> node --check EXIT 0.
+- Sibling checks re-ran clean: config.js 38 lines EXIT 0, db.js 280 lines EXIT 0,
+  login.html block 2106 chars EXIT 0, dashboard.html block 7472 chars EXIT 0.
+- Anchor scan: 19 dollar-ids ($()) resolve to 15 html id="..." targets (zero
+  missing); zero undefined CSS vars; script-src order = Supabase, config.js,
+  db.js (matches the DB.init-after-requireAuth contract).
+- Security scan: esc() defined (8 esc() sites); data-id uses esc(String(r.id));
+  innerHTML only through escaped interpolation.
+- Isolation scan: zero <link href="...style.css"> in the file (0 actual links);
+  zero prototype file edits; 0 localStorage sss_v3_* touches — backoffice/
+  isolation preserved, 18 prototype files/app.js/style.css 100% untouched.
+- Read-back verified: cards/tables/forms lines ~45-235; ends </html>.
+
+Next: Phase 3 COMPLETE — all Tasks 8-12 sealed. Smoke: wrong password -> error
+banner; correct login -> dashboard KPIs from live Supabase; suppliers CRUD
+isolated to user_id. Vercel: push backoffice/ subfolder; verify routes /, 
+/download.html, /backoffice/login.html + /dashboard.html + /suppliers.html.
 ================================================================================
 
