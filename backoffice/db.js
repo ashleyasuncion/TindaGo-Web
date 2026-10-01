@@ -84,6 +84,32 @@ const DB = {
         return null;
     },
 
+    async addProduct(p) {
+        const row = {
+            user_id: this.uid(),
+            id: p.id ?? Date.now(),
+            name: p.name,
+            quantity: p.quantity ?? 0,
+            cost_price: p.costPrice,
+            selling_price: p.sellingPrice,
+            unit: p.unit || 'piece',
+            low_stock_threshold: p.lowStockThreshold ?? 5,
+            category: p.category || '',
+            subcategory: p.subcategory || '',
+            brand: p.brand || '',
+            package_size: p.packageSize || ''
+        };
+        const { data, error } = await sb.from('products').insert(row).select().single();
+        if (error) { console.error('addProduct:', error); return null; }
+        return data;
+    },
+
+    async deleteProduct(id) {
+        const { error } = await sb.from('products').delete().eq('user_id', this.uid()).eq('id', id);
+        if (error) { console.error('deleteProduct:', error); return error; }
+        return null;
+    },
+
     // ── SALES ──
     async getSales() {
         const { data, error } = await sb

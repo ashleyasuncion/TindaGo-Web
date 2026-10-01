@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Products — TindaGo Back Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="db.js"></script>
+<style>
+:root{--primary:#16a34a;--primary-dark:#15803d;--primary-light:#dcfce7;--primary-bg:#f0fdf4;--danger:#dc2626;--danger-light:#fef2f2;--bg:#f8faf9;--surface:#fff;--text:#1e293b;--text-secondary:#64748b;--border:#e2e8f0;--shadow:0 2px 8px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--radius:12px;--radius-lg:16px;--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:100vh;overflow:auto;-webkit-font-smoothing:antialiased}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.topbar-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;color:var(--primary);text-decoration:none}
+.topbar-brand img{width:30px;height:30px;border-radius:8px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.sync-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--primary-dark);background:var(--primary-light);padding:6px 12px;border-radius:20px;border:1px solid #bbf7d0}
+.sync-pill.nodata{color:var(--text-secondary);background:var(--bg);border-color:var(--border)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.btn-signout{padding:8px 16px;background:var(--surface);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer}
+.btn-signout:hover{color:var(--danger);border-color:#fecaca}
+.layout{display:flex;min-height:calc(100vh - 59px)}
+.sidenav{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:6px}
+.sidenav a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--text-secondary);text-decoration:none}
+.sidenav a:hover{background:var(--bg);color:var(--text)}
+.sidenav a.active{background:var(--primary-light);color:var(--primary-dark)}
+.content{flex:1;min-width:0;padding:28px}
+.page-title{font-size:24px;font-weight:800;margin-bottom:6px}
+.page-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
+.error-box{display:none;background:var(--danger-light);color:var(--danger);border:1px solid #fecaca;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+.error-box.show{display:block}
+.success-box{display:none;background:var(--primary-light);color:var(--primary-dark);border:1px solid #bbf7d0;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+.success-box.show{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+.card h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.card .hint{font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:13px;font-weight:600}
+.form-input,.form-select{padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--surface);outline:none}
+.form-input:focus,.form-select:focus{border-color:var(--primary)}
+.form-actions{margin-top:16px;display:flex;gap:10px}
+.btn-primary{padding:10px 20px;background:var(--primary);color:#fff;font-size:14px;font-weight:700;font-family:var(--font);border:none;border-radius:10px;cursor:pointer}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-primary:disabled{opacity:0.6;cursor:not-allowed}
+.btn-secondary{padding:10px 18px;background:var(--surface);color:var(--text);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer}
+.btn-secondary:hover{background:var(--bg)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.toolbar input,.toolbar select{padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font);background:var(--surface);outline:none}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:760px}
+thead th{background:var(--bg);font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-secondary);padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border)}
+tbody td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tbody tr.low-stock{background:#fef3c7}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:0.03em;text-transform:uppercase}
+.badge-plenty{background:#dcfce7;color:#15803d}
+.badge-low{background:#fef3c7;color:#b45309;border:1px solid #fde68a}
+.badge-out{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.btn-edit,.btn-delete{padding:6px 10px;font-size:12px;font-weight:700;font-family:var(--font);border-radius:8px;cursor:pointer;border:1px solid var(--border)}
+.btn-edit{color:var(--primary-dark);border-color:#bbf7d0;background:var(--primary-light)}
+.btn-delete{color:var(--danger);border-color:#fecaca;background:var(--danger-light)}
+.empty-row td{padding:28px 16px;text-align:center;color:var(--text-secondary)}
+dialog{border:none;border-radius:16px;box-shadow:var(--shadow-lg);padding:0;max-width:560px;width:calc(100% - 32px);margin:auto}
+dialog::backdrop{background:rgba(15,23,42,0.45)}
+.dialog-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.dialog-head h3{font-size:16px;font-weight:800}
+.dialog-body{padding:18px 20px}
+.dialog-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--bg);border-radius:0 0 16px 16px}
+@media(max-width:768px){.layout{flex-direction:column}.sidenav{width:100%;flex-direction:row;padding:10px;overflow-x:auto}.sidenav a{white-space:nowrap}.content{padding:16px}.form-grid{grid-template-columns:1fr}.topbar{padding:10px 14px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="topbar-brand" href="dashboard.html"><img src="../img/TindaGo_logo.png" alt="TindaGo">TindaGo Back Office</a>
+<div class="topbar-right"><span class="sync-pill nodata" id="syncPill"><span class="sync-dot"></span><span id="syncPillText">No data yet</span></span><button class="btn-signout" id="btnSignout">Sign Out</button></div>
+</header>
+<div class="layout">
+<nav class="sidenav">
+<a href="dashboard.html">Dashboard</a>
+<a href="products.html" class="active">Products</a>
+<a href="reports.html">Reports</a>
+<a href="debts.html">Debts</a>
+<a href="expenses.html">Expenses</a>
+<a href="restock.html">Restock</a>
+<a href="suppliers.html">Suppliers</a>
+</nav>
+<main class="content">
+<h1 class="page-title">Products</h1>
+<p class="page-subtitle" id="pageSubtitle">Catalog owner — manage inventory here. Counter is read-only. All rows are user_id-scoped.</p>
+<div class="error-box" id="errorBox"></div>
+<div class="success-box" id="successBox"></div>
+<section class="card">
+<h2>Add Product</h2>
+<p class="hint">Add a product to your catalog. Prices in PHP. Leave optional fields blank if not needed.</p>
+<form id="productForm" autocomplete="off">
+<div class="form-grid">
+<div class="form-group"><label for="fName">Name *</label><input class="form-input" id="fName" placeholder="e.g. Kopiko Brown" required maxlength="120"></div>
+<div class="form-group"><label for="fBrand">Brand</label><input class="form-input" id="fBrand" placeholder="e.g. Nestle" maxlength="80"></div>
+<div class="form-group"><label for="fCost">Cost price (PHP) *</label><input class="form-input" id="fCost" type="number" step="0.01" min="0" placeholder="0.00" required></div>
+<div class="form-group"><label for="fSell">Selling price (PHP) *</label><input class="form-input" id="fSell" type="number" step="0.01" min="0" placeholder="0.00" required></div>
+<div class="form-group"><label for="fUnit">Unit</label><select class="form-select" id="fUnit"></select></div>
+<div class="form-group"><label for="fCategory">Category</label><select class="form-select" id="fCategory"></select></div>
+<div class="form-group"><label for="fSubcategory">Subcategory</label><select class="form-select" id="fSubcategory"></select></div>
+<div class="form-group"><label for="fPackageSize">Package size</label><input class="form-input" id="fPackageSize" placeholder="e.g. 155g, 1L" maxlength="40"></div>
+<div class="form-group"><label for="fQty">Initial quantity</label><input class="form-input" id="fQty" type="number" step="1" min="0" value="0"></div>
+<div class="form-group"><label for="fThreshold">Low-stock threshold</label><input class="form-input" id="fThreshold" type="number" step="1" min="0" value="5"></div>
+</div>
+<div class="form-actions"><button type="submit" class="btn-primary" id="btnAdd">Add Product</button><button type="button" class="btn-secondary" id="btnResetForm">Clear</button></div>
+</form>
+</section>
+<section class="card">
+<h2>Inventory</h2>
+<p class="hint" id="tableHint">Loading...</p>
+<div class="toolbar">
+<input id="searchInput" placeholder="Search name, brand, category..." style="flex:1;min-width:180px">
+<select id="statusFilter"><option value="all">All statuses</option><option value="plenty">PLENTY</option><option value="low">LOW</option><option value="out">OUT</option></select>
+<select id="sortBy"><option value="name">Sort: Name A-Z</option><option value="stock_asc">Stock low-high</option><option value="stock_desc">Stock high-low</option><option value="price_asc">Price low-high</option><option value="price_desc">Price high-low</option></select>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Name</th><th>Category</th><th>Brand</th><th>Unit</th><th>Cost</th><th>Selling</th><th>Stock</th><th>Status</th><th style="width:140px">Actions</th></tr></thead>
+<tbody id="productsBody"><tr class="empty-row"><td colspan="9">Loading products...</td></tr></tbody>
+</table>
+</div>
+</section>
+</main>
+</div>
+<dialog id="editDialog">
+<div class="dialog-head"><h3>Edit Product</h3><button type="button" class="btn-secondary" id="btnCloseDialog" style="padding:6px 10px">Close</button></div>
+<form id="editForm" autocomplete="off">
+<div class="dialog-body">
+<div class="form-grid">
+<div class="form-group full"><label for="eName">Name *</label><input class="form-input" id="eName" required maxlength="120"></div>
+<div class="form-group"><label for="eBrand">Brand</label><input class="form-input" id="eBrand" maxlength="80"></div>
+<div class="form-group"><label for="ePackageSize">Package size</label><input class="form-input" id="ePackageSize" maxlength="40"></div>
+<div class="form-group"><label for="eCost">Cost price (PHP) *</label><input class="form-input" id="eCost" type="number" step="0.01" min="0" required></div>
+<div class="form-group"><label for="eSell">Selling price (PHP) *</label><input class="form-input" id="eSell" type="number" step="0.01" min="0" required></div>
+<div class="form-group"><label for="eUnit">Unit</label><select class="form-select" id="eUnit"></select></div>
+<div class="form-group"><label for="eCategory">Category</label><select class="form-select" id="eCategory"></select></div>
+<div class="form-group"><label for="eSubcategory">Subcategory</label><select class="form-select" id="eSubcategory"></select></div>
+<div class="form-group"><label for="eQty">Quantity</label><input class="form-input" id="eQty" type="number" step="1" min="0" required></div>
+<div class="form-group"><label for="eThreshold">Low-stock threshold</label><input class="form-input" id="eThreshold" type="number" step="1" min="0" required></div>
+</div>
+</div>
+<div class="dialog-foot"><button type="button" class="btn-secondary" id="btnCancelEdit">Cancel</button><button type="submit" class="btn-primary" id="btnSaveEdit">Save Changes</button></div>
+</form>
+</dialog>
+<script>
+const $=(id)=>document.getElementById(id);
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function peso(n){const v=Number(n)||0;return '\u20B1'+v.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function showError(m){const b=$('errorBox');b.textContent=m;b.classList.add('show');$('successBox').classList.remove('show');}
+function showSuccess(m){const b=$('successBox');b.textContent=m;b.classList.add('show');$('errorBox').classList.remove('show');}
+function clearBanners(){$('errorBox').classList.remove('show');$('successBox').classList.remove('show');}
+function labelize(k){return String(k).replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());}
+const CATEGORIES=["pantry_staples","canned_goods","instant_dry_goods","snacks_sweets","beverages","dairy_refrigerated","fresh_section","liquor_wine","personal_care","household_care","baby_care","paper_sanitary"];
+const UNITS=["piece","sachet","pack","box","bottle","can","kg","g","L","mL","bundle","dozen","sack","loaf","tube","bar","sticks"];
+const SUBCATEGORIES={"pantry_staples":["rice","cooking_oil","sugar","salt","vinegar","bread"],"canned_goods":["sardines","corned_beef","tuna","meat_loaf","sausage"],"instant_dry_goods":["instant_noodles","cup_noodles","pasta","soup_mixes"],"snacks_sweets":["chips","crackers","candies","chocolates","cookies"],"beverages":["coffee_mix","powdered_milk","chocolate_drink","juice","soft_drinks","bottled_water"],"dairy_refrigerated":["cheese","butter","margarine","chilled_meats"],"fresh_section":["fresh_meat","fresh_seafood","fruits","vegetables","eggs"],"liquor_wine":["beer","gin","brandy","wine","cigarettes"],"personal_care":["shampoo","conditioner","bath_soap","toothpaste","toothbrush","lotion","cosmetics"],"household_care":["laundry","fabric_softener","dishwashing","cleaners","trash_bags","mosquito_control"],"baby_care":["diapers","baby_wipes","baby_toiletries"],"paper_sanitary":["tissue","paper_towels","sanitary_pads"]};
+function fillCategorySelect(sel,empty){sel.innerHTML=(empty?'<option value="">-- None --</option>':'')+CATEGORIES.map(c=>'<option value="'+esc(c)+'">'+esc(labelize(c))+'</option>').join('');}
+function fillUnitSelect(sel){sel.innerHTML=UNITS.map(u=>'<option value="'+esc(u)+'">'+esc(labelize(u))+'</option>').join('');}
+function fillSubcategorySelect(sel,cat){const list=SUBCATEGORIES[cat]||[];sel.innerHTML='<option value="">-- None --</option>'+list.map(s=>'<option value="'+esc(s)+'">'+esc(labelize(s))+'</option>').join('');sel.disabled=list.length===0;}
+function stockStatus(p){const q=Number(p.quantity)||0,t=Number(p.lowStockThreshold)||0;if(q<=0)return'out';if(q<=t)return'low';return'plenty';}
+function statusBadge(p){const s=stockStatus(p);if(s==='out')return'<span class="badge badge-out">OUT</span>';if(s==='low')return'<span class="badge badge-low">LOW</span>';return'<span class="badge badge-plenty">PLENTY</span>';}
+let products=[];let editId=null;
+function applyFilters(list){
+const q=($('searchInput').value||'').trim().toLowerCase();
+const f=$('statusFilter').value;
+let out=list.slice();
+if(q)out=out.filter(p=>[p.name,p.brand,p.category,p.subcategory,p.unit].join(' ').toLowerCase().includes(q));
+if(f!=='all')out=out.filter(p=>stockStatus(p)===f);
+const sort=$('sortBy').value;
+if(sort==='name')out.sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+else if(sort==='stock_asc')out.sort((a,b)=>(Number(a.quantity)||0)-(Number(b.quantity)||0));
+else if(sort==='stock_desc')out.sort((a,b)=>(Number(b.quantity)||0)-(Number(a.quantity)||0));
+else if(sort==='price_asc')out.sort((a,b)=>(Number(a.sellingPrice)||0)-(Number(b.sellingPrice)||0));
+else if(sort==='price_desc')out.sort((a,b)=>(Number(b.sellingPrice)||0)-(Number(a.sellingPrice)||0));
+return out;
+}
+function renderTable(){
+const body=$('productsBody'),hint=$('tableHint');
+const filtered=applyFilters(products);
+hint.textContent=products.length?(filtered.length+' of '+products.length+' products shown'):'No products yet — add one above.';
+if(!filtered.length){body.innerHTML='<tr class="empty-row"><td colspan="9">'+(products.length?'No matches. Try another search or status.':'No products yet. Add your first product above.')+'</td></tr>';return;}
+body.innerHTML=filtered.map(p=>{
+const st=stockStatus(p);
+return '<tr class="'+(st!=='plenty'?'low-stock':'')+'"><td><strong>'+esc(p.name)+'</strong></td><td>'+esc(p.category?labelize(p.category):'--')+(p.subcategory?' &middot; '+esc(labelize(p.subcategory)):'')+'</td><td>'+esc(p.brand||'--')+'</td><td>'+esc(p.unit||'piece')+'</td><td>'+peso(p.costPrice)+'</td><td>'+peso(p.sellingPrice)+'</td><td>'+esc(String(p.quantity))+'</td><td>'+statusBadge(p)+'</td><td><div style="display:flex;gap:6px"><button class="btn-edit" data-edit="'+esc(String(p.id))+'">Edit</button><button class="btn-delete" data-id="'+esc(String(p.id))+'">Delete</button></div></td></tr>';
+}).join('');
+}
+function paintSyncPill(){
+const pill=$('syncPill'),text=$('syncPillText');
+if(!pill||!text)return;
+if(!products.length){text.textContent='No products yet';pill.className='sync-pill nodata';return;}
+text.textContent=products.length+' product'+(products.length===1?'':'s')+' synced';
+pill.className='sync-pill';
+}
+async function reload(){
+try{products=await DB.getProducts();}catch(e){showError(e.message||'Failed to load products');products=[];}
+paintSyncPill();renderTable();
+}
+async function main(){
+const session=await requireAuth();if(!session)return;
+$('btnSignout').addEventListener('click',signOut);
+DB.init(session);
+$('pageSubtitle').textContent='Catalog owner — manage inventory here. Counter is read-only \u00B7 signed in as '+(session.user.email||'store');
+fillUnitSelect($('fUnit'));fillUnitSelect($('eUnit'));
+fillCategorySelect($('fCategory'),true);fillCategorySelect($('eCategory'),true);
+fillSubcategorySelect($('fSubcategory'),'');fillSubcategorySelect($('eSubcategory'),'');
+$('fCategory').addEventListener('change',()=>fillSubcategorySelect($('fSubcategory'),$('fCategory').value));
+$('eCategory').addEventListener('change',()=>fillSubcategorySelect($('eSubcategory'),$('eCategory').value));
+try{products=await DB.getProducts();}catch(e){showError('Could not load products: '+(e.message||'unknown error'));products=[];}
+paintSyncPill();renderTable();
+$('searchInput').addEventListener('input',renderTable);
+$('statusFilter').addEventListener('change',renderTable);
+$('sortBy').addEventListener('change',renderTable);
+$('btnResetForm').addEventListener('click',()=>{$('productForm').reset();fillSubcategorySelect($('fSubcategory'),'');clearBanners();});
+$('productForm').addEventListener('submit',async(e)=>{
+e.preventDefault();clearBanners();
+const name=$('fName').value.trim();
+const cost=Number($('fCost').value);
+const sell=Number($('fSell').value);
+if(!name){showError('Product name is required.');return;}
+if(!Number.isFinite(cost)||cost<0){showError('Cost price must be 0 or more.');return;}
+if(!Number.isFinite(sell)||sell<0){showError('Selling price must be 0 or more.');return;}
+const payload={name:name,costPrice:cost,sellingPrice:sell,unit:$('fUnit').value||'piece',category:$('fCategory').value||'',subcategory:$('fSubcategory').value||'',brand:$('fBrand').value.trim(),packageSize:$('fPackageSize').value.trim(),quantity:Math.max(0,parseInt($('fQty').value||'0',10)||0),lowStockThreshold:Math.max(0,parseInt($('fThreshold').value||'5',10)||0)};
+const btn=$('btnAdd');btn.disabled=true;btn.textContent='Adding...';
+try{const row=await DB.addProduct(payload);if(!row){showError('Could not add product — check connection and try again.');return;}$('productForm').reset();fillSubcategorySelect($('fSubcategory'),'');showSuccess('Product "'+name+'" added.');await reload();}catch(err){showError('Add failed: '+(err.message||'unknown error'));}finally{btn.disabled=false;btn.textContent='Add Product';}
+});
+const dialog=$('editDialog');
+$('btnCloseDialog').addEventListener('click',()=>dialog.close());
+$('btnCancelEdit').addEventListener('click',()=>dialog.close());
+dialog.addEventListener('click',(e)=>{const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();});
+$('productsBody').addEventListener('click',async(e)=>{
+const del=e.target.closest('.btn-delete');
+const edt=e.target.closest('[data-edit]');
+if(edt){
+const id=Number(edt.getAttribute('data-edit'));
+const p=products.find(x=>Number(x.id)===id);
+if(!p)return;
+editId=id;clearBanners();
+$('eName').value=p.name||'';$('eBrand').value=p.brand||'';$('ePackageSize').value=p.packageSize||'';
+$('eCost').value=String(p.costPrice??0);$('eSell').value=String(p.sellingPrice??0);
+fillUnitSelect($('eUnit'));$('eUnit').value=p.unit||'piece';
+fillCategorySelect($('eCategory'),true);$('eCategory').value=p.category||'';
+fillSubcategorySelect($('eSubcategory'),p.category||'');$('eSubcategory').value=p.subcategory||'';
+$('eQty').value=String(p.quantity??0);$('eThreshold').value=String(p.lowStockThreshold??5);
+dialog.showModal();return;
+}
+if(del){
+const idRaw=del.getAttribute('data-id');const id=Number(idRaw);
+if(!idRaw||Number.isNaN(id))return;
+if(!confirm('Delete this product? This cannot be undone.'))return;
+clearBanners();del.disabled=true;del.textContent='Deleting...';
+try{const err=await DB.deleteProduct(id);if(err){showError('Delete failed: '+(err.message||'unknown error'));del.disabled=false;del.textContent='Delete';return;}showSuccess('Product deleted.');await reload();}catch(err){showError('Delete failed: '+(err.message||'unknown error'));del.disabled=false;del.textContent='Delete';}
+}
+});
+$('editForm').addEventListener('submit',async(e)=>{
+e.preventDefault();clearBanners();if(editId==null)return;
+const name=$('eName').value.trim();const cost=Number($('eCost').value);const sell=Number($('eSell').value);
+if(!name){showError('Product name is required.');return;}
+if(!Number.isFinite(cost)||cost<0){showError('Cost price must be 0 or more.');return;}
+if(!Number.isFinite(sell)||sell<0){showError('Selling price must be 0 or more.');return;}
+const orig=products.find(x=>Number(x.id)===Number(editId));if(!orig){showError('Product not found — reload and try again.');return;}
+const payload={id:editId,name:name,quantity:Math.max(0,parseInt($('eQty').value||'0',10)||0),costPrice:cost,sellingPrice:sell,unit:$('eUnit').value||'piece',lowStockThreshold:Math.max(0,parseInt($('eThreshold').value||'5',10)||0),category:$('eCategory').value||'',subcategory:$('eSubcategory').value||'',brand:$('eBrand').value.trim(),packageSize:$('ePackageSize').value.trim()};
+const btn=$('btnSaveEdit');btn.disabled=true;btn.textContent='Saving...';
+try{const err=await DB.upsertProduct(payload);if(err){showError('Save failed: '+(err.message||'unknown error'));return;}dialog.close();showSuccess('Product "'+name+'" saved.');await reload();}catch(err){showError('Save failed: '+(err.message||'unknown error'));}finally{btn.disabled=false;btn.textContent='Save Changes';}
+});
+}
+main().catch(err=>{console.error('products fatal:',err);const b=$('errorBox');if(b){b.textContent='Products page failed to start: '+(err.message||'unknown error');b.classList.add('show');}});
+</script>
+</body>
+</html>
+
+
