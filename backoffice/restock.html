@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restock — TindaGo Back Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="db.js"></script>
+<style>
+:root{--primary:#16a34a;--primary-dark:#15803d;--primary-light:#dcfce7;--primary-bg:#f0fdf4;--danger:#dc2626;--danger-light:#fef2f2;--bg:#f8faf9;--surface:#fff;--text:#1e293b;--text-secondary:#64748b;--border:#e2e8f0;--shadow:0 2px 8px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--radius:12px;--radius-lg:16px;--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:100vh;overflow:auto;-webkit-font-smoothing:antialiased}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.topbar-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;color:var(--primary);text-decoration:none}
+.topbar-brand img{width:30px;height:30px;border-radius:8px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.sync-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--primary-dark);background:var(--primary-light);padding:6px 12px;border-radius:20px;border:1px solid #bbf7d0}
+.sync-pill.nodata{color:var(--text-secondary);background:var(--bg);border-color:var(--border)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.btn-signout{padding:8px 16px;background:var(--surface);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer}
+.btn-signout:hover{color:var(--danger);border-color:#fecaca}
+.layout{display:flex;min-height:calc(100vh - 59px)}
+.sidenav{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:6px}
+.sidenav a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--text-secondary);text-decoration:none}
+.sidenav a:hover{background:var(--bg);color:var(--text)}
+.sidenav a.active{background:var(--primary-light);color:var(--primary-dark)}
+.content{flex:1;min-width:0;padding:28px}
+.page-title{font-size:24px;font-weight:800;margin-bottom:6px}
+.page-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
+.error-box{display:none;background:var(--danger-light);color:var(--danger);border:1px solid #fecaca;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+.error-box.show{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px}
+.kpi-label{font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:8px}
+.kpi-value{font-size:26px;font-weight:800;line-height:1}
+.kpi-sub{font-size:13px;color:var(--text-secondary);margin-top:6px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+.card h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.card .hint{font-size:13px;color:var(--text-secondary);margin-bottom:14px}
+.readonly-note{display:flex;align-items:center;gap:8px;background:var(--primary-bg);border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;font-size:13px;color:var(--primary-dark);margin-bottom:16px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:10px 12px;font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-secondary);border-bottom:2px solid var(--border);white-space:nowrap}
+td{padding:12px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+.btn-expand{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg);color:var(--text-secondary);font-size:13px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:8px;cursor:pointer}
+.btn-expand:hover{color:var(--primary-dark);border-color:#bbf7d0;background:var(--primary-light)}
+.btn-expand .chev{transition:transform .18s}
+.btn-expand.open .chev{transform:rotate(180deg)}
+tr.detail{display:none;background:var(--bg)}
+tr.detail.open{display:table-row}
+tr.detail td{padding:0;border-bottom:1px solid var(--border)}
+.detail-inner{padding:18px 20px}
+.detail-inner .mini{width:100%;border-collapse:collapse;font-size:13px}
+.detail-inner .mini th{font-size:11px;padding:8px 10px;background:var(--surface);border-bottom:1.5px solid var(--border)}
+.detail-inner .mini td{padding:8px 10px;background:var(--surface)}
+.recon{margin-top:10px;font-size:12px;color:var(--text-secondary)}
+.recon.warn{color:#b45309;font-weight:600}
+.muted{color:var(--text-secondary)}
+.empty{padding:28px 12px;text-align:center;color:var(--text-secondary);font-size:14px}
+@media(max-width:768px){.kpi-grid{grid-template-columns:1fr}.content{padding:16px}.sidenav{display:none}}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a href="dashboard.html" class="topbar-brand"><img src="../img/TindaGo_logo.png" alt="TindaGo"> TindaGo Back Office</a>
+<div class="topbar-right"><span id="syncPill" class="sync-pill nodata"><span class="sync-dot"></span> Loading...</span><button id="btnSignout" class="btn-signout">Sign Out</button></div>
+</header>
+<div class="layout">
+<nav class="sidenav">
+<a href="dashboard.html">Dashboard</a>
+<a href="products.html">Products</a>
+<a href="reports.html">Reports</a>
+<a href="debts.html">Debts</a>
+<a href="expenses.html">Expenses</a>
+<a href="restock.html" class="active">Restock</a>
+<a href="suppliers.html">Suppliers</a>
+</nav>
+<main class="content">
+<h1 class="page-title">Restock Log</h1>
+<p id="pageSubtitle" class="page-subtitle">Warehouse restock runs &mdash; recorded on mobile, audited here. Read-only.</p>
+<div id="errorBox" class="error-box"></div>
+<div class="readonly-note">Read-only viewer &mdash; bulk buying + stock corrections are tracked and costed on the mobile app. No editing on web.</div>
+<div class="kpi-grid">
+<div class="kpi-card"><div class="kpi-label">Spend This Month</div><div id="kpiSpendMonth" class="kpi-value">&mdash;</div><div id="kpiSpendMonthSub" class="kpi-sub"></div></div>
+<div class="kpi-card"><div class="kpi-label">Restock Runs</div><div id="kpiRuns" class="kpi-value">&mdash;</div><div id="kpiRunsSub" class="kpi-sub"></div></div>
+</div>
+<div class="card">
+<h2>Restock Runs</h2>
+<p class="hint">Newest first. Expand a row to see line items (product, cost/unit, qty, total).</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Date</th><th>Total Cost</th><th>Items</th><th></th></tr></thead>
+<tbody id="restockBody"><tr><td colspan="4" class="empty">Loading restock runs...</td></tr></tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+<script>
+const $=function(id){return document.getElementById(id);};
+function esc(s){var d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;}
+function peso(n){var v=Number(n);if(!Number.isFinite(v))v=0;return '\u20B1'+v.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function showError(m){var b=$('errorBox');if(!b)return;b.textContent=m;b.classList.add('show');}
+function clearError(){var b=$('errorBox');if(b){b.textContent='';b.classList.remove('show');}}
+function todayLocalISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function monthKey(s){return String(s||'').slice(0,7);}
+function thisMonthPrefix(){return todayLocalISO().slice(0,7);}
+function getTotalCost(r){var v=r.totalCost;if(v==null)v=r.total_cost;if(v==null)v=r.amount;var n=Number(v);return Number.isFinite(n)?n:0;}
+function parseItems(row){
+  try{
+    var raw=row.itemsJson;if(raw==null)raw=row.items;if(raw==null)raw=row.item_json;if(raw==null)raw=row.items_json;
+    if(raw==null||raw==='')return[];
+    var arr=typeof raw==='string'?JSON.parse(raw):raw;
+    return Array.isArray(arr)?arr:[];
+  }catch(e){console.warn('itemsJson parse:',e);return[];}
+}
+function sumItemsTotal(items){var s=0;for(var i=0;i<items.length;i++){var v=Number(items[i].totalCost);if(!Number.isFinite(v))v=Number(items[i].total_cost);if(!Number.isFinite(v))v=0;s+=v;}return s;}
+function detailHtml(items,rowTotal){
+  if(!items.length)return '<div class="muted" style="padding:4px 2px"><em>No line items</em></div>';
+  var h='<div class="detail-inner" style="max-height:300px;overflow:auto"><table class="mini"><tr><th>Product</th><th>Cost/Unit</th><th>Qty Added</th><th>Total</th></tr>';
+  for(var i=0;i<items.length;i++){
+    var it=items[i];
+    var pn=it.productName!=null?it.productName:(it.product_name!=null?it.product_name:(it.name!=null?it.name:'--'));
+    var cpu=it.costPerUnit!=null?it.costPerUnit:(it.cost_per_unit!=null?it.cost_per_unit:(it.costPrice!=null?it.costPrice:0));
+    var qa=it.qtyAdded!=null?it.qtyAdded:(it.qty_added!=null?it.qty_added:(it.quantity!=null?it.quantity:0));
+    var tt=it.totalCost!=null?it.totalCost:(it.total_cost!=null?it.total_cost:0);
+    h+='<tr><td>'+esc(pn)+'</td><td>'+peso(cpu)+'</td><td>'+esc(qa)+'</td><td>'+peso(tt)+'</td></tr>';
+  }
+  h+='</table>';
+  var lineSum=sumItemsTotal(items);
+  if(Math.abs(lineSum-rowTotal)>0.009)h+='<div class="recon warn">Reconciliation: line total '+peso(lineSum)+' vs logged '+peso(rowTotal)+' (mismatch)</div>';
+  else if(items.length)h+='<div class="recon">Line total '+peso(lineSum)+' matches logged total.</div>';
+  h+='</div>';return h;
+}
+function paintSyncPill(rows){
+  var pill=$('syncPill');if(!pill)return;
+  if(!rows||!rows.length){pill.textContent='No restock data yet';pill.className='sync-pill nodata';return;}
+  var latest=rows[0]&&rows[0].date?rows[0].date:todayLocalISO();
+  var d=new Date(latest);var label=isNaN(d.getTime())?String(latest).slice(0,10):d.toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'});
+  pill.textContent='Last restock: '+label+' \u00B7 '+rows.length+' runs';
+  pill.className='sync-pill';
+}
+function renderSummary(rows){
+  var prefix=thisMonthPrefix();
+  var sumMonth=0;var countMonth=0;var sumAll=0;
+  for(var i=0;i<rows.length;i++){
+    var c=getTotalCost(rows[i]);sumAll+=c;
+    if(monthKey(rows[i].date)===prefix){sumMonth+=c;countMonth++;}
+  }
+  $('kpiSpendMonth').textContent=peso(sumMonth);
+  $('kpiSpendMonthSub').textContent=countMonth+' run'+(countMonth===1?'':'s')+' in '+prefix+' \u00B7 All-time '+peso(sumAll);
+  $('kpiRuns').textContent=String(rows.length);
+  $('kpiRunsSub').textContent=rows.length===0?'No runs yet':rows.length+' total run'+(rows.length===1?'':'s')+' \u00B7 '+countMonth+' this month';
+}
+function renderTable(rows){
+  var tb=$('restockBody');
+  if(!rows.length){tb.innerHTML='<tr><td colspan="4" class="empty">No restock runs yet \u2014 record one on the mobile app.</td></tr>';return;}
+  var html='';
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    var id=r.id!=null?String(r.id):('row-'+i);
+    var date=r.date!=null?String(r.date).slice(0,10):'--';
+    var total=getTotalCost(r);
+    var items=parseItems(r);
+    var count=items.length||Number(r.itemCount)||Number(r.item_count)||0;
+    if(!count&&Array.isArray(r.items))count=r.items.length;
+    html+='<tr data-log-id="'+esc(id)+'"><td>'+esc(date)+'</td><td>'+peso(total)+'</td><td>'+esc(count)+'</td><td><button class="btn-expand" data-expand="'+esc(id)+'">View <span class="chev">\u25BE</span></button></td></tr>';
+    html+='<tr class="detail" data-detail="'+esc(id)+'"><td colspan="4">'+detailHtml(items,total)+'</td></tr>';
+  }
+  tb.innerHTML=html;
+}
+var logsCache=[];
+async function main(){
+  var session=await requireAuth();if(!session)return;
+  $('btnSignout').addEventListener('click',signOut);
+  DB.init(session);
+  $('pageSubtitle').textContent='Warehouse restock runs \u2014 recorded on mobile, audited here. Signed in as '+(session.user.email||'store');
+  try{logsCache=await DB.getRestockLog();}catch(e){showError('Could not load restock log: '+(e.message||'unknown'));logsCache=[];paintSyncPill([]);renderSummary([]);renderTable([]);return;}
+  if(!Array.isArray(logsCache))logsCache=[];
+  paintSyncPill(logsCache);renderSummary(logsCache);renderTable(logsCache);
+  $('restockBody').addEventListener('click',function(e){
+    var btn=e.target.closest('[data-expand]');if(!btn)return;
+    var id=btn.getAttribute('data-expand');
+    var detail=document.querySelector('tr.detail[data-detail="'+CSS.escape(id)+'"]');
+    if(!detail)detail=document.querySelector('tr[data-detail="'+id+'"]');
+    if(!detail)return;
+    var isOpen=detail.classList.contains('open');
+    if(isOpen){detail.classList.remove('open');btn.classList.remove('open');btn.innerHTML='View <span class="chev">\u25BE</span>';}
+    else{detail.classList.add('open');btn.classList.add('open');btn.innerHTML='Hide <span class="chev">\u25BE</span>';}
+  });
+}
+main().catch(function(err){console.error('restock fatal:',err);showError('Restock page failed to start: '+(err.message||'unknown'));});
+</script>
+</body>
+</html>
