@@ -205,7 +205,26 @@ const DB = {
         }));
     },
 
-    // ── DAILY ENTRIES ──
+    async addExpense(e){
+        const row={
+            user_id:this.uid(),
+            id:e.id??Date.now(),
+            date:e.date,
+            category:e.category,
+            amount:Number(e.amount),
+            note:e.note||'',
+            timestamp:e.timestamp??Date.now()
+        };
+        const{data,error}=await sb.from('expenses').insert(row).select().single();
+        if(error){console.error('addExpense:',error);return null;}return data;
+    },
+
+    async deleteExpense(id){
+        const{error}=await sb.from('expenses').delete().eq('user_id',this.uid()).eq('id',id);
+        if(error){console.error('deleteExpense:',error);return error;}return null;
+    },
+
+        // ── DAILY ENTRIES ──
     async getDailyEntries() {
         const { data, error } = await sb
             .from('daily_entries')

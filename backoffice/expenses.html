@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expenses — TindaGo Back Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+:root{--primary:#16a34a;--primary-dark:#15803d;--primary-light:#dcfce7;--primary-bg:#f0fdf4;--danger:#dc2626;--danger-light:#fef2f2;--bg:#f8faf9;--surface:#fff;--text:#1e293b;--text-secondary:#64748b;--border:#e2e8f0;--shadow:0 2px 8px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--radius:12px;--radius-lg:16px;--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:100vh;overflow:auto;-webkit-font-smoothing:antialiased}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.topbar-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;color:var(--primary);text-decoration:none}
+.topbar-brand img{width:30px;height:30px;border-radius:8px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.sync-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--primary-dark);background:var(--primary-light);padding:6px 12px;border-radius:20px;border:1px solid #bbf7d0}
+.sync-pill.nodata{color:var(--text-secondary);background:var(--bg);border-color:var(--border)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.btn-signout{padding:8px 16px;background:var(--surface);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer}
+.btn-signout:hover{color:var(--danger);border-color:#fecaca}
+.layout{display:flex;min-height:calc(100vh - 59px)}
+.sidenav{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:6px}
+.sidenav a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--text-secondary);text-decoration:none}
+.sidenav a:hover{background:var(--bg);color:var(--text)}
+.sidenav a.active{background:var(--primary-light);color:var(--primary-dark)}
+.content{flex:1;min-width:0;padding:28px}
+.page-title{font-size:24px;font-weight:800;margin-bottom:6px}
+.page-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
+.error-box{display:none;background:var(--danger-light);color:var(--danger);border:1px solid #fecaca;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+.error-box.show{display:block}
+.success-box{display:none;background:var(--primary-light);color:var(--primary-dark);border:1px solid #bbf7d0;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+.success-box.show{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+.card h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.card .hint{font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:13px;font-weight:600}
+.form-input,.form-select{padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--surface);outline:none}
+.form-input:focus,.form-select:focus{border-color:var(--primary)}
+.form-actions{margin-top:16px;display:flex;gap:10px}
+.btn-primary{padding:10px 20px;background:var(--primary);color:#fff;font-size:14px;font-weight:700;font-family:var(--font);border:none;border-radius:10px;cursor:pointer}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-primary:disabled{opacity:0.6;cursor:not-allowed}
+.btn-secondary{padding:10px 18px;background:var(--surface);color:var(--text);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer}
+.btn-secondary:hover{background:var(--bg)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.toolbar input,.toolbar select{padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:var(--font);background:var(--surface);outline:none}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:760px}
+thead th{background:var(--bg);font-size:12px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-secondary);padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border)}
+tbody td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tbody tr.low-stock{background:#fef3c7}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:0.03em;text-transform:uppercase}
+.badge-plenty{background:#dcfce7;color:#15803d}
+.badge-low{background:#fef3c7;color:#b45309;border:1px solid #fde68a}
+.badge-out{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
+.btn-edit,.btn-delete{padding:6px 10px;font-size:12px;font-weight:700;font-family:var(--font);border-radius:8px;cursor:pointer;border:1px solid var(--border)}
+.btn-edit{color:var(--primary-dark);border-color:#bbf7d0;background:var(--primary-light)}
+.btn-delete{color:var(--danger);border-color:#fecaca;background:var(--danger-light)}
+.empty-row td{padding:28px 16px;text-align:center;color:var(--text-secondary)}
+dialog{border:none;border-radius:16px;box-shadow:var(--shadow-lg);padding:0;max-width:560px;width:calc(100% - 32px);margin:auto}
+dialog::backdrop{background:rgba(15,23,42,0.45)}
+.dialog-head{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.dialog-head h3{font-size:16px;font-weight:800}
+.dialog-body{padding:18px 20px}
+.dialog-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;background:var(--bg);border-radius:0 0 16px 16px}
+@media(max-width:768px){.layout{flex-direction:column}.sidenav{width:100%;flex-direction:row;padding:10px;overflow-x:auto}.sidenav a{white-space:nowrap}.content{padding:16px}.form-grid{grid-template-columns:1fr}.topbar{padding:10px 14px}}
+</style>
+<style>
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.kpi{padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:12px}
+.kpi-label{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px}
+.kpi-value{font-size:20px;font-weight:800}
+.kpi-sub{font-size:11px;color:var(--text-secondary);margin-top:4px}
+.cat-grid{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+.mini-table{width:100%;border-collapse:collapse;font-size:13px}
+.mini-table th{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--text-secondary);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
+.mini-table td{padding:6px 8px;border-bottom:1px solid #f1f5f9}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="topbar-brand" href="dashboard.html"><img src="../img/TindaGo_logo.png" alt="TindaGo">TindaGo Back Office</a>
+<div class="topbar-right"><span class="sync-pill nodata" id="syncPill"><span class="sync-dot"></span><span id="syncPillText">No data yet</span></span><button class="btn-signout" id="btnSignout">Sign Out</button></div>
+</header>
+<div class="layout">
+<nav class="sidenav">
+<a href="dashboard.html">Dashboard</a>
+<a href="products.html">Products</a>
+<a href="reports.html">Reports</a>
+<a href="debts.html">Debts</a>
+<a href="expenses.html" class="active">Expenses</a>
+<a href="restock.html">Restock</a>
+<a href="suppliers.html">Suppliers</a>
+</nav>
+<main class="content">
+<h1 class="page-title">Expenses</h1>
+<p class="page-subtitle" id="pageSubtitle">Operating expenses — feed Net Profit. Checking session...</p>
+<div class="error-box" id="errorBox"></div>
+<div class="success-box" id="successBox"></div>
+
+<div class="card">
+<h2>Add Expense</h2>
+<p class="hint">Log an operating cost for the day. Date + category + amount required. Becomes part of Net Profit = sales profit – expenses.</p>
+<form id="expenseForm">
+<div class="form-grid">
+<div class="form-group"><label for="fDate">Date *</label><input class="form-input" id="fDate" type="date" required></div>
+<div class="form-group"><label for="fCategory">Category *</label><select class="form-select" id="fCategory" required><option value="">Select category</option></select></div>
+<div class="form-group"><label for="fAmount">Amount ₱ *</label><input class="form-input" id="fAmount" type="number" min="0.01" step="0.01" placeholder="500.00" required></div>
+<div class="form-group"><label for="fNote">Note</label><input class="form-input" id="fNote" type="text" placeholder="e.g. electric bill" autocomplete="off"></div>
+</div>
+<div class="form-actions"><button type="submit" class="btn-primary" id="btnAdd">Add Expense</button></div>
+</form>
+</div>
+
+<div class="card">
+<h2>Summary</h2>
+<p class="hint" id="summaryHint">Filtered by month. Category breakdown drives your Net Profit story.</p>
+<div class="toolbar">
+<label for="monthFilter" style="font-size:13px;font-weight:600">Month</label>
+<select id="monthFilter" class="form-select" style="min-width:160px"><option value="">All months</option></select>
+<span id="summaryMeta" style="font-size:13px;color:var(--text-secondary);margin-left:auto"></span>
+</div>
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-label">Month Total</div><div class="kpi-value" id="kpiTotal">₱0.00</div><div class="kpi-sub" id="kpiTotalSub">0 expenses</div></div>
+<div class="kpi"><div class="kpi-label">Average</div><div class="kpi-value" id="kpiAvg">₱0.00</div><div class="kpi-sub">per expense</div></div>
+<div class="kpi"><div class="kpi-label">Categories</div><div class="kpi-value" id="kpiCats">0</div><div class="kpi-sub" id="kpiCatsSub">distinct</div></div>
+</div>
+<div class="cat-grid">
+<div class="table-wrap" style="border-radius:12px"><table class="mini-table"><thead><tr><th>Category</th><th style="text-align:right">Amount</th><th style="text-align:right">Share</th></tr></thead><tbody id="categoryBody"><tr class="empty-row"><td colspan="3">No expenses yet.</td></tr></tbody></table></div>
+<div><canvas id="catChart" height="220" style="max-width:100%"></canvas><p id="chartHint" style="font-size:11px;color:var(--text-secondary);text-align:center;margin-top:6px">Category share</p></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Expenses Log</h2>
+<p class="hint" id="tableHint">Newest first (date ↓, time ↓). Delete is per-store scoped.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Date</th><th>Category</th><th style="text-align:right">Amount</th><th>Note</th><th>Action</th></tr></thead>
+<tbody id="expensesBody"><tr class="empty-row"><td colspan="5">Loading...</td></tr></tbody>
+</table>
+</div>
+</div>
+
+</main>
+</div>
+<script>
+const CATEGORIES=['utilities','rent','transport','permits','labor','supplies','maintenance','other'];
+const CAT_LABEL={utilities:'Utilities',rent:'Rent',transport:'Transport',permits:'Permits',labor:'Labor',supplies:'Supplies',maintenance:'Maintenance',other:'Other'};
+const COLORS=['#16a34a','#0ea5e9','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b'];
+function $(id){return document.getElementById(id);}
+function esc(s){const d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;}
+function peso(n){return '\u20B1'+Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function showError(m){const b=$('errorBox');b.textContent=m;b.classList.add('show');}
+function showSuccess(m){const b=$('successBox');b.textContent=m;b.classList.add('show');setTimeout(()=>b.classList.remove('show'),3500);}
+function clearBanners(){$('errorBox').classList.remove('show');$('successBox').classList.remove('show');}
+function todayLocalISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function labelize(c){return CAT_LABEL[c]||c||'Other';}
+function fillCategorySelect(sel,includeEmpty){
+  sel.innerHTML='';
+  if(includeEmpty){const o=document.createElement('option');o.value='';o.textContent='Select category';sel.appendChild(o);}
+  CATEGORIES.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=labelize(c);sel.appendChild(o);});
+}
+function monthKey(e){return (e.date||'').slice(0,7);}
+function distinctMonths(list){const s=new Set();list.forEach(e=>{const k=monthKey(e);if(/^\d{4}-\d{2}$/.test(k)) s.add(k);});return Array.from(s).sort().reverse();}
+function paintSyncPill(list){
+  const pill=$('syncPill'),txt=$('syncPillText');
+  if(!list||!list.length){pill.classList.add('nodata');txt.textContent='No expenses yet';return;}
+  pill.classList.remove('nodata');
+  const total=list.reduce((a,e)=>a+Number(e.amount||0),0);
+  txt.textContent=list.length+' expenses \u00B7 '+peso(total);
+}
+let expenses=[];
+let catChart=null;
+function getFiltered(){
+  const m=$('monthFilter').value;
+  if(!m) return expenses.slice();
+  return expenses.filter(e=>monthKey(e)===m);
+}
+function renderMonthFilter(){
+  const sel=$('monthFilter');
+  const cur=sel.value;
+  const months=distinctMonths(expenses);
+  sel.innerHTML='<option value="">All months</option>';
+  months.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);});
+  if(cur && months.includes(cur)) sel.value=cur;
+}
+function renderTable(){
+  const list=getFiltered().slice().sort((a,b)=>{
+    if(a.date!==b.date) return b.date.localeCompare(a.date);
+    return (b.timestamp||0)-(a.timestamp||0);
+  });
+  const hint=$('tableHint');
+  const body=$('expensesBody');
+  if(!expenses.length){hint.textContent='No expenses yet \u2014 add one above to start tracking net profit.';body.innerHTML='<tr class="empty-row"><td colspan="5">No expenses yet. Your first entry drives Net Profit.</td></tr>';return;}
+  if(!list.length){hint.textContent='No expenses for '+($('monthFilter').value||'this filter')+'.';body.innerHTML='<tr class="empty-row"><td colspan="5">No expenses for this month.</td></tr>';return;}
+  hint.textContent=list.length+' shown \u00B7 newest first (date \u2193). Delete is per-store scoped.';
+  body.innerHTML=list.map(e=>'<tr><td>'+esc(e.date)+'</td><td>'+esc(labelize(e.category))+'</td><td style="text-align:right;font-weight:700">'+esc(peso(e.amount))+'</td><td>'+esc(e.note||'')+'</td><td><button class="btn-delete" data-id="'+e.id+'">Delete</button></td></tr>').join('');
+}
+function renderSummary(){
+  const list=getFiltered();
+  const total=list.reduce((a,e)=>a+Number(e.amount||0),0);
+  const cats=new Set(list.map(e=>e.category).filter(Boolean));
+  $('kpiTotal').textContent=peso(total);
+  $('kpiTotalSub').textContent=list.length+' expense'+(list.length===1?'':'s')+($('monthFilter').value?' \u00B7 '+$('monthFilter').value:'');
+  $('kpiAvg').textContent=peso(list.length?total/list.length:0);
+  $('kpiCats').textContent=String(cats.size);
+  $('kpiCatsSub').textContent=cats.size?Array.from(cats).slice(0,3).map(labelize).join(', ')+(cats.size>3?' +'+(cats.size-3):''): 'distinct';
+  $('summaryMeta').textContent=list.length?('Total '+peso(total)+' \u00B7 '+( $('monthFilter').value || 'all months')):'';
+  const byCat={};
+  list.forEach(e=>{const k=e.category||'other';byCat[k]=(byCat[k]||0)+Number(e.amount||0);});
+  const entries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const catBody=$('categoryBody');
+  if(!entries.length){catBody.innerHTML='<tr class="empty-row"><td colspan="3">No expenses yet.</td></tr>';drawChart([]);return;}
+  catBody.innerHTML=entries.map(([k,v])=>'<tr><td>'+esc(labelize(k))+'</td><td style="text-align:right;font-weight:700">'+esc(peso(v))+'</td><td style="text-align:right;color:var(--text-secondary)">'+(total?Math.round(v/total*100):0)+'%</td></tr>').join('');
+  drawChart(entries);
+}
+
+function drawChart(entries){
+  const canvas=$('catChart');
+  if(!canvas) return;
+  if(typeof Chart==='undefined'){canvas.style.display='none';$('chartHint').textContent='Chart unavailable (offline). Table shows breakdown.';return;}
+  canvas.style.display='block';
+  const labels=entries.map(([k])=>labelize(k));
+  const data=entries.map(([,v])=>v);
+  const bg=labels.map((_,i)=>COLORS[i%COLORS.length]);
+  if(catChart){catChart.destroy();catChart=null;}
+  if(!entries.length) return;
+  catChart=new Chart(canvas,{type:'doughnut',data:{labels:labels,datasets:[{data:data,backgroundColor:bg,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}}}});
+}
+async function reload(){
+  try{expenses=await DB.getExpenses();}catch(err){showError('Could not load expenses: '+(err.message||'unknown'));expenses=[];}
+  paintSyncPill(expenses);
+  renderMonthFilter();
+  renderTable();
+  renderSummary();
+}
+async function main(){
+  const session=await requireAuth();
+  if(!session) return;
+  $('btnSignout').addEventListener('click',signOut);
+  DB.init(session);
+  $('pageSubtitle').textContent='Operating expenses \u2014 feed Net Profit (profit \u2013 expenses). Signed in as '+(session.user.email||'store');
+  fillCategorySelect($('fCategory'),true);
+  $('fDate').value=todayLocalISO();
+  try{expenses=await DB.getExpenses();}catch(err){showError('Could not load expenses: '+(err.message||'unknown'));expenses=[];}
+  paintSyncPill(expenses);
+  renderMonthFilter();
+  renderTable();
+  renderSummary();
+  $('monthFilter').addEventListener('change',()=>{clearBanners();renderTable();renderSummary();});
+  $('expenseForm').addEventListener('submit',async(e)=>{
+    e.preventDefault();clearBanners();
+    const date=$('fDate').value;
+    const category=$('fCategory').value.trim();
+    const amount=Number($('fAmount').value);
+    const note=$('fNote').value.trim();
+    if(!date){showError('Date is required.');return;}
+    if(!category){showError('Category is required.');return;}
+    if(!Number.isFinite(amount)||amount<=0){showError('Amount must be greater than 0.');return;}
+    const btn=$('btnAdd');btn.disabled=true;btn.textContent='Adding...';
+    try{
+      const row=await DB.addExpense({date:date,category:category,amount:amount,note:note});
+      if(!row){showError('Could not add expense \u2014 check connection and try again.');return;}
+      $('fAmount').value='';$('fNote').value='';$('fCategory').value='';$('fDate').value=todayLocalISO();
+      showSuccess('Expense '+peso(amount)+' ('+labelize(category)+') added.');
+      await reload();
+    }catch(err){showError('Add failed: '+(err.message||'unknown'));}finally{btn.disabled=false;btn.textContent='Add Expense';}
+  });
+  $('expensesBody').addEventListener('click',async(e)=>{
+    const btn=e.target.closest('.btn-delete');
+    if(!btn) return;
+    const idRaw=btn.getAttribute('data-id');
+    const id=Number(idRaw);
+    if(!idRaw||Number.isNaN(id)) return;
+    if(!confirm('Delete this expense? This cannot be undone.')) return;
+    clearBanners();btn.disabled=true;btn.textContent='Deleting...';
+    try{const err=await DB.deleteExpense(id);if(err){showError('Delete failed: '+(err.message||'unknown'));btn.disabled=false;btn.textContent='Delete';return;}showSuccess('Expense deleted.');await reload();}catch(err){showError('Delete failed: '+(err.message||'unknown'));btn.disabled=false;btn.textContent='Delete';}
+  });
+}
+main().catch(err=>{console.error('expenses fatal:',err);const b=$('errorBox');if(b){b.textContent='Expenses page failed to start: '+(err.message||'unknown');b.classList.add('show');}});
+
+</script>
+</body>
+</html>
