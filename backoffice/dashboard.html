@@ -9,9 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-  <script src="config.js"></script>
-  <script src="db.js"></script>
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <style>
     /* ─── TindaGo Back-Office Dashboard ─── */
     /* Design tokens mirror style.css :root values (private copy — the
@@ -208,6 +208,7 @@
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
       .charts-grid { grid-template-columns: 1fr; }
     }
+    @media (max-width: 768px){ .layout{flex-direction:column} .sidenav{width:100%;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--border)} }
     @media (max-width: 640px) {
       .sidenav { display: none; }
       .content { padding: 16px; }
@@ -233,9 +234,14 @@
 
   <div class="layout">
     <nav class="sidenav">
-      <a href="dashboard.html" class="active">📊 Dashboard</a>
-      <a href="suppliers.html">🏭 Suppliers</a>
-    </nav>
+  <a href="dashboard.html" class="active">Dashboard</a>
+  <a href="products.html">Products</a>
+  <a href="reports.html">Reports</a>
+  <a href="debts.html">Debts</a>
+  <a href="expenses.html">Expenses</a>
+  <a href="restock.html">Restock</a>
+  <a href="suppliers.html">Suppliers</a>
+</nav>
 
     <main class="content">
       <h1 class="page-title">Store Analytics</h1>
@@ -459,6 +465,7 @@
     }
 
     // Defense-demo rule: always explain the state on screen, never a blank page.
+    document.querySelectorAll('.sidenav a').forEach(a=>{ if(a.getAttribute('href')===location.pathname.split('/').pop().split('?')[0]){ document.querySelectorAll('.sidenav a').forEach(x=>x.classList.remove('active')); a.classList.add('active'); }});
     main().catch(err => {
       console.error('dashboard fatal:', err);
       showError('Dashboard failed to start: ' + (err.message || 'unknown error'));

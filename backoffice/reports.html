@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports — TindaGo Back Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="db.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+:root{--primary:#16a34a;--primary-dark:#15803d;--primary-light:#dcfce7;--primary-bg:#f0fdf4;--danger:#dc2626;--danger-light:#fef2f2;--bg:#f8faf9;--surface:#fff;--text:#1e293b;--text-secondary:#64748b;--border:#e2e8f0;--shadow:0 2px 8px rgba(0,0,0,0.08);--shadow-lg:0 8px 24px rgba(0,0,0,0.12);--radius:12px;--radius-lg:16px;--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:100vh;overflow:auto;-webkit-font-smoothing:antialiased}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.topbar-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;color:var(--primary);text-decoration:none}
+.topbar-brand img{width:30px;height:30px;border-radius:8px}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.sync-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--primary-dark);background:var(--primary-light);padding:6px 12px;border-radius:20px;border:1px solid #bbf7d0}
+.sync-pill.nodata{color:var(--text-secondary);background:var(--bg);border-color:var(--border)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+.btn-signout{padding:8px 16px;background:var(--surface);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer}
+.btn-signout:hover{color:var(--danger);border-color:#fecaca}
+.layout{display:flex;min-height:calc(100vh - 59px)}
+.sidenav{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:6px}
+.sidenav a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--text-secondary);text-decoration:none}
+.sidenav a:hover{background:var(--bg);color:var(--text)}
+.sidenav a.active{background:var(--primary-light);color:var(--primary-dark)}
+.content{flex:1;min-width:0;padding:28px}
+.page-title{font-size:24px;font-weight:800;margin-bottom:6px}
+.page-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
+.error-box{display:none;background:var(--danger-light);color:var(--danger);border:1px solid #fecaca;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+.error-box.show{display:block}
+.success-box{display:none;background:var(--primary-light);color:var(--primary-dark);border:1px solid #bbf7d0;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+.success-box.show{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+.card h2{font-size:16px;font-weight:700;margin-bottom:4px}
+.card .hint{font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:16px}
+.kpi-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px}
+.kpi-value{font-size:20px;font-weight:800;line-height:1}
+.kpi-sub{font-size:12px;color:var(--text-secondary);margin-top:4px}
+</style>
+<style>
+.period-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center}
+.period-btn{padding:8px 14px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface);font-size:13px;font-weight:700;color:var(--text-secondary);cursor:pointer}
+.period-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.custom-range{display:none;align-items:center;gap:8px;margin-left:8px}
+.custom-range.show{display:flex}
+.custom-range input{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.layout{flex-direction:column}.sidenav{width:100%;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--border)}}
+@media(max-width:640px){.kpi-grid{grid-template-columns:1fr}}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:16px}
+.kpi-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);margin-bottom:6px}
+.kpi-value{font-size:22px;font-weight:800}
+.kpi-sub{font-size:12px;color:var(--text-secondary);margin-top:4px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:900px){.chart-grid{grid-template-columns:1fr}}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-secondary);background:var(--bg)}
+.export-row{display:flex;justify-content:flex-end;margin-top:12px}
+.btn{padding:10px 16px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-weight:700;cursor:pointer;font-family:var(--font)}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.empty{padding:18px;text-align:center;color:var(--text-secondary)}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="topbar-brand" href="dashboard.html"><img src="../img/TindaGo_logo.png" alt="TindaGo">TindaGo Back Office</a>
+<div class="topbar-right"><span class="sync-pill nodata" id="syncPill"><span class="sync-dot"></span><span id="syncPillText">No data yet</span></span><button class="btn-signout" id="btnSignout">Sign Out</button></div>
+</header>
+<div class="layout">
+<nav class="sidenav">
+<a href="dashboard.html">Dashboard</a>
+<a href="products.html">Products</a>
+<a href="reports.html" class="active">Reports</a>
+<a href="debts.html">Debts</a>
+<a href="expenses.html">Expenses</a>
+<a href="restock.html">Restock</a>
+<a href="suppliers.html">Suppliers</a>
+</nav>
+<main class="content">
+<h1 class="page-title">Reports & Analytics</h1>
+<p class="page-subtitle" id="pageSubtitle">Period analytics — client-side, no server aggregation. Signed in as store.</p>
+<div class="error-box" id="errorBox"></div>
+<div class="success-box" id="successBox"></div>
+<div class="period-row" id="periodRow">
+<button class="period-btn" data-period="today">Today</button>
+<button class="period-btn active" data-period="week">This Week</button>
+<button class="period-btn" data-period="month">This Month</button>
+<button class="period-btn" data-period="custom">Custom</button>
+<span class="custom-range" id="customRange">
+<input type="date" id="customFrom"> <span style="color:var(--text-secondary)">to</span> <input type="date" id="customTo">
+<button class="btn" id="btnApplyCustom" style="padding:6px 12px">Apply</button>
+</span>
+</div>
+<div class="kpi-grid">
+<div class="kpi-card"><div class="kpi-label">Total Sales</div><div class="kpi-value" id="kpiSales">₱0.00</div><div class="kpi-sub" id="kpiSalesSub">0 transactions</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Profit</div><div class="kpi-value" id="kpiProfit">₱0.00</div><div class="kpi-sub" id="kpiProfitSub">—</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Expenses</div><div class="kpi-value" id="kpiExpenses">₱0.00</div><div class="kpi-sub" id="kpiExpensesSub">operating</div></div>
+<div class="kpi-card"><div class="kpi-label">Net Profit</div><div class="kpi-value" id="kpiNet">₱0.00</div><div class="kpi-sub" id="kpiNetSub">profit − expenses</div></div>
+<div class="kpi-card"><div class="kpi-label">Transactions</div><div class="kpi-value" id="kpiCount">0</div><div class="kpi-sub" id="kpiCountSub">sales rows</div></div>
+<div class="kpi-card"><div class="kpi-label">Avg Ticket</div><div class="kpi-value" id="kpiAvg">₱0.00</div><div class="kpi-sub" id="kpiAvgSub">per transaction</div></div>
+</div>
+<div class="chart-grid">
+<div class="card"><h2>Sales Trend</h2><p class="hint" id="salesHint">Daily totals across period</p><canvas id="salesCanvas" height="220"></canvas></div>
+<div class="card"><h2>Expenses by Category</h2><p class="hint" id="expHint">Operating breakdown</p><canvas id="expCanvas" height="220"></canvas></div>
+</div>
+<div class="card"><h2>Best Sellers — Top 10</h2><p class="hint">By quantity sold in period</p><div class="table-wrap"><table><thead><tr><th>#</th><th>Product</th><th>Qty Sold</th><th>Revenue</th></tr></thead><tbody id="topBody"><tr><td colspan="4" class="empty">No sales in period</td></tr></tbody></table></div></div>
+<div class="card"><h2>Profit Margin — by Product</h2><p class="hint">Revenue vs cost (product catalog lookup; — if cost unknown)</p><div class="table-wrap"><table><thead><tr><th>Product</th><th>Qty</th><th>Revenue</th><th>Est. Cost</th><th>Margin</th></tr></thead><tbody id="marginBody"><tr><td colspan="5" class="empty">No data</td></tr></tbody></table></div>
+<div class="export-row"><button class="btn btn-primary" id="btnExport">Export CSV</button></div>
+</div>
+</main>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function peso(n){return '₱'+Number(n||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function clearBanners(){$('errorBox').classList.remove('show');$('successBox').classList.remove('show');}
+function showError(m){const b=$('errorBox');b.textContent=m;b.classList.add('show');$('successBox').classList.remove('show');}
+function showSuccess(m){const b=$('successBox');b.textContent=m;b.classList.add('show');$('errorBox').classList.remove('show');}
+function todayLocalISO(){const d=new Date();const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,10);}
+function parseTs(v){
+  if(v==null) return null;
+  if(typeof v==='number') return new Date(v>1e12?v: v>1e10?v: v*1000);
+  if(typeof v==='string'){const s=v.trim(); if(!s) return null; if(/^\d+$/.test(s)){const n=Number(s); return new Date(n>1e12?n: n>1e10?n: n*1000);} const d=new Date(s); return isNaN(d.getTime())?null:d;}
+  if(v instanceof Date) return isNaN(v.getTime())?null:v;
+  return null;
+}
+function fmtDateISO(d){const z=new Date(d.getTime()-d.getTimezoneOffset()*60000);return z.toISOString().slice(0,10);}
+function addDays(iso,n){const d=new Date(iso);d.setDate(d.getDate()+n);return fmtDateISO(d);}
+function rangeForPeriod(period,from,to){
+  const today=todayLocalISO();
+  if(period==='today') return [today,today];
+  if(period==='week'){const d=new Date(today);const day=d.getDay();const monOffset=(day===0?-6:1-day);const mon=addDays(today,monOffset);return [mon,today];}
+  if(period==='month') return [today.slice(0,7)+'-01',today];
+  if(period==='custom'){if(from&&to) return [from,to]; if(from) return [from,from]; return [today,today];}
+  return [today,today];
+}
+function isInRange(dateStr,from,to){if(!dateStr) return false; const d=String(dateStr).slice(0,10); return d>=from && d<=to;}
+function paintSyncPill(sales,expenses){
+  const pill=$('syncPill'),txt=$('syncPillText'); if(!pill||!txt) return;
+  const total=(sales?sales.length:0)+(expenses?expenses.length:0);
+  if(total===0){pill.className='sync-pill nodata';txt.textContent='No data yet';return;}
+  pill.className='sync-pill';
+  let latest=null;
+  for(const r of (sales||[])){const tt=parseTs(r.timestamp||r.date); if(tt&&(!latest||tt>latest)) latest=tt;}
+  for(const r of (expenses||[])){const tt=parseTs(r.timestamp||r.date); if(tt&&(!latest||tt>latest)) latest=tt;}
+  const label=latest?latest.toLocaleDateString('en-PH',{month:'short',day:'numeric'}):'live';
+  txt.textContent=(sales?sales.length:0)+' sales \u00B7 '+(expenses?expenses.length:0)+' expenses \u00B7 '+label;
+}
+let salesChart=null,expChart=null;
+function drawSales(labels,data){
+  const canvas=$('salesCanvas'); if(!canvas) return;
+  if(typeof Chart==='undefined'){canvas.style.display='none';$('salesHint').textContent='Chart unavailable (offline).';return;}
+  canvas.style.display='block';
+  if(salesChart){salesChart.destroy();salesChart=null;}
+  if(!labels.length) return;
+  salesChart=new Chart(canvas,{type:'line',data:{labels:labels,datasets:[{label:'Sales',data:data,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,0.12)',tension:0.35,fill:true,pointRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>peso(v)}}}}});
+}
+function drawExpenses(labels,data){
+  const canvas=$('expCanvas'); if(!canvas) return;
+  const COLORS=['#16a34a','#0ea5e9','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16','#f97316'];
+  if(typeof Chart==='undefined'){canvas.style.display='none';$('expHint').textContent='Chart unavailable (offline).';return;}
+  canvas.style.display='block';
+  if(expChart){expChart.destroy();expChart=null;}
+  if(!labels.length || data.every(v=>v===0)){$('expHint').textContent='No expenses in period';return;}
+  const bg=labels.map((_,i)=>COLORS[i%COLORS.length]);
+  expChart=new Chart(canvas,{type:'doughnut',data:{labels:labels,datasets:[{data:data,backgroundColor:bg,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}}}});
+}
+function labelize(s){if(!s) return 'Other'; return String(s).charAt(0).toUpperCase()+String(s).slice(1);}
+function exportCsv(rows){
+  const header=['date','description','amount','quantity','profit'];
+  const lines=[header.join(',')].concat(rows.map(r=>{
+    const desc='"'+String(r.description||'').replace(/"/g,'""')+'"';
+    return [String(r.date||'').slice(0,10),desc,Number(r.amount||0),Number(r.quantity||0),Number(r.profit||0)].join(',');
+  }));
+  const csv=lines.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='tindago-report-'+new Date().toISOString().slice(0,10)+'.csv'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+let allSales=[], allExpenses=[], allProducts=[], currentPeriod='week';
+function render(filteredSales, filteredExpenses){
+  const totalSales=filteredSales.reduce((s,r)=>s+(Number(r.amount)||0),0);
+  const totalProfit=filteredSales.reduce((s,r)=>s+(Number(r.profit)||0),0);
+  const totalExpenses=filteredExpenses.reduce((s,r)=>s+(Number(r.amount)||0),0);
+  const net=totalProfit-totalExpenses;
+  const count=filteredSales.length;
+  const avg=count?totalSales/count:0;
+  $('kpiSales').textContent=peso(totalSales);
+  $('kpiSalesSub').textContent=count+' transaction'+(count===1?'':'s');
+  $('kpiProfit').textContent=peso(totalProfit);
+  $('kpiProfitSub').textContent=totalSales?('~ '+((totalProfit/totalSales)*100).toFixed(1)+'% margin'):'no sales';
+  $('kpiExpenses').textContent=peso(totalExpenses);
+  $('kpiExpensesSub').textContent=filteredExpenses.length+' expense'+(filteredExpenses.length===1?'':'s');
+  $('kpiNet').textContent=peso(net);
+  $('kpiNetSub').textContent=net>=0?'profit after expenses':'loss';
+  $('kpiCount').textContent=String(count);
+  $('kpiCountSub').textContent=filteredSales.length+' rows in period';
+  $('kpiAvg').textContent=peso(avg);
+  $('kpiAvgSub').textContent=count?'per transaction':'--';
+  const [from,to]=rangeForPeriod(currentPeriod, $('customFrom').value, $('customTo').value);
+  const labels=[], dataMap={};
+  let cur=from, guard=0;
+  while(cur<=to && guard<62){ labels.push(cur); dataMap[cur]=0; cur=addDays(cur,1); guard++; }
+  for(const s of filteredSales){ const d=String(s.date||'').slice(0,10); if(dataMap[d]!=null) dataMap[d]+=Number(s.amount)||0; }
+  const data=labels.map(d=>dataMap[d]||0);
+  const shortLabels=labels.map(d=>{ const dt=new Date(d); return isNaN(dt.getTime())?d:dt.toLocaleDateString('en-PH',{month:'short',day:'numeric'}); });
+  drawSales(shortLabels, data);
+  const byCat={}; for(const e of filteredExpenses){ const k=(e.category||'other').trim().toLowerCase()||'other'; byCat[k]=(byCat[k]||0)+(Number(e.amount)||0); }
+  const catEntries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const catLabels=catEntries.map(([k])=>labelize(k));
+  const catData=catEntries.map(([,v])=>v);
+  drawExpenses(catLabels, catData);
+  const byDesc={}, revByDesc={};
+  for(const s of filteredSales){ const key=(s.description||'Unnamed item').trim()||'Unnamed item'; byDesc[key]=(byDesc[key]||0)+(Number(s.quantity)||0); revByDesc[key]=(revByDesc[key]||0)+(Number(s.amount)||0); }
+  const top=Object.entries(byDesc).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const tb=$('topBody');
+  if(!top.length){ tb.innerHTML='<tr><td colspan="4" class="empty">No sales in period</td></tr>'; }
+  else { tb.innerHTML=top.map(([name,qty],i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(name)+'</td><td>'+esc(qty)+'</td><td>'+peso(revByDesc[name]||0)+'</td></tr>').join(''); }
+  const mb=$('marginBody');
+  if(!top.length){ mb.innerHTML='<tr><td colspan="5" class="empty">No data</td></tr>'; }
+  else {
+    const rows=top.map(([name,qty])=>{
+      const rev=revByDesc[name]||0;
+      let prod=null; for(const pr of allProducts){ if((pr.name||'').trim()===name){ prod=pr; break; } }
+      let cost=null, margin=null;
+      if(prod && Number.isFinite(Number(prod.costPrice))){ cost=Number(prod.costPrice)*Number(qty); margin=rev-cost; }
+      return '<tr><td>'+esc(name)+'</td><td>'+esc(qty)+'</td><td>'+peso(rev)+'</td><td>'+(cost==null?'--':peso(cost))+'</td><td>'+(margin==null?'--':peso(margin))+'</td></tr>';
+    }).join('');
+    mb.innerHTML=rows;
+  }
+  paintSyncPill(filteredSales, filteredExpenses);
+}
+function getFiltered(){
+  const [from,to]=rangeForPeriod(currentPeriod, $('customFrom').value, $('customTo').value);
+  const fSales=allSales.filter(s=>isInRange(s.date, from, to));
+  const fExp=allExpenses.filter(e=>isInRange(e.date, from, to));
+  return [fSales, fExp];
+}
+async function main(){
+  const session=await requireAuth(); if(!session) return;
+  $('btnSignout').addEventListener('click', signOut);
+  DB.init(session);
+  $('pageSubtitle').textContent='Period analytics \u2014 client-side, no server aggregation. Signed in as '+(session.user.email||'store');
+  $('customFrom').value=todayLocalISO(); $('customTo').value=todayLocalISO();
+  try{ [allSales, allExpenses, allProducts]=await Promise.all([DB.getSales(), DB.getExpenses(), DB.getProducts()]); }catch(e){ showError(e.message||'Failed to load'); allSales=[]; allExpenses=[]; allProducts=[]; }
+  document.querySelectorAll('.period-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentPeriod=btn.getAttribute('data-period');
+      if(currentPeriod==='custom'){ $('customRange').classList.add('show'); } else { $('customRange').classList.remove('show'); const [fS,fE]=getFiltered(); render(fS,fE); }
+    });
+  });
+  $('btnApplyCustom').addEventListener('click',()=>{
+    if(currentPeriod!=='custom'){ document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active')); document.querySelector('[data-period="custom"]').classList.add('active'); currentPeriod='custom'; }
+    const [fS,fE]=getFiltered(); render(fS,fE);
+  });
+  $('btnExport').addEventListener('click',()=>{
+    const [fS]=getFiltered(); if(!fS.length){ showError('No sales to export in this period.'); return; } exportCsv(fS); showSuccess('CSV exported \u2014 '+fS.length+' rows.');
+  });
+  document.querySelectorAll('.sidenav a').forEach(a=>{ if(a.getAttribute('href')===location.pathname.split('/').pop().split('?')[0]){ document.querySelectorAll('.sidenav a').forEach(x=>x.classList.remove('active')); a.classList.add('active'); }});
+  const [fS2,fE2]=getFiltered(); render(fS2,fE2);
+}
+main().catch(err=>{ console.error('reports fatal:',err); const b=$('errorBox'); if(b){ b.textContent='Reports page failed to start: '+(err.message||'unknown'); b.classList.add('show'); }});
+</script>
+</body>
+</html>

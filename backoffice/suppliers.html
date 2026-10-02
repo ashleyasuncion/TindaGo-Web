@@ -27,6 +27,7 @@
     .sidenav a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--text-secondary);text-decoration:none;transition:background 0.15s,color 0.15s}
     .sidenav a:hover{background:var(--bg);color:var(--text)}
     .sidenav a.active{background:var(--primary-light);color:var(--primary-dark)}
+@media(max-width:768px){.layout{flex-direction:column}.sidenav{width:100%;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--border)}}
     .content{flex:1;min-width:0;padding:28px}
     .page-title{font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px}
     .page-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
@@ -64,10 +65,18 @@
 <body>
   <header class="topbar">
     <a class="topbar-brand" href="dashboard.html"><img src="../img/TindaGo_logo.png" alt="TindaGo">TindaGo Back Office</a>
-    <div class="topbar-right"><span class="topbar-hint" title="Web-only table — never synced to the phone">Web-only &middot; per-store</span><button class="btn-signout" id="btnSignout">Sign Out</button></div>
+    <div class="topbar-right"><span class="sync-pill nodata" id="syncPill"><span class="sync-dot"></span><span id="syncPillText">No suppliers yet</span></span><button class="btn-signout" id="btnSignout">Sign Out</button></div>
   </header>
   <div class="layout">
-    <nav class="sidenav"><a href="dashboard.html">Dashboard</a><a href="suppliers.html" class="active">Suppliers</a></nav>
+    <nav class="sidenav">
+  <a href="dashboard.html">Dashboard</a>
+  <a href="products.html">Products</a>
+  <a href="reports.html">Reports</a>
+  <a href="debts.html">Debts</a>
+  <a href="expenses.html">Expenses</a>
+  <a href="restock.html">Restock</a>
+  <a href="suppliers.html" class="active">Suppliers</a>
+</nav>
     <main class="content">
       <h1 class="page-title">Suppliers</h1>
       <p class="page-subtitle" id="pageSubtitle">Web-exclusive supplier contacts — stored per-store (user_id-scoped), never synced to the Android counter app.</p>
@@ -127,6 +136,7 @@
       $('errorBox').classList.remove('show');
       $('successBox').classList.remove('show');
     }
+    function paintSyncPill(rows){const pill=document.getElementById('syncPill'),txt=document.getElementById('syncPillText');if(!pill||!txt)return;if(!rows||!rows.length){pill.className='sync-pill nodata';txt.textContent='No suppliers yet';return;}pill.className='sync-pill';txt.textContent=rows.length+' suppliers \u00B7 live';}
     function renderTable(rows) {
       const tbody = $('suppliersBody');
       const hint = $('tableHint');
@@ -162,6 +172,7 @@
         renderTable([]);
         return;
       }
+      paintSyncPill(suppliers);
       renderTable(suppliers);
       const form = $('supplierForm');
       const btnAdd = $('btnAdd');
@@ -215,6 +226,7 @@
           }
           showSuccess('Supplier deleted.');
           suppliers = await DB.getSuppliers();
+          paintSyncPill(suppliers);
           renderTable(suppliers);
         } catch (err) {
           console.error('deleteSupplier:', err);
@@ -224,6 +236,7 @@
         }
       });
     }
+    document.querySelectorAll('.sidenav a').forEach(a=>{ if(a.getAttribute('href')===location.pathname.split('/').pop().split('?')[0]){ document.querySelectorAll('.sidenav a').forEach(x=>x.classList.remove('active')); a.classList.add('active'); }});
     main().catch(err => {
       console.error('suppliers fatal:', err);
       const box = document.getElementById('errorBox');

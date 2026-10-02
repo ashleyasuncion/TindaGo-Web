@@ -288,6 +288,7 @@ async function main(){
     try{const err=await DB.deleteExpense(id);if(err){showError('Delete failed: '+(err.message||'unknown'));btn.disabled=false;btn.textContent='Delete';return;}showSuccess('Expense deleted.');await reload();}catch(err){showError('Delete failed: '+(err.message||'unknown'));btn.disabled=false;btn.textContent='Delete';}
   });
 }
+document.querySelectorAll('.sidenav a').forEach(a=>{ if(a.getAttribute('href')===location.pathname.split('/').pop().split('?')[0]){ document.querySelectorAll('.sidenav a').forEach(x=>x.classList.remove('active')); a.classList.add('active'); }});
 main().catch(err=>{console.error('expenses fatal:',err);const b=$('errorBox');if(b){b.textContent='Expenses page failed to start: '+(err.message||'unknown');b.classList.add('show');}});
 
 </script>
