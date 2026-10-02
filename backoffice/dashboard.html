@@ -215,6 +215,34 @@
       .kpi-grid { grid-template-columns: 1fr; }
       .topbar { padding: 12px 16px; }
     }
+    /* ─── Executive additions (Phase 5.6 hub) ─── */
+    .kpi-card.kpi-expenses .kpi-value{color:#0ea5e9}
+    .kpi-card.kpi-net .kpi-value{color:#16a34a}
+    .kpi-card.kpi-restock .kpi-value{color:#7c3aed}
+    .kpi-card.kpi-suppliers .kpi-value{color:#0f766e}
+    .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+    .quick-tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-decoration:none;color:var(--text);display:flex;flex-direction:column;gap:6px;transition:border-color .2s,box-shadow .2s}
+    .quick-tile:hover{border-color:var(--primary);box-shadow:var(--shadow)}
+    .quick-tile .qt-count{font-size:22px;font-weight:800;color:var(--primary-dark)}
+    .quick-tile .qt-label{font-size:13px;font-weight:700}
+    .quick-tile .qt-sub{font-size:12px;color:var(--text-secondary)}
+    .quick-tile .qt-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--primary-light);color:var(--primary-dark);align-self:flex-start}
+    .action-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px;margin-bottom:24px}
+    .action-card h2{font-size:16px;font-weight:700;margin-bottom:4px}
+    .action-card p.hint{font-size:12px;color:var(--text-secondary);margin-bottom:12px}
+    .action-list{display:flex;flex-direction:column;gap:10px}
+    .action-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:inherit;transition:background .2s,border-color .2s}
+    .action-row:hover{background:var(--primary-bg);border-color:#bbf7d0}
+    .action-badge{font-size:11px;font-weight:700;padding:4px 8px;border-radius:20px;white-space:nowrap}
+    .badge-danger{background:var(--danger-light);color:var(--danger)}
+    .badge-warn{background:#fef3c7;color:#b45309}
+    .badge-info{background:var(--primary-light);color:var(--primary-dark)}
+    .badge-neutral{background:var(--bg);color:var(--text-secondary)}
+    .action-main{flex:1;min-width:0}
+    .action-title{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .action-sub{font-size:12px;color:var(--text-secondary)}
+    @media(max-width:900px){.quick-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:640px){.quick-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -249,10 +277,10 @@
 
       <div class="error-box" id="errorBox"></div>
 
-      <!-- ─── KPI Metrics Cards ─── -->
-      <section class="kpi-grid">
+      <!-- ─── KPI Row 1: Sales/Profit/Net/Debt ─── -->
+      <section class="kpi-grid" id="kpiRow1">
         <div class="kpi-card kpi-sales">
-          <div class="kpi-label">Total Sales</div>
+          <div class="kpi-label">Total Sales (7d)</div>
           <div class="kpi-value" id="kpiSales">—</div>
           <div class="kpi-sub" id="kpiSalesCount">—</div>
         </div>
@@ -261,28 +289,68 @@
           <div class="kpi-value" id="kpiProfit">—</div>
           <div class="kpi-sub" id="kpiProfitMargin">—</div>
         </div>
+        <div class="kpi-card kpi-net">
+          <div class="kpi-label">Net Profit (Profit − Expenses)</div>
+          <div class="kpi-value" id="kpiNet">—</div>
+          <div class="kpi-sub" id="kpiNetSub">—</div>
+        </div>
         <div class="kpi-card kpi-debt">
           <div class="kpi-label">Outstanding Debt</div>
           <div class="kpi-value" id="kpiDebt">—</div>
           <div class="kpi-sub" id="kpiDebtCount">—</div>
         </div>
+      </section>
+      <!-- ─── KPI Row 2: Operational Health ─── -->
+      <section class="kpi-grid" id="kpiRow2">
         <div class="kpi-card kpi-low">
           <div class="kpi-label">Low Stock Alert</div>
           <div class="kpi-value" id="kpiLowStock">—</div>
           <div class="kpi-sub" id="kpiStockTotal">—</div>
         </div>
+        <div class="kpi-card kpi-expenses">
+          <div class="kpi-label">Expenses · Month to Date</div>
+          <div class="kpi-value" id="kpiExpenses">—</div>
+          <div class="kpi-sub" id="kpiExpensesSub">—</div>
+        </div>
+        <div class="kpi-card kpi-restock">
+          <div class="kpi-label">Restock Spend · Month</div>
+          <div class="kpi-value" id="kpiRestock">—</div>
+          <div class="kpi-sub" id="kpiRestockSub">—</div>
+        </div>
+        <div class="kpi-card kpi-suppliers">
+          <div class="kpi-label">Suppliers</div>
+          <div class="kpi-value" id="kpiSuppliers">—</div>
+          <div class="kpi-sub" id="kpiSuppliersSub">—</div>
+        </div>
+      </section>
+
+      <!-- ─── Quick Tiles ─── -->
+      <section class="quick-grid" id="quickTiles">
+        <a class="quick-tile" href="products.html"><span class="qt-badge" id="qtProdBadge">—</span><span class="qt-label">Products</span><span class="qt-count" id="qtProdCount">—</span><span class="qt-sub" id="qtProdSub">inventory</span></a>
+        <a class="quick-tile" href="reports.html"><span class="qt-badge" id="qtRepBadge">period</span><span class="qt-label">Reports</span><span class="qt-count" id="qtRepCount">—</span><span class="qt-sub">sales in last 7 days</span></a>
+        <a class="quick-tile" href="debts.html"><span class="qt-badge" id="qtDebtBadge">—</span><span class="qt-label">Debts</span><span class="qt-count" id="qtDebtCount">—</span><span class="qt-sub" id="qtDebtSub">open accounts</span></a>
+        <a class="quick-tile" href="expenses.html"><span class="qt-badge" id="qtExpBadge">—</span><span class="qt-label">Expenses</span><span class="qt-count" id="qtExpCount">—</span><span class="qt-sub" id="qtExpSub">month total</span></a>
+        <a class="quick-tile" href="restock.html"><span class="qt-badge" id="qtRestockBadge">—</span><span class="qt-label">Restock</span><span class="qt-count" id="qtRestockCount">—</span><span class="qt-sub" id="qtRestockSub">runs this month</span></a>
+        <a class="quick-tile" href="suppliers.html"><span class="qt-badge" id="qtSupBadge">—</span><span class="qt-label">Suppliers</span><span class="qt-count" id="qtSupCount">—</span><span class="qt-sub" id="qtSupSub">contacts</span></a>
+      </section>
+
+      <!-- ─── Action Center ─── -->
+      <section class="action-card" id="actionCard">
+        <h2>Action Center</h2>
+        <p class="hint">Top 5 urgent items — out-of-stock, low stock, overdue debts. Click to jump.</p>
+        <div class="action-list" id="actionList"><div class="empty-note">Loading…</div></div>
       </section>
 
       <!-- ─── Visual Analytics ─── -->
       <section class="charts-grid">
         <div class="chart-card">
-          <h2>7-Day Sales Volume</h2>
-          <p class="hint">Synced sales totals per calendar day (local time).</p>
+          <h2>7-Day Net Trend — Sales & Net</h2>
+          <p class="hint" id="salesHint">Sales bar + net line (profit minus daily expenses), local time.</p>
           <div class="chart-wrap"><canvas id="chartSales"></canvas></div>
         </div>
         <div class="chart-card">
-          <h2>Top 5 Products by Quantity</h2>
-          <p class="hint">Units sold, aggregated from synced sales lines.</p>
+          <h2>Expenses by Category</h2>
+          <p class="hint" id="expHint">Month-to-date share — drives Net Profit.</p>
           <div class="chart-wrap"><canvas id="chartTop"></canvas></div>
         </div>
       </section>
@@ -291,177 +359,145 @@
 
   <script>
     // ── Dashboard bootstrap: auth -> init -> load (fail-soft) ──
-    const $ = (id) => document.getElementById(id);
-
-    function showError(msg) {
-      const box = $('errorBox');
-      box.textContent = msg;
-      box.classList.add('show');
+    const $=id=>document.getElementById(id);
+    function showError(m){const b=$('errorBox');b.textContent=m;b.classList.add('show');}
+    function esc(s){const d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;}
+    function peso(n){const v=Number(n)||0;return '\u20B1'+v.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});}
+    const CAT_LABEL={utilities:'Utilities',rent:'Rent',transport:'Transport',permits:'Permits',labor:'Labor',supplies:'Supplies',maintenance:'Maintenance',other:'Other'};
+    const COLORS=['#16a34a','#0ea5e9','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b'];
+    function labelize(c){return CAT_LABEL[c]||c||'Other';}
+    function todayLocalISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+    function monthKey(s){return String(s||'').slice(0,7);}
+    function thisMonthPrefix(){return todayLocalISO().slice(0,7);}
+    function getTotalCost(r){let v=r.totalCost;if(v==null) v=r.total_cost;if(v==null) v=r.amount;const n=Number(v);return Number.isFinite(n)?n:0;}
+    function parseTs(v){if(v==null) return null;if(typeof v==='number') return new Date(v>1e12?v:v>1e10?v:v*1000);if(typeof v==='string'){const s=v.trim();if(!s) return null;if(/^\d+$/.test(s)){const n=Number(s);return new Date(n>1e12?n:n>1e10?n:n*1000);}const d=new Date(s);return isNaN(d.getTime())?null:d;}if(v instanceof Date) return isNaN(v.getTime())?null:v;return null;}
+    function daysSince(ts){const d=parseTs(ts);if(!d) return 0;return Math.floor((Date.now()-d.getTime())/86400000);}
+    function paintSyncPill(sales,expenses,restock){
+      const pill=$('syncPill'),txt=$('syncPillText');if(!pill||!txt) return;
+      const total=(sales?sales.length:0)+(expenses?expenses.length:0)+(restock?restock.length:0);
+      if(total===0){pill.className='sync-pill nodata';txt.textContent='No data yet';return;}
+      pill.className='sync-pill';
+      let latest=null;
+      for(const r of (sales||[])){const tt=parseTs(r.timestamp||r.date);if(tt&&(!latest||tt>latest)) latest=tt;}
+      for(const r of (restock||[])){const tt=parseTs(r.date);if(tt&&(!latest||tt>latest)) latest=tt;}
+      const label=latest?latest.toLocaleDateString('en-PH',{month:'short',day:'numeric'}):'live';
+      txt.textContent=(sales?sales.length:0)+' sales \u00B7 '+(expenses?expenses.length:0)+' expenses \u00B7 '+label;
+      const age=latest?Date.now()-latest.getTime():0;
+      if(age>24*60*60*1000) pill.classList.add('stale');
+      pill.title=latest?('Newest: '+latest.toLocaleString('en-PH')):'';
+    }
+    function last7Days(sales){
+      const days=[];
+      for(let back=6;back>=0;back--){const d=new Date();d.setDate(d.getDate()-back);const yyyy=d.getFullYear();const mm=String(d.getMonth()+1).padStart(2,'0');const dd=String(d.getDate()).padStart(2,'0');days.push({key:yyyy+'-'+mm+'-'+dd,label:d.toLocaleDateString('en-PH',{weekday:'short'})});}
+      return days.map(day=>({label:day.label,key:day.key,total:sales.filter(s=>s.date===day.key).reduce((a,s)=>a+(Number(s.amount)||0),0),profit:sales.filter(s=>s.date===day.key).reduce((a,s)=>a+(Number(s.profit)||0),0)}));
     }
 
-    // Peso formatter for the defense demo: ₱ with 2 decimals.
-    function peso(n) {
-      const v = Number(n) || 0;
-      return '₱' + v.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    // Sync pill: green = fresh (< 24h), amber = stale, grey = no data yet.
-    // Sales timestamps are device-epoch millis; the pill is best-effort freshness,
-    // NOT a guarantee — the dashboard shows whatever Supabase returned.
-    function paintSyncPill(sales) {
-      const pill = $('syncPill');
-      const text = $('syncPillText');
-      pill.classList.remove('stale', 'nodata');
-      if (!sales.length) {
-        pill.classList.add('nodata');
-        text.textContent = 'No sales synced yet';
-        return;
+    let salesChart=null,topChart=null;
+    function drawCharts(seven, sevenExpenses, catEntries){
+      const c1=$('chartSales'),c2=$('chartTop');
+      if(typeof Chart==='undefined'){if(c1) c1.style.display='none';if(c2) c2.style.display='none';const h1=$('salesHint'),h2=$('expHint');if(h1) h1.textContent='Chart unavailable (offline).';if(h2) h2.textContent='Category chart unavailable (offline).';return;}
+      if(c1) c1.style.display='block';if(c2) c2.style.display='block';
+      if(salesChart){salesChart.destroy();salesChart=null;}
+      if(topChart){topChart.destroy();topChart=null;}
+      const labels=seven.map(d=>d.label);
+      const salesData=seven.map(d=>d.total);
+      const netData=seven.map((d,i)=>d.profit-(sevenExpenses[i]||0));
+      if(c1){
+        salesChart=new Chart(c1,{type:'bar',data:{labels:labels,datasets:[{type:'bar',label:'Sales',data:salesData,backgroundColor:'#16a34a',borderRadius:6},{type:'line',label:'Net',data:netData,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,0.12)',tension:0.35,fill:true,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11}}}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'\u20B1'+v}}}}});
       }
-      const latest = Math.max(...sales.map(s => Number(s.timestamp) || 0));
-      if (!latest) {
-        pill.classList.add('nodata');
-        text.textContent = 'Sync time unknown';
-        return;
+      if(c2){
+        if(!catEntries.length){topChart=new Chart(c2,{type:'doughnut',data:{labels:['No expenses yet'],datasets:[{data:[1],backgroundColor:['#e2e8f0'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}}}});}
+        else{topChart=new Chart(c2,{type:'doughnut',data:{labels:catEntries.map(([k])=>labelize(k)),datasets:[{data:catEntries.map(([,v])=>v),backgroundColor:catEntries.map((_,i)=>COLORS[i%COLORS.length]),borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}}}});}
       }
-      const ageMs = Date.now() - latest;
-      const mins = Math.round(ageMs / 60000);
-      text.textContent = mins < 60
-        ? 'Synced ' + mins + 'm ago'
-        : 'Synced ' + Math.round(mins / 60) + 'h ago';
-      // Same-day freshness window: green if the newest sale is under 24h old.
-      if (ageMs > 24 * 60 * 60 * 1000) pill.classList.add('stale');
-      pill.title = 'Newest synced sale: ' + new Date(latest).toLocaleString('en-PH');
+    }
+    function renderActionCenter(products,debts,expenses){
+      const el=$('actionList');if(!el) return;
+      const actions=[];
+      for(const p of products){
+        const q=Number(p.quantity)||0,thr=Number(p.lowStockThreshold)||0;
+        if(q===0) actions.push({pri:0,badge:'Out of stock',badgeClass:'badge-danger',title:esc(p.name||'Product')+' \u2014 0 left',sub:'Restock now',href:'products.html'});
+        else if(q<=thr) actions.push({pri:1,badge:'Low stock',badgeClass:'badge-warn',title:esc(p.name||'Product')+' \u2014 '+q+' left (need '+(thr-q+1)+')',sub:'Threshold '+thr,href:'products.html'});
+      }
+      for(const d of debts){
+        const rem=Number(d.remainingBalance)||0;if(rem<=0) continue;
+        const age=daysSince(d.createdAt);
+        if(age>30) actions.push({pri:2,badge:age+'d overdue',badgeClass:'badge-danger',title:esc(d.customerName||'Customer')+' \u2014 '+peso(rem)+' overdue',sub:esc(d.phoneNumber||'no phone')+' \u00B7 '+age+' days',href:'debts.html'});
+      }
+      for(const e of expenses){
+        if(String(e.date||'').slice(0,10)===todayLocalISO()) actions.push({pri:3,badge:'Expense today',badgeClass:'badge-info',title:esc(labelize(e.category))+' \u2014 '+peso(e.amount),sub:esc(e.note||e.category||''),href:'expenses.html'});
+      }
+      if(!actions.length){el.innerHTML='<div class="empty-note" style="color:var(--text-secondary);font-size:13px">All clear \u2713 \u2014 no urgent items.</div>';return;}
+      actions.sort((a,b)=>a.pri-b.pri);
+      const top=actions.slice(0,5);
+      el.innerHTML=top.map(a=>'<a class="action-row" href="'+a.href+'"><span class="action-badge '+a.badgeClass+'">'+esc(a.badge)+'</span><span class="action-main"><span class="action-title">'+a.title+'</span><span class="action-sub">'+esc(a.sub)+'</span></span><span style="color:var(--primary);font-weight:700;font-size:18px">\u203A</span></a>').join('');
     }
 
-    // Aggregates the last 7 calendar days (local time) from synced sales.
-    // Sale rows carry a yyyy-MM-dd `date`; timestamp is device millis.
-    function last7Days(sales) {
-      const days = [];
-      for (let back = 6; back >= 0; back--) {
-        const d = new Date();
-        d.setDate(d.getDate() - back);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        days.push({
-          key: yyyy + '-' + mm + '-' + dd,
-          label: d.toLocaleDateString('en-PH', { weekday: 'short' })
-        });
-      }
-      return days.map(day => ({
-        label: day.label,
-        total: sales
-          .filter(s => s.date === day.key)
-          .reduce((sum, s) => sum + (Number(s.amount) || 0), 0)
-      }));
-    }
-
-    let salesChart = null;
-    let topChart = null;
-
-    function drawCharts(seven, top5) {
-      if (typeof Chart === 'undefined') {
-        showError('Chart.js failed to load from the CDN — the KPI cards above are still live; charts are unavailable. Check the internet connection.');
-        return;
-      }
-      if (salesChart) salesChart.destroy();
-      if (topChart) topChart.destroy();
-      salesChart = new Chart($('chartSales'), {
-        type: 'bar',
-        data: {
-          labels: seven.map(d => d.label),
-          datasets: [{ label: 'Sales (₱)', data: seven.map(d => d.total), backgroundColor: '#16a34a', borderRadius: 6 }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, ticks: { callback: v => '₱' + v } } }
-        }
-      });
-      topChart = new Chart($('chartTop'), {
-        type: 'doughnut',
-        data: {
-          labels: top5.map(p => p.name),
-          datasets: [{
-            data: top5.map(p => p.qty),
-            backgroundColor: ['#16a34a', '#2563eb', '#b45309', '#dc2626', '#7c3aed']
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
-        }
-      });
-    }
-
-    async function main() {
-      // Auth gate FIRST: unauthenticated visitors bounce to login.html.
-      const session = await requireAuth();
-      if (!session) return;
-      $('btnSignout').addEventListener('click', signOut);
-
-      // Scope every query to this store (throws loudly if init is skipped).
+    async function main(){
+      const session=await requireAuth();if(!session) return;
+      $('btnSignout').addEventListener('click',signOut);
       DB.init(session);
-
-      // The three table loads are independent: a network hiccup that throws
-      // inside one getter would reject the whole Promise.all, which is exactly
-      // what this catch reports in the error box (never a blank page).
-      let products = [], sales = [], debts = [];
-      try {
-        [products, sales, debts] = await Promise.all([
-          DB.getProducts(), DB.getSales(), DB.getDebts()
-        ]);
-      } catch (err) {
-        console.error('dashboard load:', err);
-        showError('Could not load synced data: ' + (err.message || 'unknown error') + '. The portal needs internet plus a signed-in session.');
-        return;
-      }
-
-      // ── KPI 1: Total Sales (sum of synced sale amounts) ──
-      const totalSales = sales.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-      $('kpiSales').textContent = peso(totalSales);
-      $('kpiSalesCount').textContent = sales.length + ' synced line items';
-
-      // ── KPI 2: Total Estimated Profit (sum of the synced profit column) ──
-      const totalProfit = sales.reduce((s, r) => s + (Number(r.profit) || 0), 0);
-      $('kpiProfit').textContent = peso(totalProfit);
-      $('kpiProfitMargin').textContent = totalSales > 0
-        ? '≈ ' + ((totalProfit / totalSales) * 100).toFixed(1) + '% margin'
-        : 'no sales yet';
-
-      // ── KPI 3: Outstanding Debt (live balances only; settled excluded) ──
-      const open = debts.filter(d => (Number(d.remainingBalance) || 0) > 0);
-      const totalDebt = open.reduce((s, d) => s + Number(d.remainingBalance), 0);
-      $('kpiDebt').textContent = peso(totalDebt);
-      $('kpiDebtCount').textContent = open.length + ' open account' + (open.length === 1 ? '' : 's');
-
-      // ── KPI 4: Low Stock Alert (qty <= per-product threshold) ──
-      const low = products.filter(p => (Number(p.quantity) || 0) <= (Number(p.lowStockThreshold) || 0));
-      $('kpiLowStock').textContent = low.length;
-      $('kpiStockTotal').textContent = 'of ' + products.length + ' products';
-
-      // ── Sync pill + page subtitle ──
-      paintSyncPill(sales);
-      $('pageSubtitle').textContent =
-        'Live data synced from the Android counter app · ' + products.length +
-        ' products · ' + sales.length + ' sales rows · signed in as ' + (session.user.email || 'store');
-
-      // ── Charts: 7-day volume + top 5 products by quantity ──
-      // A store with zero synced sales still gets a readable (empty) chart:
-      // seven zeroes + a single "No sales yet" placeholder slice.
-      const seven = last7Days(sales);
-      const byProduct = {};
-      sales.forEach(s => {
-        const key = (s.description || 'Unnamed item').trim() || 'Unnamed item';
-        byProduct[key] = (byProduct[key] || 0) + (Number(s.quantity) || 0);
-      });
-      const top5 = Object.entries(byProduct)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([name, qty]) => ({ name, qty }));
-      drawCharts(seven, top5.length ? top5 : [{ name: 'No sales yet', qty: 1 }]);
+      let products=[],sales=[],debts=[],expenses=[],restock=[],suppliers=[];
+      try{
+        const res=await Promise.all([DB.getProducts().catch(()=>[]),DB.getSales().catch(()=>[]),DB.getDebts().catch(()=>[]),DB.getExpenses().catch(()=>[]),DB.getRestockLog().catch(()=>[]),DB.getSuppliers().catch(()=>[])]);
+        [products,sales,debts,expenses,restock,suppliers]=res.map(v=>Array.isArray(v)?v:[]);
+      }catch(err){console.error('dashboard load:',err);showError('Could not load synced data: '+(err.message||'unknown error'));}
+      const totalSales=sales.reduce((a,r)=>a+(Number(r.amount)||0),0);
+      const totalProfit=sales.reduce((a,r)=>a+(Number(r.profit)||0),0);
+      const totalExpenses=expenses.reduce((a,r)=>a+(Number(r.amount)||0),0);
+      const net=totalProfit-totalExpenses;
+      const prefix=thisMonthPrefix();
+      const expensesMTD=expenses.filter(e=>monthKey(e.date)===prefix).reduce((a,r)=>a+(Number(r.amount)||0),0);
+      const expensesMTDCount=expenses.filter(e=>monthKey(e.date)===prefix).length;
+      let restockMTD=0,restockMTDCount=0,restockAll=0;
+      for(const r of restock){const c=getTotalCost(r);restockAll+=c;if(monthKey(r.date)===prefix){restockMTD+=c;restockMTDCount++;}}
+      const open=debts.filter(d=>(Number(d.remainingBalance)||0)>0);
+      const totalDebt=open.reduce((a,d)=>a+Number(d.remainingBalance),0);
+      const overdue=open.filter(d=>daysSince(d.createdAt)>30).length;
+      const low=products.filter(p=>(Number(p.quantity)||0)<=(Number(p.lowStockThreshold)||0));
+      const seven=last7Days(sales);
+      const sevenTotal=seven.reduce((a,d)=>a+d.total,0);
+      const sevenTx=sales.filter(s=>seven.some(d=>d.key===String(s.date||'').slice(0,10))).length;
+      $('kpiSales').textContent=peso(totalSales);
+      $('kpiSalesCount').textContent=sevenTx+' in last 7d \u00B7 '+sales.length+' rows \u00B7 7d '+peso(sevenTotal);
+      $('kpiProfit').textContent=peso(totalProfit);
+      $('kpiProfitMargin').textContent=totalSales>0?'~ '+((totalProfit/totalSales)*100).toFixed(1)+'% margin':'no sales yet';
+      $('kpiNet').textContent=peso(net);
+      $('kpiNetSub').textContent=net>=0?'profit after expenses':'loss \u2014 expenses exceed profit';
+      $('kpiDebt').textContent=peso(totalDebt);
+      let debtSub=open.length+' open';if(overdue) debtSub+=' \u00B7 '+overdue+' overdue >30d';$('kpiDebtCount').textContent=debtSub;
+      const topLow=low.slice(0,3).map(p=>p.name||'Product').join(', ');
+      $('kpiLowStock').textContent=String(low.length);
+      $('kpiStockTotal').textContent='of '+products.length+' \u00B7 '+(topLow?topLow:'all stocked');
+      $('kpiExpenses').textContent=peso(expensesMTD);
+      $('kpiExpensesSub').textContent=expensesMTDCount+' in '+prefix+' \u00B7 all-time '+peso(totalExpenses);
+      $('kpiRestock').textContent=peso(restockMTD);
+      $('kpiRestockSub').textContent=restockMTDCount+' run'+(restockMTDCount===1?'':'s')+' in '+prefix+' \u00B7 '+peso(restockAll)+' all-time';
+      $('kpiSuppliers').textContent=String(suppliers.length);
+      $('kpiSuppliersSub').textContent=suppliers.length?suppliers.length+' contacts':'no contacts yet';
+      if($('qtProdCount')) $('qtProdCount').textContent=String(products.length);
+      if($('qtProdBadge')) $('qtProdBadge').textContent=low.length?low.length+' low':'stock ok';
+      if($('qtProdSub')) $('qtProdSub').textContent=low.length?low.length+' low of '+products.length:products.length+' products';
+      if($('qtRepCount')) $('qtRepCount').textContent=peso(sevenTotal);
+      if($('qtDebtCount')) $('qtDebtCount').textContent=String(open.length);
+      if($('qtDebtBadge')) $('qtDebtBadge').textContent=overdue?overdue+' overdue':open.length+' open';
+      if($('qtDebtSub')) $('qtDebtSub').textContent=peso(totalDebt)+' outstanding';
+      if($('qtExpCount')) $('qtExpCount').textContent=peso(expensesMTD);
+      if($('qtExpBadge')) $('qtExpBadge').textContent=expensesMTDCount+' this month';
+      if($('qtExpSub')) $('qtExpSub').textContent='All-time '+peso(totalExpenses);
+      if($('qtRestockCount')) $('qtRestockCount').textContent=String(restockMTDCount);
+      if($('qtRestockBadge')) $('qtRestockBadge').textContent=restock.length+' total runs';
+      if($('qtRestockSub')) $('qtRestockSub').textContent=peso(restockMTD)+' this month';
+      if($('qtSupCount')) $('qtSupCount').textContent=String(suppliers.length);
+      if($('qtSupBadge')) $('qtSupBadge').textContent=suppliers.length?suppliers.length+' contacts':'none';
+      if($('qtRepBadge')) $('qtRepBadge').textContent=sevenTx+' tx 7d';
+      paintSyncPill(sales,expenses,restock);
+      $('pageSubtitle').textContent='Live data synced from the Android counter app \u00B7 '+products.length+' products \u00B7 '+sales.length+' sales \u00B7 '+expenses.length+' expenses \u00B7 signed in as '+(session.user.email||'store');
+      renderActionCenter(products,debts,expenses);
+      const byDayExp={};for(const e of expenses){const k=String(e.date||'').slice(0,10);byDayExp[k]=(byDayExp[k]||0)+(Number(e.amount)||0);}
+      const sevenExpenses=seven.map(d=>byDayExp[d.key]||0);
+      const byCat={};for(const e of expenses.filter(e=>monthKey(e.date)===prefix)){const k=(e.category||'other').trim().toLowerCase()||'other';byCat[k]=(byCat[k]||0)+(Number(e.amount)||0);}
+      const catEntries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+      drawCharts(seven,sevenExpenses,catEntries);
     }
 
     // Defense-demo rule: always explain the state on screen, never a blank page.
