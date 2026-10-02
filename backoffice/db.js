@@ -187,6 +187,13 @@ const DB = {
         }));
     },
 
+    // ── DEBT PAYMENTS (write) ──
+    async addPayment(debtId, amount, note){
+        const row={ user_id:this.uid(), debt_id:debtId, amount:Number(amount), note:note||'', timestamp:Date.now() };
+        const {data,error}=await sb.from('debt_payments').insert(row).select().single();
+        if(error){console.error('addPayment:',error);return null;} return data;
+    },
+
     // ── EXPENSES ──
     async getExpenses() {
         const { data, error } = await sb
