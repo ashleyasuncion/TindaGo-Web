@@ -146,6 +146,55 @@
         </div>
 
 
+        <!-- ── Cloud Sync (Step 2 — Supabase push, offline-first) ── -->
+        <div class="settings-section" id="cloudSyncCard">
+          <div class="settings-section-title" onclick="toggleSettingsSection(this)">
+            <span>Cloud Sync</span>
+            <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="settings-section-body">
+            <p style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:10px;">Sign in to push your offline data to the cloud or restore on a new device. Works offline — sync when you're back online.</p>
+            <!-- Logged out -->
+            <div id="cloudSyncLoggedOut">
+              <div class="form-group">
+                <label for="cloudEmail">Email</label>
+                <input type="email" id="cloudEmail" class="form-input" placeholder="you@example.com" autocomplete="email">
+              </div>
+              <div class="form-group">
+                <label for="cloudPassword">Password</label>
+                <input type="password" id="cloudPassword" class="form-input" placeholder="••••••••" autocomplete="current-password">
+              </div>
+              <button class="btn btn-primary btn-full" id="cloudSignInBtn" onclick="handleCloudSignIn(event)">Sign In</button>
+            </div>
+            <!-- Logged in -->
+            <div id="cloudSyncLoggedIn" style="display:none;">
+              <div style="font-size:var(--text-sm);margin-bottom:6px;">Signed in as <strong id="cloudSyncEmail"></strong></div>
+              <div style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:10px;">Last synced: <span id="cloudSyncLast">Never</span></div>
+              <button class="btn btn-primary btn-full" id="cloudSyncBtn" onclick="handleCloudSync()" style="margin-bottom:8px;">Sync Now</button>
+              <button class="btn btn-secondary btn-full" id="cloudRestoreBtn" onclick="handleCloudRestore()" style="margin-bottom:8px;">Restore from Cloud</button>
+              <button class="btn btn-secondary btn-full" onclick="handleCloudSignOut()">Sign Out</button>
+            </div>
+            <div id="cloudSyncStatus" style="font-size:var(--text-xs);margin-top:8px;min-height:1.2em;word-break:break-word;"></div>
+          </div>
+        </div>
+
+        <!-- ── Backup (Step 4) ── -->
+        <div class="settings-section">
+          <div class="settings-section-title" onclick="toggleSettingsSection(this)">
+            <span data-i18n="backupTitle">Automatic Backup</span>
+            <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="settings-section-body">
+            <div style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:10px;" data-i18n="backupDesc">Weekly JSON backup to Downloads or a chosen folder</div>
+            <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;cursor:pointer;"><input type="checkbox" id="backupEnabledToggle" onchange="saveSettings()"> <span data-i18n="backupEnabledLabel">Auto backup</span></label>
+            <div style="display:flex;gap:8px;margin-bottom:10px;"><label style="flex:1;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="backupFreq" id="backupFreqDaily" onchange="saveSettings()"> <span data-i18n="backupDaily">Daily</span></label><label style="flex:1;display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="radio" name="backupFreq" id="backupFreqWeekly" onchange="saveSettings()"> <span data-i18n="backupWeekly">Weekly</span></label></div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;"><span style="font-size:var(--text-xs);color:var(--text-muted);" data-i18n="backupLocationLabel">Location</span><span id="backupLocationLabel" style="flex:1;font-size:var(--text-sm);word-break:break-all;">downloads</span><button class="btn btn-secondary btn-sm" onclick="handleBackupPickDir()" data-i18n="backupChooseFolder">Choose Folder</button></div>
+            <div id="backupStatusLabel" style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:10px;">Never</div>
+            <button class="btn btn-primary btn-full" onclick="handleBackupNow()" style="margin-bottom:8px;" data-i18n="backupNow">Back Up Now</button>
+            <label class="btn btn-secondary btn-full" style="display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;margin-bottom:8px;"><span data-i18n="backupRestore">Restore from File</span><input type="file" id="backupFileInput" accept=".json" style="display:none;" onchange="handleBackupRestoreFile(this)"></label>
+          </div>
+        </div>
+
         <!-- ── Data ── -->
         <div class="settings-section collapsed">
           <div class="settings-section-title" onclick="toggleSettingsSection(this)">
@@ -191,6 +240,11 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="db_indexed.js"></script>
+  <script src="supabase.js"></script>
+  <script src="sync.js"></script>
+  <script src="forecast.js"></script>
+<script src="backup.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -50,8 +50,8 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </div>
               <div class="morning-card-body">
-                <div class="morning-card-title" id="morningOverdueTitle">⚠️ Store not closed</div>
-                <div class="morning-card-desc" id="morningOverdueDesc">Opened on ... · Open for N days</div>
+                <div class="morning-card-title" id="morningOverdueTitle">âš ï¸ Store not closed</div>
+                <div class="morning-card-desc" id="morningOverdueDesc">Opened on ... Â· Open for N days</div>
                 <button class="btn btn-secondary btn-sm" id="morningOverdueReviewBtn" data-i18n="overdueReview" style="margin-top:10px;width:100%;" onclick="openOverdueReview()">Review Last Day's Sales</button>
               </div>
             </div>
@@ -62,12 +62,12 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               </div>
               <div class="morning-card-body">
-                <div class="morning-card-title" id="morningStockTitle">✅ All stock — good</div>
+                <div class="morning-card-title" id="morningStockTitle">âœ… All stock â€” good</div>
                 <div class="morning-card-desc" id="morningStockDesc">No items running low</div>
               </div>
             </div>
 
-            <!-- ML urgent-restock (Stage 4) — rendered by renderMorningCheck() -->
+            <!-- ML urgent-restock (Stage 4) â€” rendered by renderMorningCheck() -->
             <div id="morningForecastCard" style="display:none;"></div>
 
             <!-- Debt summary -->
@@ -76,7 +76,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/><path d="M16 12h.01"/><path d="M8 12h.01"/></svg>
               </div>
               <div class="morning-card-body">
-                <div class="morning-card-title" id="morningDebtTitle">💰 Debt: ₱0.00</div>
+                <div class="morning-card-title" id="morningDebtTitle">ðŸ’° Debt: â‚±0.00</div>
                 <div class="morning-card-desc" id="morningDebtDesc">0 customers</div>
               </div>
             </div>
@@ -87,7 +87,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div class="morning-card-body">
-                <div class="morning-card-title" id="morningYesterdayTitle">Yesterday: ₱0.00</div>
+                <div class="morning-card-title" id="morningYesterdayTitle">Yesterday: â‚±0.00</div>
                 <div class="morning-card-desc" id="morningYesterdayDesc">Yesterday's earnings</div>
               </div>
             </div>
@@ -98,7 +98,7 @@
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 10.5 10.5 13.5 16.5 7.5"/></svg>
               </div>
               <div class="morning-card-body">
-                <div class="morning-card-title" id="morningRestockTitle">🚚 Restock Day</div>
+                <div class="morning-card-title" id="morningRestockTitle">ðŸšš Restock Day</div>
                 <div class="morning-card-desc" id="morningRestockDesc">Check inventory and record purchases</div>
               </div>
             </div>
@@ -111,7 +111,7 @@
         </div>
 
         <!-- OVERDUE REVIEW OVERLAY (previous day's sales) -->
-        <!-- FIX (v2.36): removed inline display:none — it out-specified the
+        <!-- FIX (v2.36): removed inline display:none â€” it out-specified the
              .overlay.open { display:flex } rule, so the review overlay never
              appeared. z-index:55 kept. Now shown/hidden by the open class like
              summaryOverlay/setupOverlay. -->
@@ -142,8 +142,8 @@
           <span class="nav-label" data-i18n="navMorning">Umaga</span>
         </a>
         <div class="nav-spacer"></div>
-        <!-- V2.68: Morning's Sell goes to the Day page first (Morning → Sell →
-             Day → Sell → Checkout). navigateToDayMode() keeps the overdue /
+        <!-- V2.68: Morning's Sell goes to the Day page first (Morning â†’ Sell â†’
+             Day â†’ Sell â†’ Checkout). navigateToDayMode() keeps the overdue /
              day-not-open guard and alerts on this page instead of bouncing
              through the checkout page. -->
         <button class="nav-item nav-fab-item" onclick="navigateToDayMode()">
@@ -184,6 +184,11 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="db_indexed.js"></script>
+  <script src="supabase.js"></script>
+  <script src="sync.js"></script>
+  <script src="forecast.js"></script>
+<script src="backup.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

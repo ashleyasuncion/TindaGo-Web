@@ -27,7 +27,15 @@
       launchCount: 0,
       defaultMarkup: 20,
       lowStockThreshold: 5,
-      defaultCreditLimit: 500
+      defaultCreditLimit: 500,
+      backupEnabled: true,
+      backupIntervalHours: 168,
+      backupLocationUri: '',
+      backupRetentionCount: 5,
+      lastBackupAt: 0,
+      lastBackupStatus: '',
+      lastBackupFile: '',
+      lastBackupError: ''
     },
     products: [],
     sales: [],
@@ -94,6 +102,8 @@
       'saleCreditWarn', 'saleAllowAnyway', 'newDebtCreditWarn', 'newDebtAllowAnyway',
       'btnAddToCart', 'saleCartSection', 'saleCartList', 'saleCartEmpty', 'saleCartCount',
       'salePayCash', 'salePayCredit', 'saleCustomerWrap', 'salePhoneWrap', 'salePhone', 'btnCompleteSale',
+      'quickSellRow', 'quickSellChips', 'recentDebtorsRow', 'recentDebtorsChips',
+      'backupEnabledToggle', 'backupFreqDaily', 'backupFreqWeekly', 'backupLocationLabel', 'backupStatusLabel', 'backupFileInput',
       'cddCreditLimit',
       'setupOverlay', 'setupStoreName', 'setupOwnerName', 'setupLanguage',
       'toastContainer'
@@ -458,6 +468,44 @@
       forecastSuggestedShort: 'suggest +{n}',
       forecastReportTitle: 'Restock Soon (ML Forecast) \ud83d\udd2e',
       forecastReportDesc: '14-day demand window \u2014 buy these to avoid running out',
+      quickSellTitle: 'Mabilisang Benta \u26a1',
+      quickSellDesc: 'Pinakamabentang produkto \u2014 i-tap para idagdag',
+      recentDebtors: 'Huling may utang',
+      recentDebtorsHint: 'I-tap ang chip para punan ang pangalan',
+      mabilisangBenta: 'Mabilisang Benta',
+      backupTitle: 'Awtomatikong Backup',
+      backupDesc: 'Lingguhang JSON backup sa Downloads o napiling folder',
+      backupEnabledLabel: 'Awtomatikong backup',
+      backupFrequencyLabel: 'Dalas',
+      backupDaily: 'Araw-araw',
+      backupWeekly: 'Lingguhan',
+      backupLocationLabel: 'Lokasyon',
+      backupChooseFolder: 'Pumili ng Folder',
+      backupNow: 'I-backup Ngayon',
+      backupRestore: 'I-restore mula sa File',
+      backupStatusSuccess: 'OK ang backup',
+      backupStatusFailed: 'Bigo ang backup',
+      backupRestored: 'Na-restore ang backup \u2014 i-reload para makita',
+      backupNoFile: 'Pumili muna ng JSON backup file',
+      quickSellTitle: 'Quick Sell \u26a1',
+      quickSellDesc: 'Top sellers by quantity \u2014 tap to add',
+      recentDebtors: 'Recent customers with utang',
+      recentDebtorsHint: 'Tap a chip to fill the customer name',
+      mabilisangBenta: 'Mabilisang Benta',
+      backupTitle: 'Automatic Backup',
+      backupDesc: 'Weekly JSON backup to Downloads or a chosen folder',
+      backupEnabledLabel: 'Auto backup',
+      backupFrequencyLabel: 'Frequency',
+      backupDaily: 'Daily',
+      backupWeekly: 'Weekly',
+      backupLocationLabel: 'Location',
+      backupChooseFolder: 'Choose Folder',
+      backupNow: 'Back Up Now',
+      backupRestore: 'Restore from File',
+      backupStatusSuccess: 'Backup OK',
+      backupStatusFailed: 'Backup failed',
+      backupRestored: 'Backup restored \u2014 reload to see data',
+      backupNoFile: 'Pick a JSON backup file first',
       // Restock
       tutRestock: 'Restock Day Tutorial',
       restockTutorial1: 'This is the Restock Day page - a guided 2-step workflow to update inventory.',
@@ -2464,7 +2512,7 @@
     try {
       var s;
       s = localStorage.getItem('sss_v3_settings');
-      if (s) state.settings = JSON.parse(s);
+      if (s) { try{ var _ps=JSON.parse(s); for(var _k in _ps) if(Object.prototype.hasOwnProperty.call(_ps,_k)) state.settings[_k]=_ps[_k]; }catch(_){} }
       s = localStorage.getItem('sss_v3_products');
       if (s) state.products = JSON.parse(s);
       s = localStorage.getItem('sss_v3_sales');
@@ -2489,6 +2537,10 @@
 
     // V2.71: normalize the expense log (older saves have no field at all)
     if (!state.expenseLog || !Array.isArray(state.expenseLog)) state.expenseLog = [];
+    if(state.settings.backupEnabled===undefined) state.settings.backupEnabled=true;
+    if(state.settings.backupIntervalHours===undefined) state.settings.backupIntervalHours=168;
+    if(state.settings.backupLocationUri===undefined) state.settings.backupLocationUri='';
+    if(state.settings.lastBackupAt===undefined) state.settings.lastBackupAt=0;
 
     // Seed sample products if none exist, or migrate from the old 17-item
     // dataset (ids start with 'p') to the new 120-item dataset (ids start with 's').
@@ -3242,7 +3294,7 @@
         '<div class="product-suggestion-price">' + formatCurrency(p.sellingPrice) + '</div>' +
       '</div>';
     }).join('');
-    dom.productSuggestions.classList.add('open');
+    dom.productSuggestions.classList.add('open'); try{ renderQuickSellRow(); }catch(_){}
   }
 
   function selectProduct(id) {
@@ -3553,6 +3605,7 @@
     }
     if (dom.salePhone && salePayment === 'cash') dom.salePhone.value = '';
     hideCreditWarn('saleCreditWarn');
+    try{ renderRecentDebtorsRow(); renderQuickSellRow(); }catch(_){}
     if (dom.saleAllowAnyway) dom.saleAllowAnyway.style.display = 'none';
     updateCreditWarn();
   }
@@ -4102,7 +4155,18 @@
   // Urgency rank for sorting — a numeric, monotonic "risk" key derived from the
   // forecast. Lower = more urgent (appears first). Non-demanded / cold-start
   // items are deprioritised behind any item that will actually run out.
-  function forecastUrgencyRank(result) {
+  // ── Quick-Sell + Smart Utang (Step 4) ──
+function getTopSellingProducts(limit){ if(limit==null) limit=8; var counts={}; try{ (state.sales||[]).forEach(function(ss){ var n=ss.productName||ss.description||''; if(!n) return; counts[n]=(counts[n]||0)+(typeof ss.quantity==='number'?ss.quantity:1); }); (state.history||[]).forEach(function(h){ var arch=h.archivedSales; if(!Array.isArray(arch)) return; arch.forEach(function(ss){ var n=ss.productName||ss.description||''; if(!n) return; counts[n]=(counts[n]||0)+(typeof ss.quantity==='number'?ss.quantity:1); }); }); }catch(_){} var rn=Object.keys(counts).sort(function(a,b){return counts[b]-counts[a];}).slice(0,limit); var byName={}; (state.products||[]).forEach(function(pp){ byName[pp.name]=pp; }); var ranked=rn.map(function(n){return byName[n];}).filter(function(pp){return pp&&pp.quantity>0;}); if(ranked.length<limit){ var rem=(state.products||[]).filter(function(pp){return pp.quantity>0 && ranked.indexOf(pp)===-1;}).sort(function(a,b){return b.quantity-a.quantity;}).slice(0,limit-ranked.length); ranked=ranked.concat(rem); } return ranked.slice(0,limit); }
+function getRecentDebtors(limit){ if(limit==null) limit=5; var act=(state.debts||[]).filter(function(d){return (d.remainingBalance||0)>0;}); act.sort(function(a,b){ var ad=a.createdAt||'', bd=b.createdAt||''; if(bd!==ad) return String(bd).localeCompare(String(ad)); var ai=Number(a.id), bi=Number(b.id); if(!isNaN(bi)&&!isNaN(ai)) return bi-ai; return String(b.id).localeCompare(String(a.id)); }); return act.slice(0,limit); }
+function renderQuickSellRow(){ var row=document.getElementById('quickSellRow'); var chips=document.getElementById('quickSellChips'); if(!row||!chips) return; var list=getTopSellingProducts(8); if(!list||list.length===0){ row.style.display='none'; chips.innerHTML=''; return; } row.style.display=''; chips.innerHTML=list.map(function(pp){ var sub=(typeof productSubline==='function'?productSubline(pp):''); var price=(typeof formatCurrency==='function'?formatCurrency(pp.sellingPrice):('P'+pp.sellingPrice)); return '<button class="quick-sell-chip" type="button" onclick="quickSellAdd(\''+String(pp.id).replace(/'/g,"\\'")+'\')">'+'<span class="qs-name">'+esc(pp.name)+'</span>'+(sub?'<span class="qs-sub">'+esc(sub)+'</span>':'')+'<span class="qs-price">'+price+'</span>'+'</button>'; }).join(''); }
+function quickSellAdd(id){ var product=(state.products||[]).find(function(pp){return String(pp.id)===String(id);}); if(!product) return; if(product.quantity<=0){ showToast(t('noStock'),'error'); return; } state.selectedProduct=product; if(typeof window.selectProduct==='function') window.selectProduct(product.id); else if(dom.saleProductName) dom.saleProductName.value=product.name; try{ if(typeof addToCart==='function'){ if(dom.saleQty) dom.saleQty.value='1'; addToCart(); } }catch(_){} }
+function renderRecentDebtorsRow(){ var row=document.getElementById('recentDebtorsRow'); var chips=document.getElementById('recentDebtorsChips'); if(!row||!chips) return; var pay=(typeof salePayment!=='undefined'?salePayment:'cash'); if(pay!=='credit'){ row.style.display='none'; chips.innerHTML=''; return; } var list=getRecentDebtors(5); if(!list||list.length===0){ row.style.display='none'; chips.innerHTML=''; return; } row.style.display=''; chips.innerHTML=list.map(function(d){ var bal=(typeof formatCurrency==='function'?formatCurrency(d.remainingBalance):('P'+d.remainingBalance)); return '<button class="recent-debtor-chip" type="button" onclick="selectRecentDebtor(\''+String(d.customerName).replace(/'/g,"\\'")+'\')">'+esc(d.customerName)+' : '+bal+'</button>'; }).join(''); }
+function selectRecentDebtor(name){ if(dom.saleCustomer) dom.saleCustomer.value=name; if(dom.customerSuggestions) dom.customerSuggestions.classList.remove('open'); if(typeof updateCreditWarn==='function') updateCreditWarn(); try{ renderRecentDebtorsRow(); }catch(_){} }
+function handleBackupNow(){ if(!window.TindaBackup){ showToast('Backup not ready','error'); return; } window.TindaBackup.createBackup({manual:true}).then(function(r){ if(r&&r.success){ showToast(t('backupStatusSuccess')+' '+r.fileName); var el=document.getElementById('backupStatusLabel'); if(el) el.textContent=r.fileName+' ('+r.label+')'; try{ state.settings.lastBackupAt=Date.now(); state.settings.lastBackupFile=r.fileName; state.settings.lastBackupStatus='success'; saveState(); }catch(_){} } else showToast(t('backupStatusFailed'),'error'); }).catch(function(){ showToast(t('backupStatusFailed'),'error'); }); }
+function handleBackupPickDir(){ if(!window.TindaBackup||!window.TindaBackup.pickDirectory){ showToast('Picker unsupported','error'); return; } window.TindaBackup.pickDirectory().then(function(r){ if(r&&r.success){ var el=document.getElementById('backupLocationLabel'); if(el) el.textContent=r.label; state.settings.backupLocationUri=r.label; saveState(); showToast(t('saved')); } else if(r&&r.error==='unsupported') showToast('File picker not supported \u2014 downloads will be used'); else showToast(t('backupStatusFailed'),'error'); }); }
+function handleBackupRestoreFile(input){ var f=input&&input.files&&input.files[0]; if(!f){ showToast(t('backupNoFile'),'error'); return; } if(!window.TindaBackup){ showToast('Backup not ready','error'); return; } showConfirmModal('Restore will replace current data with the backup file. Continue?','','Restore').then(function(ok){ if(!ok) return; window.TindaBackup.restoreFromFile(f).then(function(r){ if(r&&r.success){ showToast(t('backupRestored')); setTimeout(function(){ window.location.reload(); }, 900); } else showToast((r&&r.error)||t('backupStatusFailed'),'error'); }); }); }
+function applyBackupSettingsToDom(){ var en=document.getElementById('backupEnabledToggle'); if(en) en.checked=!!state.settings.backupEnabled; var hrs=Number(state.settings.backupIntervalHours||168); var d=document.getElementById('backupFreqDaily'); if(d) d.checked=hrs<=24; var w=document.getElementById('backupFreqWeekly'); if(w) w.checked=hrs>24; var loc=document.getElementById('backupLocationLabel'); if(loc) loc.textContent=(window.TindaBackup?window.TindaBackup.locationLabel():(state.settings.backupLocationUri||'downloads')); var st=document.getElementById('backupStatusLabel'); if(st){ var ss=state.settings.lastBackupStatus||''; var ff=state.settings.lastBackupFile||''; st.textContent=ff ? (ss+': '+ff) : 'Never'; } }
+function forecastUrgencyRank(result) {
     if (!result) return 1e9;
     if (result.currentStock <= 0) return 0;                        // out of stock
     if (result.predictedDaysUntilOut == null) return 1e9;          // no demand / collecting
@@ -4911,7 +4975,11 @@
       var cl = parseInt(dom.settingsDefaultCreditLimit.value, 10);
       if (!isNaN(cl) && cl >= 0) state.settings.defaultCreditLimit = Math.min(cl, 10000);
     }
-    saveState();
+        if (dom.backupEnabledToggle) state.settings.backupEnabled = !!dom.backupEnabledToggle.checked;
+    if (dom.backupFreqDaily && dom.backupFreqDaily.checked) state.settings.backupIntervalHours = 24;
+    else if (dom.backupFreqWeekly && dom.backupFreqWeekly.checked) state.settings.backupIntervalHours = 168;
+    try{ if(window.TindaBackup) window.TindaBackup.schedule({backupEnabled: !!state.settings.backupEnabled, backupIntervalHours: Number(state.settings.backupIntervalHours||168), lastBackupAt: Number(state.settings.lastBackupAt||0)});}catch(_){}
+saveState();
     // Apply translations to all data-i18n elements on this page
     applyTranslations();
     applyTextSize();
@@ -6468,7 +6536,11 @@
         applyTranslations();
         renderRecordPayment();
       });
-    } else if (pageName === 'reports') {
+      // Step 4: wire checkout quick-sell + recent-debtor chips on every init (also after day open)
+  try{ renderQuickSellRow(); renderRecentDebtorsRow(); }catch(_){}
+  // re-render on payment toggle is handled in setSalePayment
+  document.addEventListener('tindago:languageChanged', function(){ try{ renderQuickSellRow(); renderRecentDebtorsRow(); }catch(_){} });
+} else if (pageName === 'reports') {
       // Reports page
       applyTranslations();
       loadReportPeriod();
@@ -6597,6 +6669,17 @@
   window.setLanguage = setLanguage;
   window.setSetupLanguage = setSetupLanguage;
   window.historyBack = historyBack;
+  window.renderQuickSellRow = renderQuickSellRow;
+  window.quickSellAdd = quickSellAdd;
+  window.renderRecentDebtorsRow = renderRecentDebtorsRow;
+  window.selectRecentDebtor = selectRecentDebtor;
+  window.getTopSellingProducts = getTopSellingProducts;
+  window.getRecentDebtors = getRecentDebtors;
+  window.handleBackupNow = handleBackupNow;
+  window.handleBackupPickDir = handleBackupPickDir;
+  window.handleBackupRestoreFile = handleBackupRestoreFile;
+  window.applyBackupSettingsToDom = applyBackupSettingsToDom;
+
 
   // Bridge: expose checkout taxonomy to window for checkout_morph.js (IIFE scope)
   try{window.PRODUCT_CATEGORIES=PRODUCT_CATEGORIES;}catch(e){}

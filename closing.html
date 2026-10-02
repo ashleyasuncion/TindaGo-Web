@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -39,7 +39,7 @@
             <div class="closing-icon">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             </div>
-            <div class="closing-title" data-i18n="closingTitle">Isara ang Tindahan 🌙</div>
+            <div class="closing-title" data-i18n="closingTitle">Isara ang Tindahan ðŸŒ™</div>
             <div class="closing-subtitle" data-i18n="closingSubtitle">Tapusin na ang araw na ito</div>
           </div>
 
@@ -50,7 +50,7 @@
               <!-- Cash Sales Today (read-only) -->
               <div class="closing-input-row">
                 <label data-i18n="closingRecordedSales">Cash Sales Today</label>
-                <span class="closing-readonly-value" id="closingRecordedSales">₱0.00</span>
+                <span class="closing-readonly-value" id="closingRecordedSales">â‚±0.00</span>
               </div>
               <!-- Cash Counted -->
               <div class="closing-input-row">
@@ -60,23 +60,23 @@
               <!-- Cash Difference -->
               <div class="closing-diff-row">
                 <span data-i18n="closingSalesDiff">Cash Difference</span>
-                <span class="closing-diff-value" id="closingSalesDiff">₱0.00</span>
+                <span class="closing-diff-value" id="closingSalesDiff">â‚±0.00</span>
               </div>
               <!-- Profit from Items Sold (auto, per-sale data) -->
               <div class="closing-total-row">
                 <span class="closing-total-label" data-i18n="closingProfitLabel">Profit from Items Sold</span>
-                <span class="closing-total-value" id="closingTotalToday">₱0.00</span>
+                <span class="closing-total-value" id="closingTotalToday">â‚±0.00</span>
               </div>
               <div class="closing-profit-hint" data-i18n="closingProfitHint">Selling price of items sold minus their cost.</div>
               <!-- Store Expenses Today (V2.71) -->
               <div class="closing-diff-row" style="border-top:none;margin-top:0;padding-top:4px;">
                 <span data-i18n="closingExpensesToday">Store Expenses Today</span>
-                <span class="closing-diff-value" id="closingExpensesToday" style="color:var(--danger);">₱0.00</span>
+                <span class="closing-diff-value" id="closingExpensesToday" style="color:var(--danger);">â‚±0.00</span>
               </div>
               <!-- Net Profit (gross profit - store expenses, V2.71) -->
               <div class="closing-total-row" style="margin-top:0;">
                 <span class="closing-total-label" data-i18n="closingNetProfit">Net Profit</span>
-                <span class="closing-total-value" id="closingNetProfit">₱0.00</span>
+                <span class="closing-total-value" id="closingNetProfit">â‚±0.00</span>
               </div>
               <div class="closing-profit-hint" data-i18n="closingNetProfitHint">Net Profit = profit from items sold - store expenses.</div>
               <!-- Last restock info -->
@@ -93,7 +93,7 @@
               <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="closing-items collapsing" id="closingSoldItems">
-              <div class="empty-state" style="padding:12px 0;">No sales yet — tap Sell to record your first sale!</div>
+              <div class="empty-state" style="padding:12px 0;">No sales yet â€” tap Sell to record your first sale!</div>
             </div>
           </div>
 
@@ -104,7 +104,7 @@
               <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="closing-items collapsing" id="closingLowStock">
-              <div class="empty-state" style="padding:12px 0;">✅ All stock is good — you're ready to sell!</div>
+              <div class="empty-state" style="padding:12px 0;">âœ… All stock is good â€” you're ready to sell!</div>
             </div>
           </div>
 
@@ -115,7 +115,7 @@
               <svg class="collapse-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="closing-items collapsing" id="closingDebts">
-              <div class="empty-state" style="padding:12px 0;">✅ No outstanding debts — everyone is settled!</div>
+              <div class="empty-state" style="padding:12px 0;">âœ… No outstanding debts â€” everyone is settled!</div>
             </div>
           </div>
 
@@ -125,18 +125,18 @@
             <div class="closing-weekly">
               <div class="closing-weekly-row">
                 <span class="label" data-i18n="closingWeeklyLabel">Total Sales</span>
-                <span class="value" id="closingWeeklySales">₱0.00</span>
+                <span class="value" id="closingWeeklySales">â‚±0.00</span>
               </div>
               <div class="closing-weekly-row">
                 <span class="label" data-i18n="closingTopSellerLabel">Top Seller</span>
-                <span class="value" id="closingTopSeller">—</span>
+                <span class="value" id="closingTopSeller">â€”</span>
               </div>
             </div>
           </div>
 
           <button class="btn btn-primary btn-large" id="btnCompleteDay" onclick="completeDay()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <span data-i18n="completeDayBtn">Tapos Na ang Araw ✓</span>
+            <span data-i18n="completeDayBtn">Tapos Na ang Araw âœ“</span>
           </button>
 
           <button class="btn btn-secondary btn-full" style="margin-top:8px;" onclick="backToDay()">
@@ -148,13 +148,13 @@
         <div class="overlay" id="summaryOverlay">
           <div class="overlay-content overlay-sm" style="justify-content:center;height:100%;padding:24px;">
             <div class="day-complete-animation">
-              <div class="day-complete-icon">🌙</div>
+              <div class="day-complete-icon">ðŸŒ™</div>
               <div class="day-complete-title" data-i18n="dayCompleteTitle">Tapos Na ang Araw!</div>
               <div class="day-complete-subtitle" id="summaryText">Magpahinga na, Aling Rosa. Bukas ulit!</div>
             </div>
             <div class="summary-details" id="summaryDetails"></div>
             <button class="btn btn-secondary btn-full" style="margin-top:16px;" onclick="reopenClosing()">
-              <span>✏️ Edit Closing</span>
+              <span>âœï¸ Edit Closing</span>
             </button>
             <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="closeDayAndShowMorning()">
               <span data-i18n="prepareTomorrow">Maghanda para Bukas</span>
@@ -208,6 +208,10 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="db_indexed.js"></script>
+  <script src="supabase.js"></script>
+  <script src="sync.js"></script>
+  <script src="backup.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -34,7 +34,7 @@
       <main class="app-content" id="appContent">
         <div class="debt-summary-card" style="margin-bottom:12px;">
           <span class="debt-summary-label" data-i18n="debtsTotalLabel">Total Debt</span>
-          <span class="debt-summary-amount" id="manageTotalDebt">₱0.00</span>
+          <span class="debt-summary-amount" id="manageTotalDebt">â‚±0.00</span>
         </div>
         <a class="btn btn-primary btn-large" href="new_debt.html" style="margin-bottom:12px;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -46,7 +46,7 @@
         <div id="paidDebtsContainer" style="display:none;margin-top:12px;">
           <div class="day-transactions" id="paidDebtsSection">
             <div class="day-transactions-header" onclick="togglePaidDebts()">
-              <div class="section-label">✅ Paid Debts (<span id="paidDebtsCount">0</span>)</div>
+              <div class="section-label">âœ… Paid Debts (<span id="paidDebtsCount">0</span>)</div>
               <svg class="day-transactions-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="list-container" id="paidDebtsList"></div>
@@ -67,19 +67,19 @@
           <!-- Balance Card -->
           <div class="debt-detail-balance-card">
             <span class="debt-detail-balance-label" data-i18n="currentBalance">Current Balance</span>
-            <span class="debt-detail-balance" id="debtDetailBalance">₱0.00</span>
-            <span class="debt-detail-settled-badge" id="debtDetailSettledBadge" style="display:none;">✅ Fully Settled</span>
+            <span class="debt-detail-balance" id="debtDetailBalance">â‚±0.00</span>
+            <span class="debt-detail-settled-badge" id="debtDetailSettledBadge" style="display:none;">âœ… Fully Settled</span>
             <span class="debt-detail-meta" id="debtDetailCreated"></span>
           </div>
 
           <!-- Revenue/Collected Summary -->
           <div class="debt-detail-summary-row">
             <span>Total Debt</span>
-            <span id="debtDetailTotal" style="font-weight:700;font-size:var(--text-lg);">—</span>
+            <span id="debtDetailTotal" style="font-weight:700;font-size:var(--text-lg);">â€”</span>
           </div>
           <div class="debt-detail-summary-row" style="border:none;">
             <span>Total Collected</span>
-            <span id="debtDetailCollected" style="font-weight:700;font-size:var(--text-lg);color:var(--primary);">₱0.00</span>
+            <span id="debtDetailCollected" style="font-weight:700;font-size:var(--text-lg);color:var(--primary);">â‚±0.00</span>
           </div>
 
           <!-- Record Payment Button -->
@@ -117,7 +117,7 @@
           <div class="sheet-body">
             <div class="payment-customer-info" id="paymentCustomerInfo">
               <div class="payment-customer-name" id="paymentCustomerName"></div>
-              <div class="payment-customer-balance" id="paymentCustomerBalance">Balanse: ₱0.00</div>
+              <div class="payment-customer-balance" id="paymentCustomerBalance">Balanse: â‚±0.00</div>
             </div>
             <div class="form-group">
               <label data-i18n="payLabel">Magkano ang ibabayad?</label>
@@ -125,11 +125,11 @@
             </div>
             <div class="payment-preview">
               <span data-i18n="payPreview">Matitira pagkatapos:</span>
-              <span class="payment-preview-amount" id="paymentRemaining">₱0.00</span>
+              <span class="payment-preview-amount" id="paymentRemaining">â‚±0.00</span>
             </div>
             <div class="sheet-actions">
               <button class="btn btn-secondary" onclick="closePaymentSheet()" data-i18n="cancel">Kanselahin</button>
-              <button class="btn btn-primary" onclick="savePayment()" data-i18n="payBtn">Bayad Na ✓</button>
+              <button class="btn btn-primary" onclick="savePayment()" data-i18n="payBtn">Bayad Na âœ“</button>
             </div>
           </div>
         </div>
@@ -175,6 +175,10 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="db_indexed.js"></script>
+  <script src="supabase.js"></script>
+  <script src="sync.js"></script>
+  <script src="backup.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

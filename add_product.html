@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -34,11 +34,11 @@
           <input type="text" id="productName" class="form-input" autocomplete="off" data-i18n-placeholder="productName" placeholder="e.g. Canned Tuna">
         </div>
 
-        <!-- Product Details (optional) — each field is its own form-group,
+        <!-- Product Details (optional) â€” each field is its own form-group,
              matching the rest of the form (v2.59 cleanup: removed the
              single-wrapper .pd-section so all fields share one structure). -->
         <div style="font-weight:700;color:var(--primary);font-size:var(--text-base);margin-top:6px;" data-i18n="productDetailsSection">Product Details</div>
-        <div style="font-size:var(--text-sm);color:#94a3b8;margin-bottom:12px;" data-i18n="productDetailsHint">Optional — helps identify and sort your products</div>
+        <div style="font-size:var(--text-sm);color:#94a3b8;margin-bottom:12px;" data-i18n="productDetailsHint">Optional â€” helps identify and sort your products</div>
 
         <div class="form-group">
           <label for="productCategory" data-i18n="categoryLabel">Category</label>
@@ -68,24 +68,24 @@
           <input type="number" id="productQty" class="form-input" placeholder="10" min="1" step="1">
         </div>
         <div class="form-group">
-          <label for="productCost" data-i18n="costLabel">Cost Price (₱)</label>
+          <label for="productCost" data-i18n="costLabel">Cost Price (â‚±)</label>
           <input type="number" id="productCost" class="form-input" placeholder="0.00" min="0" step="0.01">
         </div>
 
         <!-- Markup Helper -->
         <div class="markup-helper" id="markupSuggestion" style="display:none;">
           <div class="hint" id="markupHint">At 20% markup, sell at</div>
-          <div class="suggested" id="markupSuggestedPrice">₱0.00</div>
+          <div class="suggested" id="markupSuggestedPrice">â‚±0.00</div>
           <div class="hint"><span data-i18n="suggestedPrice">Suggested</span></div>
         </div>
 
         <div class="form-group">
-          <label for="productMarkup" data-i18n="markupLabel">Markup (%)<span class="help-icon">?<span class="help-tooltip">Added to cost price to set selling price. Example: ₱100 cost + 20% = ₱120 selling price.</span></span></label>
+          <label for="productMarkup" data-i18n="markupLabel">Markup (%)<span class="help-icon">?<span class="help-tooltip">Added to cost price to set selling price. Example: â‚±100 cost + 20% = â‚±120 selling price.</span></span></label>
           <input type="number" id="productMarkup" class="form-input" placeholder="20" min="0" max="1000" step="1">
           <div class="markup-hint" id="productMarkupHint"></div>
         </div>
         <div class="form-group">
-          <label for="productPrice" data-i18n="priceLabel">Selling Price (₱)</label>
+          <label for="productPrice" data-i18n="priceLabel">Selling Price (â‚±)</label>
           <input type="number" id="productPrice" class="form-input" placeholder="0.00" min="0" step="0.01">
         </div>
         <div class="form-group">
@@ -121,6 +121,10 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="db_indexed.js"></script>
+  <script src="supabase.js"></script>
+  <script src="sync.js"></script>
+  <script src="backup.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
