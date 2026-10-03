@@ -1355,3 +1355,146 @@ isolated to user_id. Vercel: push backoffice/ subfolder; verify routes /,
 /download.html, /backoffice/login.html + /dashboard.html + /suppliers.html.
 ================================================================================
 
+
+================================================================================
+SYNC — STEP 3: CLOUD RESTORE (PULL) — SUPABASE → INDEXEDDB — DONE
+================================================================================
+Date: 2026-10-02
+Status: IMPLEMENTED + VERIFIED
+Plan: Phase2_Android_Sync_Plan.md Task 5 (SyncRepository.kt) + AppDatabase v12 / db_indexed.js v12
+Type: vanilla fetch IIFE — zero deps, offline-first (mirrors Android Ktor -> browser fetch)
+
+WHAT WAS DONE:
+1) Rebuilt git/TindaGo/sync.js — was RED (node --check SYNC:1 at line 139).
+   Root cause: src/ truncated at salesToJson — missing `});` close and `}` brace
+   (map return closed but not the function), plus trailing fragment after the
+   IIFE close:
+
+     })(typeof window!=='undefined'?window:this);
+      }
+     }catch(e){}
+     }
+     async function smsLogToJson(){...}
+      });
+     }
+
+   The fragment left an extra `)` token at the IIFE's `})(...);` line and
+   99/99 braces were coincidentally balanced only by the stray tail.
+
+   Fix: full rebuild 10890B/155L (broken) -> 17540B/227L (clean), 163/163 braces
+   486/486 parens balanced. Header now reads
+   `TindaGo Supabase Sync — vanilla fetch IIFE (Step 2 push + Step 3 pull)`.
+   Push path (upsert POST /rest/v1/{table} with Prefer: resolution=merge-duplicates)
+   preserved 1:1 from SyncRepository.kt:
+
+     productsToJson / debtsToJson / paymentsToJson / txsToJson / salesToJson
+     expensesToJson / dailyEntriesToJson / endOfDayToJson / restockLogToJson
+     smsLogToJson — all 10 inject user_id via uid() -> Supabase.getUserId(),
+     snake_case wire names match supabase_v2.sql (cost_price, low_stock_threshold,
+     package_size, customer_name, remaining_balance, created_at, sms_opt_in,
+     debt_id, transaction_id, payment_method, items_json, total_cost, stock_expenses,
+     cash_in_drawer, stock_check_done, debt_payments_done, sales_diff, net_profit,
+     message_body). store_settings intentionally NOT synced (web-managed, mirrors
+     SyncRepository.kt comment).
+
+   New Step 3 pull path:
+
+     fetchRows(token, table) — GET /rest/v1/{table}?select=*&user_id=eq.<uid>
+       (apikey + Bearer token headers, throws `Failed to fetch {table}: {status}`).
+     10 cloud->IDB mappers (snake->camel, Number()/String() guards, defaults):
+       mapProductRow / mapDebtRow / mapPaymentRow / mapTxRow / mapSaleRow
+       mapExpenseRow / mapDailyRow / mapEodRow / mapRestockRow / mapSmsRow.
+     PULL_TABLES[10] — declarative driver binding Supabase table -> clearStore
+       -> bulk/single putter -> mapper:
+         products->clearProducts->putProducts->mapProductRow
+         customer_debts->clearDebts->putDebts->mapDebtRow
+         debt_payments->clearPayments->putPayments->mapPaymentRow
+         debt_transactions->clearTransactions->putTransactions->mapTxRow
+         specific_sales->clearSales->putSales->mapSaleRow
+         expenses->clearExpenses->putExpenses->mapExpenseRow
+         daily_entries->clearDailyEntries->putDailyEntry->mapDailyRow
+         end_of_day_data->clearEndOfDay->putEndOfDay->mapEodRow
+         restock_log->clearRestockLogs->putRestockLog->mapRestockRow
+         sms_log->clearSmsLogs->putSmsLog->mapSmsRow
+
+     pullAll() (alias restoreFromCloud) — auth-gates via SB().isLoggedIn() +
+       getToken() + uid() + DB().ready await, loops PULL_TABLES, fetches,
+       maps, clears store (cloud is source of truth, avoids stale merge
+       duplicates), bulk putMany where available else per-row putOne, sums
+       total rows. Returns `Restored N rows from cloud — reload to see changes`
+       or `No cloud rows yet`. Saves last_sync_timestamp via Supabase.saveLastSyncTime.
+
+   Public surface: TindaSync = { syncAll, pullAll, restoreFromCloud, signIn,
+     signOut, isLoggedIn, getLastSyncTime, getEmail, wireSettingsCard, _upsert,
+     _fetchRows }; aliased to window.Sync. Handlers:
+
+     handleCloudSignIn(e) — reads #cloudEmail/#cloudPassword, disables Sign In,
+       calls signIn(), paints #cloudSyncStatus green/red + showToast.
+     handleCloudSync — disables #cloudSyncBtn -> Syncing..., calls syncAll().
+     handleCloudRestore — NEW, disables #cloudRestoreBtn -> Restoring...,
+       `Restoring from cloud...` grey status, calls pullAll(), paints success,
+       then location.reload() after 900ms so app.js loadState() re-renders.
+     handleCloudSignOut — Supabase.logout(), clears inputs, paints Signed out,
+       rewires card.
+
+2) Patched git/TindaGo/setting.html (157xxB -> 15827B, 232L):
+   - Inserted Restore button inside #cloudSyncLoggedIn between Sync Now and
+     Sign Out:
+
+       <button class="btn btn-secondary btn-full" id="cloudRestoreBtn"
+         onclick="handleCloudRestore()" style="margin-bottom:8px;">
+         Restore from Cloud
+       </button>
+
+     Order verified: cloudSyncBtn (pos 882) < cloudRestoreBtn (1030) <
+     handleCloudSignOut (1199). Only file under git/TindaGo/*.html touched.
+   - Updated #cloudSyncCard description from `push your offline data to the
+     cloud` -> `push your offline data to the cloud or restore on a new device`
+     to document the bidirectional flow (still `Works offline — sync when you're
+     back online.`).
+   - No change to supabase.js (4302B/109L), db_indexed.js (31467B/529L),
+     supabase_v2.sql (6995B/104L — 10 tables, 10x RLS enable + drop/create
+     policy auth.uid()=user_id, PK (user_id,id) or (user_id,date)), or
+     app.js/restock.js logic.
+
+AFFECTED FILES:
+- git/TindaGo/sync.js (rebuild — push fix + pull feature)
+- git/TindaGo/setting.html (Restore button + copy)
+
+VERIFICATION:
+- node --check db_indexed.js  — EXIT 0
+- node --check supabase.js    — EXIT 0
+- node --check sync.js        — EXIT 0  (was EXIT 1 SyntaxError Unexpected token ')' at :139)
+- node --check app.js         — EXIT 0
+- node --check restock.js     — EXIT 0
+- Size audit: sync.js 17540B 227L, supabase.js 4302B 109L, db_indexed.js
+  31467B 529L, setting.html 15827B 232L, supabase_v2.sql 6995B 104L.
+- Brace/paren audit: sync.js 163 open { / 163 close } , 486 ( / 486 ) — balanced.
+- Serializer audit: 10 toJson + 10 mapRow + PULL_TABLES[10] + fetchRows + pullAll
+  + 4 handlers resolve; salesToJson now properly closed (expensesToJson follows).
+- TindaDB mapper audit: product lowStockThreshold/brand/packageSize guards,
+  debt smsOptIn bool, sale transactionId, expense category guard, EOD booleans
+  (stock_check_done etc.) — mirrors db_indexed.js normalizers.
+- Settings card audit: cloudRestoreBtn exists, handleCloudRestore exists on
+  window, button order Sync Now -> Restore -> Sign Out OK, description updated.
+- Load-order audit (Get-ChildItem *.html | Select-String 'script src'):
+  17 HTML pages carry db_indexed.js < supabase.js < sync.js < app.js — 17 OK,
+  0 BAD. restock.html = db_indexed, supabase, sync, app, restock.js (restock
+  after app per spec). checkout.html = db_indexed, supabase, sync,
+  checkout_morph.js, app (morph before app per spec — still db<sup<sync<app).
+  All 17 pages match the `db_indexed -> supabase -> sync -> app` contract.
+- SQL audit: 10 tables present (products, customer_debts, debt_payments,
+  debt_transactions, specific_sales, expenses, daily_entries, end_of_day_data,
+  restock_log, sms_log), 10x enable RLS, 10x drop/create policy IsOwner.
+- Read-back verified: sync.js header Step 2+3, setting.html Logged-in block
+  3 buttons, ends </html>.
+
+Next: Manual Cloud Sync smoke (once per device): Settings Sign In ->
+  `Signed in as ...` -> Sync Now -> `Synced N tables` + Last synced -> Table
+  Editor rows carry user_id -> airplane sale -> online Sync Now persists ->
+  new device/browser Sign In -> Restore from Cloud -> `Restored N rows` ->
+  reload -> inventory/sales/debts/expense/daily/EOD/restock/sms restored.
+  Then `supabase_v2.sql` run-once in Supabase SQL Editor — expect
+  `Success. No rows returned`, 10 tables in Table Editor.
+
+================================================================================

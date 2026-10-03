@@ -5694,7 +5694,21 @@ saveState();
     saveState();
     showToast(t('creditLimitSaved'));
     renderDebtorDetail();
+  
+
+  // ── SMS opt-in toggle (Step5-C: creditLimit/phoneNumber/smsOptIn + SMS log)
+  function updateDebtSmsOptIn(debtId, optIn){
+    var d = state.debts.find(function(x){ return String(x.id)===String(debtId); });
+    if(!d) return;
+    d.smsOptIn = !!optIn;
+    d.updatedAt = new Date().toISOString();
+    try{ if(window.TindaDB && window.TindaDB.putSmsLog) window.TindaDB.putSmsLog({ debtId: d.id, customerName: d.customerName, phoneNumber: d.phone||d.phoneNumber||'', type: optIn?'sms_opt_in':'sms_opt_out', messageBody: optIn?'SMS opt-in':'SMS opt-out', status: 'logged', timestamp: Date.now() }); }catch(e){}
+    saveState();
+    try{ renderDebtorDetail(); }catch(e){}
+    try{ showToast(optIn? t('smsOptInYes') : t('smsOptInNo')); }catch(e){}
   }
+  window.updateDebtSmsOptIn = updateDebtSmsOptIn;
+}
 
   // ============================================
   // RECORD PAYMENT PAGE (record_payment.html)

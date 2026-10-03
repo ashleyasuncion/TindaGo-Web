@@ -1,7 +1,7 @@
-/* TindaGo Backup — web port of BackupManager/Serializer/Scheduler/Worker V3.0
+/* TindaGo Backup — FV3 adds smsOptIn/phone per-debt (backward compat with FV1/2) — web port of BackupManager/Serializer/Scheduler/Worker V3.0
    IDB->JSON Blob, setInterval 168h, FS Access/a[download], OPFS. node --check backup.js */
 ;(function(g){'use strict';
-var FV=2,AV='2.1',MT='application/json',AP='tindago-autobackup-',MP='tindago-backup-',PP='tindago-prerestore-',LSM='sss_v3_backupMeta';
+var FV=3,AV='2.1',MT='application/json',AP='tindago-autobackup-',MP='tindago-backup-',PP='tindago-prerestore-',LSM='sss_v3_backupMeta';
 function pad(n){return(n<10?'0':'')+n}
 function stamp(d){return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'-'+pad(d.getHours())+pad(d.getMinutes())+pad(d.getSeconds())}
 function genName(manual,pre,now){var p=pre?PP:(manual?MP:AP);return p+stamp(new Date(now||Date.now()))+'.json'}

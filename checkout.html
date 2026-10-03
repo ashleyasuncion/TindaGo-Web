@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -53,7 +53,7 @@
                   <div class="category-container" id="checkoutCategoryContainer">
                     <button class="category-button" id="checkoutCategoryButton" aria-expanded="false" aria-label="Category">
                       <span class="category-label" id="checkoutCategoryLabel">Category</span>
-                      <span class="arrow" id="checkoutArrow">â–¾</span>
+                      <span class="arrow" id="checkoutArrow">▾</span>
                       <span class="tiles-icon" id="checkoutTilesIcon" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
                     </button>
                     <div class="checkout-dropdown" id="checkoutCategoryDropdown"></div>
@@ -71,7 +71,7 @@
             <div class="form-group">
               <label data-i18n="saleQtyLabel">Quantity?</label>
               <div class="qty-selector">
-                <button class="qty-btn" onclick="adjustQty(-1)">âˆ’</button>
+                <button class="qty-btn" onclick="adjustQty(-1)">−</button>
                 <input type="number" id="saleQty" class="qty-input qty-input-editable" value="1" min="1" onchange="onQtyChange()">
                 <button class="qty-btn" onclick="adjustQty(1)">+</button>
               </div>
@@ -118,7 +118,7 @@
           <!-- TOTAL -->
           <div class="sale-total-display">
             <span class="sale-total-label" data-i18n="saleTotalLabel">Total:</span>
-            <span class="sale-total-amount" id="saleTotalAmount">â‚±0.00</span>
+            <span class="sale-total-amount" id="saleTotalAmount">₱0.00</span>
           </div>
 
           <!-- ACTIONS -->
