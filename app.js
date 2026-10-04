@@ -416,6 +416,12 @@
       payCash: 'Cash',
       payCredit: 'Credit (Utang)',
       payGcash: 'GCash',
+      confirmSummary: 'Review your sale',
+      confirmEmpty: 'No items yet',
+      confirmPaymentLabel: 'Payment:',
+      confirmCustomerLabel: 'Customer:',
+      confirmPhoneLabel: 'Phone:',
+      gcashHint: 'Tap Complete to open GCash',
       completeSale: 'Complete Sale',
       saleCompleted: 'Transaction recorded!',
       discardCart: 'Discard cart?',
@@ -984,6 +990,13 @@
       paymentMethod: 'Pagbabayad',
       payCash: 'Cash',
       payCredit: 'Utang',
+      payGcash: 'GCash',
+      confirmSummary: 'Suriin ang benta',
+      confirmEmpty: 'Wala pang laman',
+      confirmPaymentLabel: 'Bayad:',
+      confirmCustomerLabel: 'Kostumer:',
+      confirmPhoneLabel: 'Telepono:',
+      gcashHint: 'I-tap ang Complete para buksan ang GCash',
       completeSale: 'Tapusin ang Benta',
       saleCompleted: 'Naitala ang transaksyon!',
       discardCart: 'Alisin ang cart?',
@@ -3234,6 +3247,7 @@
       var needName = salePayment==='credit' && !(dom.saleCustomer && dom.saleCustomer.value.trim());
       b3.disabled = !!needName;
     }
+    if(step===4){ try{ updateConfirmSummary(); }catch(e){} }
     try{ window.dispatchEvent(new CustomEvent('tindago:checkoutStepChanged',{detail:{step:step}})); }catch(e){}
     return true;
   }
@@ -3499,6 +3513,7 @@
   }
 
   function onCustomerSearch() {
+    try{ updateConfirmSummary(); }catch(e){}
     updateCreditWarn();
     if (!dom.saleCustomer || !dom.customerSuggestions) return;
     var query = dom.saleCustomer.value.toLowerCase().trim();
@@ -3540,6 +3555,7 @@
     if (dom.saleCustomer) dom.saleCustomer.value = name;
     if (dom.customerSuggestions) dom.customerSuggestions.classList.remove('open');
     updateCreditWarn();
+    try{ updateConfirmSummary(); }catch(e){}
   }
 
   // ── Credit-limit warnings (v2.56) ────────────────────────────────────
@@ -3723,7 +3739,45 @@
     }
     if (dom.saleTotalAmount) dom.saleTotalAmount.textContent = formatCurrency(getCartTotal());
     updateCreditWarn();
+    try{ updateConfirmSummary(); }catch(e){}
   }
+
+  function updateConfirmSummary(){
+    try{
+      var linesEl=document.getElementById('confirmSummaryLines');
+      var totalEl=document.getElementById('confirmTotal');
+      if(!linesEl && !totalEl) return;
+      var total=getCartTotal();
+      if(totalEl) totalEl.textContent=formatCurrency(total);
+      if(dom.saleTotalAmount) dom.saleTotalAmount.textContent=formatCurrency(total);
+      if(!linesEl) return;
+      if(saleCart.length===0){
+        linesEl.innerHTML='<div style="color:var(--text-muted);padding:6px 0;">'+esc(t('confirmEmpty'))+'</div>';
+      } else {
+        var html=saleCart.map(function(line){
+          var sub=line.price*line.qty;
+          return '<div style="display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:14px;"><span>'+esc(line.name)+' <span style="color:var(--text-muted);">\u00d7 '+line.qty+'</span></span><span style="font-weight:600;">'+esc(formatCurrency(sub))+'</span></div>';
+        }).join('');
+        var payLabel=t('confirmPaymentLabel')||'Payment:';
+        var payName=salePayment==='gcash'?t('payGcash'):salePayment==='credit'?t('payCredit'):t('payCash');
+        html+='<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;color:var(--text-secondary);"><span>'+esc(payLabel)+'</span><span style="font-weight:600;color:var(--text);">'+esc(payName)+'</span></div>';
+        if(salePayment==='credit'){
+          var cust=dom.saleCustomer?dom.saleCustomer.value.trim():'';
+          if(cust){
+            html+='<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);"><span>'+esc(t('confirmCustomerLabel')||'Customer:')+'</span><span>'+esc(cust)+'</span></div>';
+            var phone=dom.salePhone?dom.salePhone.value.trim():'';
+            if(phone) html+='<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-secondary);"><span>'+esc(t('confirmPhoneLabel')||'Phone:')+'</span><span>'+esc(phone)+'</span></div>';
+          }
+        }
+        if(salePayment==='gcash'){
+          html+='<div style="margin-top:6px;font-size:12px;color:#16a34a;">'+esc(t('gcashHint'))+'</div>';
+        }
+        linesEl.innerHTML=html;
+      }
+    }catch(e){}
+  }
+  // Stage 5 — live phone -> confirm sync (delegated)
+  try{ document.addEventListener('input', function(ev){ if(ev.target && ev.target.id==='salePhone'){ try{ updateConfirmSummary(); }catch(e){} } }); }catch(e){}
 
   function cartSetQty(index, value) {
     var line = saleCart[index];
@@ -3752,6 +3806,7 @@
     try{ renderRecentDebtorsRow(); renderQuickSellRow(); }catch(_){}
     if (dom.saleAllowAnyway) dom.saleAllowAnyway.style.display = 'none';
     updateCreditWarn();
+    try{ updateConfirmSummary(); }catch(e){}
     try{ var _b3a=document.getElementById('btnStep3Next'); if(_b3a){ var _need = salePayment==='credit' && !(dom.saleCustomer && dom.saleCustomer.value.trim()); _b3a.disabled=!!_need; } }catch(e){}
   }
 

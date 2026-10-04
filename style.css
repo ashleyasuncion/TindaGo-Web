@@ -1745,3 +1745,7 @@ select.form-input {
 /* Stage 4 — GCash payment (#16a34a) */
 #salePayGcash.active{ background:#16a34a; color:#fff; box-shadow:var(--shadow-sm); }
 .payment-btn#salePayGcash.active{ background:#16a34a; }
+
+/* Stage5 Confirm summary live-sync */
+#confirmSummaryLines:empty:before{content:attr(data-empty);color:var(--text-muted);font-size:13px;}
+#checkoutConfirmSummary{overflow:hidden;}
