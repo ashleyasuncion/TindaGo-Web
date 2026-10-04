@@ -101,7 +101,7 @@
       'settingsLowStockThreshold', 'settingsDefaultCreditLimit',
       'saleCreditWarn', 'saleAllowAnyway', 'newDebtCreditWarn', 'newDebtAllowAnyway',
       'btnAddToCart', 'saleCartSection', 'saleCartList', 'saleCartEmpty', 'saleCartCount',
-      'salePayCash', 'salePayCredit', 'saleCustomerWrap', 'salePhoneWrap', 'salePhone', 'btnCompleteSale',
+      'salePayCash', 'salePayGcash', 'salePayCredit', 'saleCustomerWrap', 'salePhoneWrap', 'salePhone', 'btnCompleteSale',
       'quickSellRow', 'quickSellChips', 'recentDebtorsRow', 'recentDebtorsChips',
       'backupEnabledToggle', 'backupFreqDaily', 'backupFreqWeekly', 'backupLocationLabel', 'backupStatusLabel', 'backupFileInput',
       'cddCreditLimit',
@@ -415,6 +415,7 @@
       paymentMethod: 'Payment',
       payCash: 'Cash',
       payCredit: 'Credit (Utang)',
+      payGcash: 'GCash',
       completeSale: 'Complete Sale',
       saleCompleted: 'Transaction recorded!',
       discardCart: 'Discard cart?',
@@ -3087,7 +3088,8 @@
   // completed transaction clears them. Sale records store the shared
   // transactionId + paymentMethod for the whole group.
   var saleCart = [];
-  var salePayment = 'cash'; // 'cash' | 'credit'
+  var salePayment = 'cash'; // 'cash' | 'gcash' | 'credit'
+  var checkoutStep = 1; // 1..4 wizard step (Stage 1 shell)
 
   /** v2.64: the checkout is its own page — the "Benta" action navigates to it. */
   // Overdue guard (web v2.35 parity, same as showClosingScreen/navigateToDayMode):
@@ -3135,15 +3137,26 @@
     if (dom.saleAllowAnyway) dom.saleAllowAnyway.style.display = 'none';
     setSalePayment('cash');
     renderSaleCart();
+    // Stage 1: reset wizard to step 1 (no history push on reset)
+    try{ checkoutStep = 1; sessionStorage.setItem('sss_v3_checkoutStep', '1'); }catch(e){}
+    try{ if(pageName==='checkout') showCheckoutStep(1, false); }catch(e){}
     // Disable qty-selector until a product is selected
     var qtySelector = document.querySelector('.qty-selector');
     if (qtySelector) qtySelector.classList.add('disabled');
+    try{ syncStep1PickerState(); }catch(e){}
   }
 
   function closeSaleSheet() {
-    // On the standalone checkout page, "close" means go back to Day.
-    // Never silently drop an in-progress multi-item cart (v2.63).
+    // Stage 1 wizard: header Back steps through the wizard before leaving (parity: Mobile BackHandler).
     if (pageName === 'checkout') {
+      if (typeof checkoutStep !== 'undefined' && checkoutStep > 1) {
+        // Prefer history back so popstate stays in sync; fallback to direct step change if no history.
+        try{
+          if (window.history && window.history.state && window.history.state.checkoutStep) { history.back(); }
+          else showCheckoutStep(checkoutStep - 1, true);
+        }catch(e){ try{ showCheckoutStep(checkoutStep - 1, true); }catch(_){} }
+        return;
+      }
       leaveCheckout('day.html');
       return;
     }
@@ -3164,6 +3177,98 @@
     }
     window.location.href = dest;
   }
+
+  // ============================================
+  // CHECKOUT WIZARD (Stage 1 shell -- web-first)
+  // ============================================
+  function getCheckoutCartCount(){ return saleCart.length; }
+  function canGoNextCheckoutStep(target){
+    if(target > checkoutStep){
+      if(target >= 2 && saleCart.length === 0) return false;
+      if(target >= 4){
+        if(saleCart.length === 0) return false;
+        if(salePayment === 'credit'){
+          var nm = dom.saleCustomer ? dom.saleCustomer.value.trim() : '';
+          if(!nm) return false;
+        }
+      }
+    }
+    return true;
+  }
+  function showCheckoutStep(step, pushHistory){
+    if(pageName !== 'checkout') return false;
+    if(pushHistory === undefined) pushHistory = true;
+    step = Math.max(1, Math.min(4, step|0 || 1));
+    if(!canGoNextCheckoutStep(step)){
+      if(step >= 2 && saleCart.length === 0) showToast(t('cartEmpty'), 'error');
+      else if(step >= 4 && salePayment === 'credit'){
+        var nm2 = dom.saleCustomer ? dom.saleCustomer.value.trim() : '';
+        if(!nm2) showToast(t('noCustomerCredit'), 'error');
+      }
+      return false;
+    }
+    checkoutStep = step;
+    try{ sessionStorage.setItem('sss_v3_checkoutStep', String(step)); }catch(e){}
+    for(var i=1;i<=4;i++){
+      var el = document.getElementById('checkoutStep'+i);
+      if(el) el.classList.toggle('active', i===step);
+    }
+    var stepper = document.getElementById('checkoutStepper');
+    if(stepper){
+      var dots = stepper.querySelectorAll('.stepper-dot');
+      dots.forEach(function(d, idx){ d.classList.toggle('active', idx+1===step); d.classList.toggle('done', idx+1 < step); });
+      var lines = stepper.querySelectorAll('.stepper-line');
+      lines.forEach(function(l, idx){ l.classList.toggle('done', idx+1 < step); });
+      var label = stepper.querySelector('#stepperLabel');
+      if(label){
+        var keys = ['','stepProducts','stepCart','stepPayment','stepConfirm'];
+        try{ label.textContent = t(keys[step]) || ('Step '+step+' / 4'); }catch(e){ label.textContent='Step '+step+' / 4'; }
+      }
+    }
+    if(pushHistory){
+      try{ var url = window.location.pathname + '#step'+step; history.pushState({checkoutStep: step}, '', url); }catch(e){}
+    }
+    var b1=document.getElementById('btnStep1Next'); if(b1) b1.disabled = saleCart.length===0;
+    var b2=document.getElementById('btnStep2Next'); if(b2) b2.disabled = saleCart.length===0;
+    var b3=document.getElementById('btnStep3Next'); if(b3){
+      var needName = salePayment==='credit' && !(dom.saleCustomer && dom.saleCustomer.value.trim());
+      b3.disabled = !!needName;
+    }
+    try{ window.dispatchEvent(new CustomEvent('tindago:checkoutStepChanged',{detail:{step:step}})); }catch(e){}
+    return true;
+  }
+  function navigateCheckoutStep(n){ return showCheckoutStep(n, true); }
+  function resetCheckout(){
+    saleCart = [];
+    salePayment = 'cash';
+    checkoutStep = 1;
+    try{ sessionStorage.removeItem('sss_v3_checkoutStep'); }catch(e){}
+  }
+  (function(){
+    window.addEventListener('popstate', function(ev){
+      if(pageName !== 'checkout') return;
+      var s2 = ev.state && ev.state.checkoutStep ? ev.state.checkoutStep : null;
+      if(s2 == null){
+        var m = window.location.hash.match(/step(\d)/);
+        s2 = m ? parseInt(m[1],10) : 1;
+        if(!m && !ev.state && checkoutStep > 1){
+          showCheckoutStep(checkoutStep > 1 ? checkoutStep - 1 : 1, false);
+          return;
+        }
+      }
+      if(s2 > 1){ showCheckoutStep(s2, false); }
+      else {
+        if(saleCart.length > 0){
+          try{ history.pushState({checkoutStep:1}, '', window.location.pathname+'#step1'); }catch(e){}
+          showConfirmModal(t('discardCartMsg'), t('discardCart')).then(function(ok){
+            if(!ok) return;
+            resetCheckout();
+            window.location.href = 'day.html';
+          });
+        } else { showCheckoutStep(1, false); }
+      }
+    });
+  })();
 
   window.checkoutSelectedCategory = '';
   window.checkoutSelectedSubcategory = '';
@@ -3313,6 +3418,7 @@
     var qtySelector = document.querySelector('.qty-selector');
     if (qtySelector) qtySelector.classList.remove('disabled');
     updateSaleTotal();
+    try{ syncStep1PickerState(); }catch(e){}
   }
 
   function adjustQty(delta) {
@@ -3353,6 +3459,23 @@
       if (dom.saleStockHint) dom.saleStockHint.textContent = '';
     }
     updateCreditWarn();
+    try{ syncStep1PickerState(); }catch(e){}
+  }
+
+  // Stage 2 — Step1 live sync (search->qty->AddToCart) mirrors native CategorySearchField parity
+  function syncStep1PickerState(){
+    var hasProduct = !!state.selectedProduct;
+    var qty = parseInt(dom.saleQty && dom.saleQty.value || 1) || 1;
+    var max = hasProduct ? state.selectedProduct.quantity : 1;
+    var btnAdd = document.getElementById('btnAddToCart');
+    if(btnAdd) btnAdd.disabled = !hasProduct || qty < 1 || qty > max || (hasProduct && max <= 0);
+    if(dom.saleQty) dom.saleQty.disabled = !hasProduct;
+    var qs = document.querySelector('.qty-selector');
+    if(qs) qs.classList.toggle('disabled', !hasProduct);
+    var btnMinus = document.getElementById('btnQtyMinus');
+    var btnPlus = document.getElementById('btnQtyPlus');
+    if(btnMinus) btnMinus.disabled = !hasProduct || qty <= 1;
+    if(btnPlus) btnPlus.disabled = !hasProduct || qty >= max;
   }
 
   /** Balance badge for customer suggestions: "₱bal / ₱limit" color-coded by utilization (v2.56). */
@@ -3461,6 +3584,8 @@
     } else {
       hideCreditWarn('saleCreditWarn');
     }
+    // Stage 1: sync Step3 Next gate (credit name)**
+    try{ var _b3b=document.getElementById('btnStep3Next'); if(_b3b){ var _need2 = salePayment==='credit' && !(dom.saleCustomer && dom.saleCustomer.value.trim()); _b3b.disabled=!!_need2; } }catch(e){}
   }
 
   // ── Multi-item checkout (v2.63) ──────────────────────────────────────
@@ -3525,6 +3650,7 @@
     var qtySelector = document.querySelector('.qty-selector');
     if (qtySelector) qtySelector.classList.add('disabled');
     renderSaleCart();
+    try{ syncStep1PickerState(); }catch(e){}
     showToast(t('addedToCart'));
   }
 
@@ -3547,7 +3673,7 @@
     return saleCart.reduce(function(sum, l) { return sum + (l.price * l.qty); }, 0);
   }
 
-  /** Renders the cart list, count badge, empty state, and the transaction total. */
+  /** Renders the cart list, count badge, empty state, and the transaction total. (Stage 3 live-sync) */
   function renderSaleCart() {
     if (!dom.saleCartSection) return;
     var hasItems = saleCart.length > 0;
@@ -3555,6 +3681,18 @@
     if (dom.saleCartEmpty) dom.saleCartEmpty.style.display = hasItems ? 'none' : 'block';
     if (dom.saleCartList) dom.saleCartList.style.display = hasItems ? 'block' : 'none';
     if (dom.saleCartCount) dom.saleCartCount.textContent = saleCart.length;
+    try{
+      var _c2w=document.getElementById('cartStep2TotalWrap');
+      var _c2t=document.getElementById('cartStep2Total');
+      if(_c2w) _c2w.style.display = hasItems ? 'flex' : 'none';
+      if(_c2t) _c2t.textContent = formatCurrency(getCartTotal());
+      var _cf=document.getElementById('confirmTotal');
+      if(_cf) _cf.textContent = formatCurrency(getCartTotal());
+    }catch(e){}
+    try{
+      var _b1=document.getElementById('btnStep1Next'); if(_b1) _b1.disabled = saleCart.length===0;
+      var _b2=document.getElementById('btnStep2Next'); if(_b2) _b2.disabled = saleCart.length===0;
+    }catch(e){}
     if (dom.saleCartList) {
       dom.saleCartList.innerHTML = saleCart.map(function(line, i) {
         var sub = '';
@@ -3563,19 +3701,23 @@
           if (line.packageSize) sub += ' \u00b7 ' + esc(line.packageSize);
           else if (line.unit && line.unit !== 'piece') sub += ' \u00b7 ' + esc(productUnitLabel(line.unit));
         }
-        return '<div class="sale-cart-line">' +
+        var prod = state.products.find(function(p){ return p.id===line.productId; });
+        var max = prod ? prod.quantity : line.qty;
+        var atMin = line.qty <= 1;
+        var atMax = line.qty >= max;
+        return '<div class="sale-cart-line" role="listitem">' +
           '<div class="sale-cart-line-info">' +
             '<div class="sale-cart-line-name">' + esc(line.name) + '</div>' +
             (sub ? '<div class="sale-cart-line-sub">' + sub + '</div>' : '') +
             '<div class="sale-cart-line-price">' + formatCurrency(line.price) + ' ' + t('eachLabel') + '</div>' +
           '</div>' +
           '<div class="sale-cart-line-qty">' +
-            '<button class="qty-btn" onclick="cartAdjustQty(' + i + ', -1)">\u2212</button>' +
-            '<input type="number" class="qty-input qty-input-editable" value="' + line.qty + '" min="1" onchange="cartSetQty(' + i + ', this.value)">' +
-            '<button class="qty-btn" onclick="cartAdjustQty(' + i + ', 1)">+</button>' +
+            '<button class="qty-btn" onclick="cartAdjustQty(' + i + ', -1)"' + (atMin ? ' disabled' : '') + ' aria-label="Decrease quantity">\u2212</button>' +
+            '<input type="number" class="qty-input qty-input-editable" value="' + line.qty + '" min="1" max="' + max + '" onchange="cartSetQty(' + i + ', this.value)" aria-label="Quantity">' +
+            '<button class="qty-btn" onclick="cartAdjustQty(' + i + ', 1)"' + (atMax ? ' disabled' : '') + ' aria-label="Increase quantity">+</button>' +
           '</div>' +
           '<div class="sale-cart-line-subtotal">' + formatCurrency(line.price * line.qty) + '</div>' +
-          '<button class="sale-cart-line-remove" onclick="cartRemoveLine(' + i + ')" title="' + t('itemRemoved') + '">\u2715</button>' +
+          '<button class="sale-cart-line-remove" onclick="cartRemoveLine(' + i + ')" title="' + t('itemRemoved') + '" aria-label="Remove item">\u2715</button>' +
         '</div>';
       }).join('');
     }
@@ -3594,24 +3736,40 @@
 
   /** Switches the payment method (Cash / Credit) and toggles the customer field. */
   function setSalePayment(method) {
-    salePayment = method === 'credit' ? 'credit' : 'cash';
+    salePayment = method === 'gcash' ? 'gcash' : method === 'credit' ? 'credit' : 'cash';
     if (dom.salePayCash) dom.salePayCash.classList.toggle('active', salePayment === 'cash');
     if (dom.salePayCredit) dom.salePayCredit.classList.toggle('active', salePayment === 'credit');
+    if (dom.salePayGcash) dom.salePayGcash.classList.toggle('active', salePayment === 'gcash');
+    if (salePayment === 'gcash'){ try{ updateCreditWarn(); }catch(e){} }
     if (dom.saleCustomerWrap) dom.saleCustomerWrap.style.display = salePayment === 'credit' ? 'block' : 'none';
     if (dom.salePhoneWrap) dom.salePhoneWrap.style.display = salePayment === 'credit' ? 'block' : 'none';
-    if (dom.saleCustomer && salePayment === 'cash') {
+    if (dom.saleCustomer && salePayment !== 'credit') {
       dom.saleCustomer.value = '';
       if (dom.customerSuggestions) dom.customerSuggestions.classList.remove('open');
     }
-    if (dom.salePhone && salePayment === 'cash') dom.salePhone.value = '';
+    if (dom.salePhone && salePayment !== 'credit') dom.salePhone.value = '';
     hideCreditWarn('saleCreditWarn');
     try{ renderRecentDebtorsRow(); renderQuickSellRow(); }catch(_){}
     if (dom.saleAllowAnyway) dom.saleAllowAnyway.style.display = 'none';
     updateCreditWarn();
+    try{ var _b3a=document.getElementById('btnStep3Next'); if(_b3a){ var _need = salePayment==='credit' && !(dom.saleCustomer && dom.saleCustomer.value.trim()); _b3a.disabled=!!_need; } }catch(e){}
   }
 
   /** Completes the whole cart as one transaction (v2.63). */
-  function completeSale(force) {
+  
+  // Stage 4 — GCash deep-link (gcash:// fallback)
+  function openGcashPayment(){
+    var total = getCartTotal();
+    var amount = encodeURIComponent(total);
+    var gcashUrl = "gcash://pay?amount=" + amount;
+    try{ window.location.href = gcashUrl; }catch(e){}
+    setTimeout(function(){
+      try{ window.open(gcashUrl, "_blank"); }catch(e){}
+    }, 300);
+    showToast(t("payGcash") + " — " + formatCurrency(total));
+  }
+
+function completeSale(force) {
     if (saleCart.length === 0) {
       showToast(t('cartEmpty'), 'error');
       return;
@@ -6379,6 +6537,14 @@ saveState();
       }
       applyTranslations();
       resetSaleForm();
+      // Stage 1: restore wizard step (sessionStorage) then seed history with #stepN
+      (function(){
+        var saved=1;
+        try{ var v=sessionStorage.getItem('sss_v3_checkoutStep'); if(v) saved=parseInt(v,10)||1; }catch(e){}
+        saved=Math.max(1,Math.min(4,saved));
+        try{ history.replaceState({checkoutStep: saved}, '', window.location.pathname+'#step'+saved); }catch(e){}
+        try{ showCheckoutStep(saved, false); }catch(e){}
+      })();
       // Focus the product search so the owner can start typing immediately.
       if (dom.saleProductName) dom.saleProductName.focus();
       // bfcache: re-run loadState + render when page is restored from cache
@@ -6387,6 +6553,7 @@ saveState();
         loadState();
         applyTranslations();
         resetSaleForm();
+        try{ var _sv=parseInt(sessionStorage.getItem('sss_v3_checkoutStep')||'1',10)||1; _sv=Math.max(1,Math.min(4,_sv)); history.replaceState({checkoutStep:_sv}, '', window.location.pathname+'#step'+_sv); showCheckoutStep(_sv,false); }catch(e){}
       });
     } else if (pageName === 'closing') {
       // Evening closing page
@@ -6627,6 +6794,9 @@ saveState();
   window.closeSaleSheet = closeSaleSheet;
   window.leaveCheckout = leaveCheckout;
   window.resetSaleForm = resetSaleForm;
+  window.showCheckoutStep = showCheckoutStep;
+  window.navigateCheckoutStep = navigateCheckoutStep;
+  window.resetCheckout = resetCheckout;
   window.onProductSearch = onProductSearch;
   window.selectProduct = selectProduct;
   window.selectProductOutOfStock = selectProductOutOfStock;
