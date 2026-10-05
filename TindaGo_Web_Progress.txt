@@ -1665,3 +1665,68 @@ AFFECTED FILES:
 
 NEXT: Commit feat(web): Plan A auto cloud sync 12/24h Off + refresh + wiring ; push when ready.
 ================================================================================
+
+===============================================================================
+PLAN B — CLOSE-OUT: ISOLATED WEB vs MOBILE ACCOUNTS (NO NEW TIMER)
+===============================================================================
+Date: 2026-10-05
+Status: CLOSED — Plan A auto-sync already shipped (85b1bb4); Plan B hardens + documents isolation
+Goal: Harden what exists, document why web vs mobile are different logins, archive gaps — no new interval/timer
+
+B1 — ACCOUNTS LABELED (operational, no code):
+  - mobileEmail: tindago@test.com (existing mobile test account) -> uid:<paste-mobile-uid> -> tindago_db v12 on device (Room v12, SupabaseConfig.kt tindago_sync_prefs)
+  - webEmail:    tindago.web@test.com (your created web account)     -> uid:<paste-web-uid>    -> prototype localStorage+IndexedDB (sss_v3_* + TindaDB v12, supabase.js tindago_sync_prefs)
+  - Both Email Confirmed=true. UIDs recorded in demo notes only (not committed). Do NOT commit passwords.
+  - Supabase project: https://gncnluxjrpmbjmtzcwsv.supabase.co (anon key eyJhbGci...16_Ris shared web/backoffice/mobile)
+  - Back-office: backoffice/login.html + backoffice/config.js (window.supabase.createClient CDN v2) — same project, same RLS, isolated tier (no prototype link).
+  - Rationale: phone day-lifecycle stays pristine for panel; web prototype dirty data never leaks. Slide: Same project, different user_id — RLS isolation.
+  - Unified alternative (single email) would let Phone Sync Now -> backoffice/dashboard.html live KPIs instantly (continuity wow) but web TestWeb-001 mutations would pollute mobile partition — documented as risk, not used.
+B2 — ISOLATION DOCUMENTED (this file, single doc touch):
+  - 10 synced tables (composite PK + RLS auth.uid()=user_id, supabase_v2.sql 7096B 10 tables/10 policies):
+    products, specific_sales, customer_debts, debt_payments, debt_transactions, expenses, daily_entries, end_of_day_data, restock_log, sms_log
+    All rows carry user_id = auth.uid(); PK (user_id,id) or (user_id,date) for daily_entries/end_of_day_data.
+  - Web tier: prototype localStorage sss_v3_* + IndexedDB TindaDB v12 -> sync.js 10 mappers (productsToJson...smsLogToJson) inject user_id via uid()->Supabase.getUserId(), snake_case wire names match supabase_v2.sql, fetchRows scoped user_id=eq.<uid> via encodeURIComponent(uid).
+  - Mobile tier: Room v12 + SupabaseConfig.kt tindago_sync_prefs (access_token/refresh_token/user_id/user_email/last_sync_timestamp) + SyncRepository.kt 10-table upsert — same 10 tables, same RLS.
+  - Intentionally NOT synced: store_settings (re-keyed PK user_id, one row/user, web-managed) + suppliers (web-only, backoffice/db.js stamps user_id:this.uid(), composite delete .eq(user_id).eq(id)).
+  - Ephemeral: _archive/ + _stage5/ one-offs, plus prior temps (_dump3.js/_patch_step3.js/_verify_step3.js/_wire.txt/_fmt.txt deleted) — not part of shipped prototype.
+  - Host: supabase.js:15 bare https://gncnluxjrpmbjmtzcwsv.supabase.co (no /rest/v1 suffix; sync.js appends /auth/v1 + /rest/v1); backoffice/config.js:5 same host via CDN v2 — verified isolated tier.
+
+B3 — HARDENED ERROR HANDLING (2-file touch, shared with Plan A — flagged as B):
+  - supabase.js: SYNC_INTERVAL_KEY=tindago_sync_interval_hours, getSyncInterval()/setSyncInterval() normalize 0|12|24 else 24, default 24; refreshSession() POST /auth/v1/token?grant_type=refresh_token with apikey+Content-Type:application/json body {refresh_token}, on ok saveSession(access_token,refresh_token,uid,email) to tindago_sync_prefs, on fail throw with status.
+  - sync.js isAuthError(err): status 401/403 -> true; else message lower includes 401/403/jwt/expired/invalid token/not signed in -> true; 5xx/network (fetch TypeError) -> false. Distinguishes auth vs transient.
+  - sync.js maybeAutoSync(): guard !isLoggedIn||!navigator.onLine||!isDue() -> silent false; else try refreshSession() once on 401, on 2nd 401 logout()+wireSettingsCard()+red #ef4444 cloudSyncStatus Session expired — please sign in again; on 5xx keep token and retry next poll. _autoSyncing prevents overlap.
+  - fetch apikey+Authorization: Bearer pattern: supabase.js + sync.js:14 upsert/fetchRows all send apikey:SUPABASE_ANON_KEY and Authorization:Bearer <token>, Prefer:resolution=merge-duplicates on upsert.
+
+
+
+
+B4 — ISOLATION VERIFIED (manual, no code — run before defense):
+  1) Web: setting.html -> Sign in webEmail -> add product TestWeb-001 -> Sync Now -> Synced X tables -> Dashboard Table Editor select * from products where user_id=eq.<webUid> has row.
+  2) Mobile: Settings -> Sync Now as mobileEmail -> select ... where user_id=eq.<mobileUid> shows NO TestWeb-001. Backoffice backoffice/login.html sign in as either uid to inspect respective partition.
+  3) Continuity demo if desired requires temporarily signing both sides into same email — documented risk: web test mutations pollute mobile partition.
+  4) Off/Offline/Auth-fail vs transient 5xx matrix: Off->no timer fire (60s poll+visibility no-op); offline (navigator.onLine false)->silent skip; 401->refresh once->2nd 401 logout+red; 5xx/network->keep token, retry next 60s.
+
+B5 — HOUSEKEEPING:
+  - Polling: sync.js _autoHook() 60s maybeAutoSync + 60s wireSettingsCard (fmtLastSync(last)->Never|toLocaleString() to #cloudSyncLast/email pill) + visibilitychange (visible) + online event — all silent, no new interval beyond Plan A.
+  - Archive: _archive/ one-offs noted ephemeral; _stage5/ kept (5 files: e2e.test.js 2627B, forecast_test.js 6373B, stage2_integration_test.js 6044B, stage3_inventory_browser_test.js 14623B, stage4_product_morning_report_test.js 19821B). Prior temps deleted.
+  - Script order verified: db_indexed.js < supabase.js < sync.js < app.js in setting.html (plus all 17 HTML pages load supabase.js before sync.js).
+
+
+TRADEOFF (defense slide):
+  Isolated (recommended, your choice): Phone day lifecycle pristine; web dirty data never leaks. Same project, different user_id — RLS isolation.
+  Unified (single email): Phone Sync Now -> backoffice/dashboard.html live KPIs instantly (continuity wow) but web test mutations pollute mobile partition.
+
+VERIFICATION (Plan B close-out 2026-10-05):
+ - node --check supabase.js PASS, sync.js PASS (Plan A wiring intact).
+ - setting.html: cloudSyncInterval Off/12/24 + handleAutoSyncChange + 3 options + order db<suba<sync<app OK.
+ - supabase.js: SYNC_INTERVAL_KEY + getSyncInterval/setSyncInterval + refreshSession POST /auth/v1/token?grant_type=refresh_token OK.
+ - sync.js: isAuthError/isDue/maybeAutoSync/_autoSyncing + 60s polls + visibilitychange+online + user_id=eq.<uid> via encodeURIComponent + #ef4444 auth-fail OK.
+ - supabase_v2.sql 7096B 10 tables 10 RLS policies auth.uid()=user_id, PK (user_id,id)/(user_id,date) — unchanged.
+ - backoffice/config.js window.supabase.createClient (CDN v2) isolated tier, same host/anon key.
+ - git diff --stat vs 85b1bb4: only TindaGo_Web_Progress.txt (this entry) — no code change required for Plan B (hardening already in 85b1bb4).
+ - Manual smoke still valid: picker default 24 persists tindago_sync_interval_hours, Off no fire, 12h due fires once, offline silent skip, corrupt token 401->refresh->logout+red, 500 keep token.
+
+AFFECTED FILES:
+ - git/TindaGo/TindaGo_Web_Progress.txt (this entry only for Plan B; code already in 85b1bb4: setting.html 19161B, supabase.js 6438B, sync.js 20807B, supabase_v2.sql 7096B)
+ - No new interval/timer — Plan A 60s maybeAutoSync + 60s wireSettingsCard + visibility/online retained.
+===============================================================================
