@@ -698,7 +698,12 @@
       unitPiece: 'piece', unitSachet: 'sachet', unitPack: 'pack', unitBox: 'box',
       unitBottle: 'bottle', unitCan: 'can', unitKg: 'kg', unitG: 'g',
       unitL: 'L', unitMl: 'mL', unitBundle: 'bundle', unitDozen: 'dozen',
-      unitSack: 'sack', unitLoaf: 'loaf', unitTube: 'tube', unitBar: 'bar', unitSticks: 'sticks'
+      unitSack: 'sack', unitLoaf: 'loaf', unitTube: 'tube', unitBar: 'bar', unitSticks: 'sticks',
+      clear: 'Clear',
+      inStock: 'In Stock',
+      lowStock: 'Low Stock',
+      outOfStock: 'Out of Stock',
+      selectedProduct: 'Selected product',
     },
     fil: {
       greeting: 'Magandang araw!',
@@ -1226,7 +1231,12 @@
       unitPiece: 'piraso', unitSachet: 'sachet', unitPack: 'pack', unitBox: 'kahon',
       unitBottle: 'bote', unitCan: 'lata', unitKg: 'kg', unitG: 'g',
       unitL: 'L', unitMl: 'mL', unitBundle: 'bundle', unitDozen: 'dosena',
-      unitSack: 'sako', unitLoaf: 'loaf', unitTube: 'tube', unitBar: 'bar', unitSticks: 'sticks'
+      unitSack: 'sako', unitLoaf: 'loaf', unitTube: 'tube', unitBar: 'bar', unitSticks: 'sticks',
+      clear: 'Linawin',
+      inStock: 'May Stock',
+      lowStock: 'Mababang Stock',
+      outOfStock: 'Wala nang Stock',
+      selectedProduct: 'Napiling produkto',
     }
   };
 
@@ -3157,6 +3167,7 @@
     var qtySelector = document.querySelector('.qty-selector');
     if (qtySelector) qtySelector.classList.add('disabled');
     try{ syncStep1PickerState(); }catch(e){}
+    try{ clearSelectedProductDisplay(); }catch(e){}
   }
 
   function closeSaleSheet() {
@@ -3315,7 +3326,33 @@
     try{ if(dom.productSuggestions && !silent) dom.productSuggestions.classList.remove('open'); }catch(e){}
     try{ var qs=document.querySelector('.qty-selector'); if(qs) qs.classList.add('disabled'); }catch(e){}
     try{ updateSaleTotal(); }catch(e){}
+    try{ clearSelectedProductDisplay(); }catch(e){}
   };
+
+  // Selected Product Display helpers
+  function renderSelectedProductDisplay(product) {
+    var el = document.getElementById('selectedProductDisplay');
+    if (!el || !product) { if (el) el.style.display = 'none'; return; }
+    var brand = product.brand ? ' ' + product.brand : '';
+    var unit = product.unit ? ' / ' + product.unit : '';
+    var catLabel = product.category ? t(productCategoryLabel(product.category)) : '';
+    var subLabel = product.subcategory ? t(productSubcategoryLabel(product.subcategory)) : '';
+    var metaParts = [catLabel, subLabel].filter(Boolean).join(' \u2014 ') + brand + unit;
+    var stock = product.quantity;
+    var stockClass = stock <= 0 ? 'out' : (stock <= 5 ? 'low' : 'ok');
+    var stockText = stock <= 0 ? t('outOfStock') : (stock <= 5 ? t('lowStock') : t('inStock'));
+    el.setAttribute('aria-label', t('selectedProduct'));
+    el.innerHTML = '<button class=\"clear-btn\" onclick=\"clearCheckoutProductSelection()\" aria-label=\"' + t('clear') + '\">\u00d7</button>' +
+      '<div class=\"name\">' + product.name + '</div>' +
+      '<div class=\"meta\">' + metaParts + '</div>' +
+      '<div class=\"price\">\u20b1' + (product.sellingPrice || 0).toFixed(2) + '</div>' +
+      '<div class=\"stock ' + stockClass + '\">' + stockText + ' (' + stock + ')</div>';
+    el.style.display = 'block';
+  }
+  function clearSelectedProductDisplay() {
+    var el = document.getElementById('selectedProductDisplay');
+    if (el) { el.style.display = 'none'; el.innerHTML = ''; }
+  }
 
   // Shared bilingual hay builder — single source for checkout + inventory search.
   // Covers name + categoryEn/Fil + subcategoryEn/Fil + brand + unitEn/Fil + packageSize.
@@ -3433,6 +3470,7 @@
     if (qtySelector) qtySelector.classList.remove('disabled');
     updateSaleTotal();
     try{ syncStep1PickerState(); }catch(e){}
+    try{ renderSelectedProductDisplay(product); }catch(e){}
   }
 
   function adjustQty(delta) {
@@ -3490,6 +3528,12 @@
     var btnPlus = document.getElementById('btnQtyPlus');
     if(btnMinus) btnMinus.disabled = !hasProduct || qty <= 1;
     if(btnPlus) btnPlus.disabled = !hasProduct || qty >= max;
+    // Stage 2: restore selected product display on page load/reload
+    if (hasProduct) {
+      try { renderSelectedProductDisplay(state.selectedProduct); } catch(e) {}
+    } else {
+      try { clearSelectedProductDisplay(); } catch(e) {}
+    }
   }
 
   /** Balance badge for customer suggestions: "₱bal / ₱limit" color-coded by utilization (v2.56). */
@@ -3667,6 +3711,7 @@
     if (qtySelector) qtySelector.classList.add('disabled');
     renderSaleCart();
     try{ syncStep1PickerState(); }catch(e){}
+    try{ clearSelectedProductDisplay(); }catch(e){}
     showToast(t('addedToCart'));
   }
 

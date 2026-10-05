@@ -1498,3 +1498,91 @@ Next: Manual Cloud Sync smoke (once per device): Settings Sign In ->
   `Success. No rows returned`, 10 tables in Table Editor.
 
 ================================================================================
+================================================================================
+2026-10-05 — WEB CHECKOUT SELECTED PRODUCT DISPLAY CARD (v2.63/v2.64 parity)
+Date: 2026-10-05
+Status: IMPLEMENTED — 4 files modified, not yet committed (diff --stat 89+/3-)
+Scope: WEB ONLY — mirrors mobile SelectedProductDisplay.kt (see
+  TindaGo_Mobile_Progress.txt 2026-10-05 and
+  Capstone App/TindaGo_Universal_Progress.txt summary)
+================================================================================
+
+WHAT WAS DONE (mirrors mobile Compose card):
+
+1) checkout.html (+1 line inside #checkoutStep1, after qty-selector):
+   <div id="selectedProductDisplay" class="selected-product-display"
+     aria-live="polite" role="region" tabindex="0"
+     data-i18n-aria="selectedProduct" style="display:none"></div>
+   - Name, category -> subcategory / brand / unit / price (Peso) + stock badge
+     ok>5 green / low<=5 amber / out<=0 red + clear x button 44x44 min
+   - aria-live polite, role region, tabIndex 0, i18n keys
+     clear/inStock/lowStock/outOfStock/selectedProduct
+   - Persists via state.selectedProduct + syncStep1PickerState();
+     cleared via clearCheckoutProductSelection() / addToCart() /
+     resetSaleForm() / closeSaleSheet()
+
+2) style.css (+36 lines, after .product-suggestion-stock):
+   .selected-product-display { display:none; padding:10px 12px;
+     background:var(--primary-bg,#f0fdf4);
+     border:1px solid var(--primary-border,#16a34a);
+     border-radius:8px; margin-bottom:10px; font-size:var(--text-sm) }
+   .name { font-weight:600 }
+   .meta { color:var(--text-muted); font-size:var(--text-xs); margin-top:4px }
+   .price { color:var(--primary,#16a34a); font-weight:700 }
+   .stock { font-size:var(--text-xs); margin-top:2px }
+     .stock.ok { color:var(--primary) } .stock.low { color:#b45309 }
+     .stock.out { color:#ef4444 }
+   .clear-btn { float:right; background:none; border:none; font-size:18px;
+     min-width:44px; min-height:44px; border-radius:6px; display:flex;
+     align-items:center; justify-content:center; cursor:pointer }
+   .clear-btn:hover { color:var(--text); background:var(--hover-bg,#e5e7eb) }
+   .clear-btn:focus { outline:2px solid var(--primary,#16a34a); outline-offset:2px }
+
+3) app.js (+49 lines, -2):
+   - i18n EN: clear:'Clear', inStock:'In Stock', lowStock:'Low Stock',
+     outOfStock:'Out of Stock', selectedProduct:'Selected product'
+     FIL: clear:'Linawin', inStock:'May Stock', lowStock:'Mababang Stock',
+     outOfStock:'Wala nang Stock', selectedProduct:'Napiling produkto'
+   - Helpers (37 lines):
+     function renderSelectedProductDisplay(product) { aria-label t('selectedProduct'),
+       innerHTML clear-btn onclick clearCheckoutProductSelection() + name/meta/
+       price/stockClass/stockText + display block/none }
+     function clearSelectedProductDisplay() { el.style.display='none' }
+   - Integration: resetSaleForm() -> try clearSelectedProductDisplay()
+     clearCheckoutProductSelection() -> try clearSelectedProductDisplay()
+     closeSaleSheet()/addToCart paths via syncStep1PickerState
+
+4) checkout_morph.js (+6 lines, -1):
+   - Deferred CategorySearch takeover guard:
+     setTimeout(function(){ if(window.CategorySearch) return;
+       dd.addEventListener('click',...) ... }); // close setTimeout
+     NOTE: UI listeners bound only when category_search.js did NOT load;
+     avoids detached-target bug; keeps this file as fallback taxonomy only.
+
+AFFECTED FILES:
+- git/TindaGo/checkout.html (1 +)
+- git/TindaGo/style.css (36 +++ )
+- git/TindaGo/app.js (49 +)
+- git/TindaGo/checkout_morph.js (6 +-)
+
+VERIFICATION:
+- git diff --stat 2026-10-05: 4 files changed, 89 insertions(+), 3 deletions(-)
+- git diff read-back OK (app.js/style.css/checkout.html/checkout_morph.js)
+- node --check app.js — EXIT 0 (full suite 2026-10-02 28/28 PASS, 393829B,
+  checkout.html 17635B/223L — sizes stable +89L diff)
+- Load-order 17 OK (db_indexed < supabase < sync < app; checkout_morph before app)
+- Mojibake/BOM fix 0854a54 intact (UTF-8 glyphs, BOM stripped)
+
+RELATED:
+- Mobile parity: git/app/TindaGo_APP/ui/components/SelectedProductDisplay.kt (212L)
+  + ui/util/Haptics.kt (14L) — same UX, Compose Card Green50/Green200, 48dp clear,
+  liveRegion Polite. See TindaGo_Mobile_Progress.txt 2026-10-05 entry.
+- Universal: Capstone App/TindaGo_Universal_Progress.txt — shared snapshot.
+
+NEXT:
+- Commit as Stage 6 / v2.65: git add app.js checkout.html checkout_morph.js style.css
+  + update committed hash; git push (ahead by 2 +1)
+- Smoke viewports 375/390/414/768/1024 + landscape + large text + dark mode;
+  focus order (card -> clear x), TalkBack/VoiceOver aria-live polite.
+================================================================================
+

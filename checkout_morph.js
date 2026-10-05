@@ -8,7 +8,7 @@
   var inp=document.getElementById('saleProductName');
   if(!sc||!cb||!dd||!ab||!inp) return;
   // If CategorySearch (category_search.js) is loaded, it owns the morph — keep this file as fallback taxonomy only
-  try{ if(window.CategorySearch) { /* let CategorySearch handle events; this file provides taxonomy fallback */ }}catch(e){}
+  // NOTE: UI event listeners below are bound in a deferred block only when category_search.js did NOT load.
   function getCat(){ return window.checkoutSelectedCategory||''; }
   function getSub(){ return window.checkoutSelectedSubcategory||''; }
   function setCat(v){ window.checkoutSelectedCategory=v; if(window.__checkoutFilter) window.__checkoutFilter.setCategory(v); }
@@ -76,6 +76,9 @@
   function enterSM(){ sc.classList.add('search-mode'); closeDD(); setTimeout(function(){ try{ inp.focus(); }catch(e){} try{ if(typeof onProductSearch==='function') onProductSearch(); }catch(e){} },50); }
   function exitSM(){ sc.classList.remove('search-mode'); inp.value=''; updLabel(); try{ if(typeof window.clearCheckoutProductSelection==='function') window.clearCheckoutProductSelection(true); }catch(_){} closeDD(); if(typeof onProductSearch==='function') onProductSearch(); try{ inp.blur(); }catch(e){} }
   // Delegated dropdown clicks — avoids detached-target bug from innerHTML onclick re-render
+  // Deferred so category_search.js (loaded after this file) can take over the same elements first.
+  setTimeout(function(){
+  if(window.CategorySearch) return; // CategorySearch owns these controls — skip morph bindings
   dd.addEventListener('click', function(e){
     var t=e.target.closest('[data-cat],[data-sub],[data-action]');
     if(!t || !dd.contains(t)) return;
@@ -121,5 +124,6 @@
     var attempts=0;
     var iv=setInterval(function(){ attempts++; tryWrap(); if((window.selectProduct && window.selectProduct.__checkoutWrapped) || attempts>60) clearInterval(iv); }, 120);
   })();
+  }); // close setTimeout — deferred CategorySearch takeover guard
   updLabel();
 })();
