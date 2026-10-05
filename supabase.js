@@ -54,6 +54,60 @@
     // keep last_sync_timestamp cleared as well
   }
 
+  var SYNC_INTERVAL_KEY = 'tindago_sync_interval_hours';
+
+  function getSyncInterval() {
+    try {
+      var v = global.localStorage ? global.localStorage.getItem(SYNC_INTERVAL_KEY) : null;
+      if (v == null || v === '') return 24;
+      var n = Number(v);
+      if (n === 0 || n === 12 || n === 24) return n;
+      return 24;
+    } catch (_) { return 24; }
+  }
+
+  function setSyncInterval(h) {
+    var n = Number(h);
+    if (n !== 0 && n !== 12 && n !== 24) n = 24;
+    try { if (global.localStorage) global.localStorage.setItem(SYNC_INTERVAL_KEY, String(n)); } catch (_) {}
+    return n;
+  }
+
+  async function refreshSession() {
+    var rt = getRefreshToken();
+    if (!rt) throw new Error('No refresh_token');
+    var url = SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token';
+    var res;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ refresh_token: rt })
+      });
+    } catch (e) {
+      throw new Error(e && e.message ? e.message : 'Network error');
+    }
+    var json;
+    try { json = await res.json(); } catch (_) { json = {}; }
+    if (res.ok) {
+      var token = json.access_token;
+      var refresh = json.refresh_token || rt;
+      var uid = json.user && json.user.id ? json.user.id : getUserId();
+      var mail = json.user && json.user.email ? json.user.email : getEmail();
+      if (!token) throw new Error('Missing access_token on refresh');
+      saveSession(token, refresh, uid, mail);
+      return token;
+    } else {
+      var msg = json.error_description || json.error || json.msg || 'Refresh failed';
+      var err = new Error(String(msg));
+      try { err.status = res.status; } catch (_) {}
+      throw err;
+    }
+  }
+
   // ── Auth: POST /auth/v1/token?grant_type=password ──
   async function signIn(email, password) {
     var url = SUPABASE_URL + '/auth/v1/token?grant_type=password';
@@ -91,6 +145,7 @@
     SUPABASE_URL: SUPABASE_URL,
     SUPABASE_ANON_KEY: SUPABASE_ANON_KEY,
     PREFS_KEY: PREFS_KEY,
+    SYNC_INTERVAL_KEY: SYNC_INTERVAL_KEY,
     getToken: getToken,
     getRefreshToken: getRefreshToken,
     getUserId: getUserId,
@@ -100,7 +155,10 @@
     saveLastSyncTime: saveLastSyncTime,
     saveSession: saveSession,
     logout: logout,
-    signIn: signIn
+    signIn: signIn,
+    refreshSession: refreshSession,
+    getSyncInterval: getSyncInterval,
+    setSyncInterval: setSyncInterval
   };
 
   try { global.Supabase = Supabase; } catch (_) {}

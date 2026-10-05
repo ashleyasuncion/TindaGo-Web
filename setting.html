@@ -146,7 +146,7 @@
         </div>
 
 
-        <!-- ── Cloud Sync (Step 2 — Supabase push, offline-first) ── -->
+        <!-- ── Cloud Sync (Step 3 — Auto-Sync Off/12h/24h + last-sync pill) ── — Supabase push, offline-first) ── -->
         <div class="settings-section" id="cloudSyncCard">
           <div class="settings-section-title" onclick="toggleSettingsSection(this)">
             <span>Cloud Sync</span>
@@ -154,6 +154,14 @@
           </div>
           <div class="settings-section-body">
             <p style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:10px;">Sign in to push your offline data to the cloud or restore on a new device. Works offline — sync when you're back online.</p>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label for="cloudSyncInterval">Auto-Sync</label>
+              <select id="cloudSyncInterval" class="form-input" onchange="handleAutoSyncChange(this.value)">
+                <option value="0">Off</option>
+                <option value="12">Every 12 hours</option>
+                <option value="24">Every 24 hours</option>
+              </select>
+            </div>
             <!-- Logged out -->
             <div id="cloudSyncLoggedOut">
               <div class="form-group">

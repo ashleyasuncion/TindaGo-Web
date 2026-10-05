@@ -1586,3 +1586,82 @@ NEXT:
   focus order (card -> clear x), TalkBack/VoiceOver aria-live polite.
 ================================================================================
 
+
+================================================================================
+PLAN A — AUTO CLOUD SYNC (WEB-ONLY) 12h/24h/Off + REFRESH + maybeAutoSync — DONE
+================================================================================
+Date: 2026-10-05
+Status: IMPLEMENTED + VERIFIED — Step 5 housekeeping close-out
+Spec: web-only automatic sync to gncnluxjrpmbjmtzcwsv.supabase.co
+      Persistent Off/12h/24h (tindago_sync_interval_hours default 24) + manual,
+      silent maybeAutoSync on timer/visibility/online. ID note: spec cloudAutoSync
+      vs actual cloudSyncInterval (functional same).
+
+WHAT WAS DONE (Plan A Steps 1-4 shipped as "Step 3" batch; Step 5 = this close-out):
+
+1) supabase.js (18884B node --check PASS):
+   SYNC_INTERVAL_KEY='tindago_sync_interval_hours'
+   getSyncInterval()->0|12|24 default 24 (normalize 99->24, ""->24)
+   setSyncInterval(h) normalize 0|12|24 else 24, localStorage persist
+   refreshSession() POST /auth/v1/token?grant_type=refresh_token + saveSession()
+     to tindago_sync_prefs {access_token,refresh_token,user_id,user_email,last_sync_timestamp}
+   Exposed: refreshSession/getSyncInterval/setSyncInterval on Supabase/TindaSupabase.
+
+2) sync.js (20791B was 20513B node --check PASS):
+   Appended (no sync_scheduler.js) to avoid setting.html load-order risk.
+   isAuthError(err,res): 401/403/jwt/expired/invalid token/not signed in -> true; 5xx/network false
+   isDue(): iv===0?false : Date.now()-last >= iv*3600*1000; no last -> due (Off=never).
+     last_sync_timestamp inside tindago_sync_prefs so account switch resets due.
+   _autoSyncing guard prevents overlapping runs.
+   maybeAutoSync(): if !isLoggedIn||!onLine||!isDue() return false; else syncAll()
+     catch 401 -> refreshSession() retry once; still 401 -> logout()+wireSettingsCard()+ red
+     #cloudSyncStatus='Session expired — please sign in again'; 5xx/network keep token.
+   Wiring: DOMContentLoaded setTimeout 1200ms maybeAutoSync; setInterval maybeAutoSync 60s;
+     setInterval wireSettingsCard 60s (pill); visibilitychange visible + online -> maybeAutoSync.
+   wireSettingsCard(): patches #cloudSyncInterval.value=String(getSyncInterval()) normalized
+     + fmtLastSync(last)->Never|toLocaleString() to #cloudSyncLast / email pill.
+   handleAutoSyncChange(val): setSyncInterval(val)->wireSettingsCard()->maybeAutoSync().
+   fetchRows isolated: user_id=eq.<uid> via encodeURIComponent(uid); RLS auth.uid()=user_id.
+   Exported TindaSync {wireSettingsCard,fmtLastSync,isDue,isAuthError,maybeAutoSync,handleAutoSyncChange,syncAll}.
+
+3) setting.html (19065B was 18575B):
+   Inside #cloudSyncCard .settings-section-body after "Sign in to push..." <p>:
+   <select id="cloudSyncInterval" onchange="handleAutoSyncChange(this.value)">
+     <option value="0">Off</option><option value="12">Every 12 hours</option><option value="24">Every 24 hours</option>
+   Comment: <!-- Step 3 — Auto-Sync Off/12h/24h + last-sync pill -->
+   Script order verified 18843 < 18884 < 18923 < 19028 (db_indexed<supabase<sync<app).
+
+4) _stage5/ inspection (KEEP — not empty staging):
+   5 files: e2e.test.js 2627B, forecast_test.js 6373B, stage2_integration_test.js 6044B,
+   stage3_inventory_browser_test.js 14623B, stage4_product_morning_report_test.js 19821B
+   No rm -rf. Temps deleted earlier: _dump3.js/_patch_step3.js/_verify_step3.js/_wire.txt/_fmt.txt.
+
+VERIFICATION (Step 5 live harness 2026-10-05 11:44 UTC, HARN_EXIT:0):
+ - node --check supabase.js PASS, sync.js PASS
+ - setting.html: cloudSyncInterval yes, handleAutoSyncChange yes, options=3, order true
+ - supabase.js: SYNC_INTERVAL_KEY yes, refreshSession yes
+ - sync.js: wire sel yes, fmtLastSync/isAuthError/isDue/maybeAutoSync/_autoSyncing yes,
+   60s maybe+wire polls yes, visibilitychange+online yes, user_id hits 1, len 20791
+ - Runtime 25/25 PASS: default 24; set 0/12/99->24/24; isDue Off/false 12/no-last true
+   12/13h true 12/5h false 24/25h true; auth 401/jwt/expired true 500/network false;
+   maybe not-logged/Off/not-due/offline false; due true+fetch; 401 false+logout; 500 false keep token
+ - git diff --stat (git/TindaGo origin https://github.com/ashleyasuncion/TindaGo-Web.git):
+   setting.html | 10 +++++++-  supabase.js | 60 +++++++++++++-  sync.js | 79 +++++++++++++++-
+   3 files changed, 144 insertions(+), 5 deletions(-) — log d417e7c top
+ - Anon key eyJhbGci...16_Ris shared web/backoffice/mobile, isolated by RLS + user_id=eq.uid.
+
+MANUAL SMOKE (requires real login — 2-min):
+ 1) Settings picker default 24, change 12 -> localStorage tindago_sync_interval_hours=12 reload persists.
+ 2) Off -> no timer fire (60s poll + visibility -> no sync).
+ 3) 12h with last 13h ago -> fires once.
+ 4) Airplane offline -> silent skip.
+ 5) Corrupt access_token -> 401 -> refresh 401 -> logout + red status + logged-out card.
+ 6) Dashboard Table Editor products?user_id=eq.<webUid> isolated from mobile.
+ 7) 500 -> keep token, retry next poll.
+
+AFFECTED FILES:
+ - git/TindaGo/setting.html  - git/TindaGo/supabase.js  - git/TindaGo/sync.js
+ - git/TindaGo/TindaGo_Web_Progress.txt (this entry)
+
+NEXT: Commit feat(web): Plan A auto cloud sync 12/24h Off + refresh + wiring ; push when ready.
+================================================================================

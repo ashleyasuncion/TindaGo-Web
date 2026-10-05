@@ -16,7 +16,7 @@ async function upsert(token,table,rows){
   headers:{apikey:key,Authorization:'Bearer '+token,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},
   body:JSON.stringify(rows)
  });
- if(!res.ok){var t='';try{t=await res.text();}catch(e){}throw new Error('Failed to sync '+table+': '+res.status+' '+(t||res.statusText));}
+ if(!res.ok){var t='';try{t=await res.text();}catch(e){}var _e=new Error('Failed to sync '+table+': '+res.status+' '+(t||res.statusText));try{_e.status=res.status;}catch(_){}throw _e;}
 }
 async function fetchRows(token,table){
  var s=SB();var base=s.SUPABASE_URL,key=s.SUPABASE_ANON_KEY;
@@ -24,7 +24,7 @@ async function fetchRows(token,table){
  var url=base+'/rest/v1/'+table+'?select=*';
  if(u) url+='&user_id=eq.'+encodeURIComponent(u);
  var res=await fetch(url,{method:'GET',headers:{apikey:key,Authorization:'Bearer '+token}});
- if(!res.ok){var t='';try{t=await res.text();}catch(e){}throw new Error('Failed to fetch '+table+': '+res.status+' '+(t||res.statusText));}
+ if(!res.ok){var t='';try{t=await res.text();}catch(e){}var _e2=new Error('Failed to fetch '+table+': '+res.status+' '+(t||res.statusText));try{_e2.status=res.status;}catch(_){}throw _e2;}
  var data;try{data=await res.json();}catch(e){data=[];}
  if(!Array.isArray(data)) data=data?[data]:[];
  return data;
@@ -182,9 +182,68 @@ function wireSettingsCard(){
   var em=document.getElementById('cloudSyncEmail'),la=document.getElementById('cloudSyncLast');
   if(lo)lo.style.display=logged?'none':'';if(li)li.style.display=logged?'':'none';
   if(em)em.textContent=email||'';if(la)la.textContent=fmtLastSync(last);
+  var sel=document.getElementById('cloudSyncInterval');if(sel){try{var iv=s&&s.getSyncInterval?s.getSyncInterval():24;if(iv!==0&&iv!==12&&iv!==24)iv=24;sel.value=String(iv);}catch(_){}}
  }catch(e){}
 }
-var TindaSync={syncAll:syncAll,pullAll:pullAll,restoreFromCloud:pullAll,signIn:signIn,signOut:signOut,isLoggedIn:isLoggedIn,getLastSyncTime:getLastSyncTime,getEmail:getEmail,wireSettingsCard:wireSettingsCard,_upsert:upsert,_fetchRows:fetchRows};
+function isAuthError(err){
+ var st=err&&err.status;
+ if(st===401||st===403) return true;
+ var m=String(err&&err.message||err||'').toLowerCase();
+ return m.indexOf('401')!==-1||m.indexOf('403')!==-1||m.indexOf('jwt')!==-1||m.indexOf('expired')!==-1||m.indexOf('invalid token')!==-1||m.indexOf('not signed in')!==-1;
+}
+function getIntervalHours(){
+ var sb=SB();
+ try{ if(sb&&sb.getSyncInterval) return sb.getSyncInterval(); }catch(_){}
+ return 24;
+}
+function isDue(){
+ var iv=getIntervalHours();
+ if(iv===0) return false;
+ var sb=SB();
+ var last=sb?sb.getLastSyncTime():0;
+ if(!last) return true;
+ return Date.now() - Number(last) >= iv*3600*1000;
+}
+var _autoSyncing=false;
+async function maybeAutoSync(){
+ if(_autoSyncing) return false;
+ var sb=SB();
+ if(!sb||!sb.isLoggedIn()) return false;
+ try{ if(typeof navigator!=='undefined' && navigator.onLine===false) return false; }catch(_){}
+ if(!isDue()) return false;
+ _autoSyncing=true;
+ try{
+  await syncAll();
+  return true;
+ }catch(e){
+  if(isAuthError(e)){
+   try{
+    var ss=SB();
+    if(ss&&ss.refreshSession) await ss.refreshSession();
+    await syncAll();
+    return true;
+   }catch(re){
+    if(isAuthError(re)){
+     try{ var s2=SB(); if(s2&&s2.logout) s2.logout(); }catch(_){}
+     try{ wireSettingsCard(); }catch(_){}
+     try{
+      var st=document.getElementById('cloudSyncStatus');
+      if(st){ st.textContent='Session expired \u2014 please sign in again'; st.style.color='#ef4444'; }
+     }catch(_){}
+    }
+    return false;
+   }
+  }
+  return false;
+ }finally{ _autoSyncing=false; }
+}
+function handleAutoSyncChange(val){
+ var sb=SB();
+ try{ if(sb&&sb.setSyncInterval) sb.setSyncInterval(val); }catch(_){}
+ try{ wireSettingsCard(); }catch(_){}
+ try{ maybeAutoSync(); }catch(_){}
+}
+var TindaSync={syncAll:syncAll,pullAll:pullAll,restoreFromCloud:pullAll,signIn:signIn,signOut:signOut,isLoggedIn:isLoggedIn,getLastSyncTime:getLastSyncTime,getEmail:getEmail,wireSettingsCard:wireSettingsCard,maybeAutoSync:maybeAutoSync,isDue:isDue,isAuthError:isAuthError,getIntervalHours:getIntervalHours,handleAutoSyncChange:handleAutoSyncChange,_upsert:upsert,_fetchRows:fetchRows};
 try{g.TindaSync=TindaSync;}catch(e){}
 try{g.Sync=TindaSync;}catch(e){}
 try{
@@ -223,4 +282,18 @@ try{
   }catch(e){}
  }
 }catch(e){}
+try{
+ if(typeof document!=='undefined'){
+  function _autoHook(){
+   try{ setTimeout(function(){ try{ maybeAutoSync(); }catch(_){} }, 1200); }catch(_){}
+   try{ setInterval(function(){ try{ maybeAutoSync(); }catch(_){} }, 60000); }catch(_){}
+   try{ setInterval(function(){ try{ wireSettingsCard(); }catch(_){} }, 60000); }catch(_){}
+   try{ document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') try{ maybeAutoSync(); }catch(_){} }); }catch(_){}
+   try{ window.addEventListener('online', function(){ try{ maybeAutoSync(); }catch(_){} }); }catch(_){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _autoHook);
+  else setTimeout(_autoHook, 0);
+ }
+}catch(e){}
+try{ g.maybeAutoSync=maybeAutoSync; g.isDue=isDue; g.isAuthError=isAuthError; g.handleAutoSyncChange=handleAutoSyncChange; }catch(e){}
 })(typeof window!=='undefined'?window:this);
