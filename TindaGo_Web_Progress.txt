@@ -1674,8 +1674,8 @@ Status: CLOSED — Plan A auto-sync already shipped (85b1bb4); Plan B hardens + 
 Goal: Harden what exists, document why web vs mobile are different logins, archive gaps — no new interval/timer
 
 B1 — ACCOUNTS LABELED (operational, no code):
-  - mobileEmail: tindago@test.com (existing mobile test account) -> uid:<paste-mobile-uid> -> tindago_db v12 on device (Room v12, SupabaseConfig.kt tindago_sync_prefs)
-  - webEmail:    tindago.web@test.com (your created web account)     -> uid:<paste-web-uid>    -> prototype localStorage+IndexedDB (sss_v3_* + TindaDB v12, supabase.js tindago_sync_prefs)
+  - mobileEmail: tindago@test.com (existing mobile test account) -> uid:1e97da84-9353-4dbd-b461-f1c539f78faf -> tindago_db v12 on device (Room v12, SupabaseConfig.kt tindago_sync_prefs)
+  - webEmail:    tindago.web@test.com (your created web account)     -> uid:6f42c1ff-a2d6-46fb-b29d-0891b66cf035    -> prototype localStorage+IndexedDB (sss_v3_* + TindaDB v12, supabase.js tindago_sync_prefs)
   - Both Email Confirmed=true. UIDs recorded in demo notes only (not committed). Do NOT commit passwords.
   - Supabase project: https://gncnluxjrpmbjmtzcwsv.supabase.co (anon key eyJhbGci...16_Ris shared web/backoffice/mobile)
   - Back-office: backoffice/login.html + backoffice/config.js (window.supabase.createClient CDN v2) — same project, same RLS, isolated tier (no prototype link).
