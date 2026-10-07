@@ -270,8 +270,8 @@
     padding: 4px 10px;
   }
   .btn-signout {
-    padding: 6px 12px;
-    font-size: 12px;
+    width: 30px;
+    height: 30px;
   }
   .page-subtitle {
     font-size: 13px;
