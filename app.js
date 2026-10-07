@@ -3464,7 +3464,6 @@
   function selectProduct(id) {
     var product = state.products.find(function(p) { return p.id === id; });
     if (!product) return;
-    // Defensive: never select an out-of-stock product (v2.58)
     if (product.quantity <= 0) {
       showToast(t('noStock'), 'error');
       return;
@@ -3473,9 +3472,26 @@
     if (dom.saleProductName) dom.saleProductName.value = product.name;
     if (dom.productSuggestions) dom.productSuggestions.classList.remove('open');
     try { if (window.__checkoutCloseDropdown) window.__checkoutCloseDropdown(); } catch(e){}
-    // Enable qty-selector now that a product is selected
     var qtySelector = document.querySelector('.qty-selector');
     if (qtySelector) qtySelector.classList.remove('disabled');
+    try{
+      var _u = product.unit||'piece'; var _mn = minFor(_u); var _st = stepFor(_u);
+      if (dom.saleQty){
+        var _raw = (dom.saleQty.value||'').trim();
+        var _cur = parseQty(_raw, _mn);
+        var _valid = _raw!=='' && isFinite(_cur) && _cur>=_mn && _cur<=product.quantity;
+        if (_valid){
+          var _rem = Math.abs(roundQty((_cur - _mn) % _st));
+          if (_rem>0.001 && Math.abs(_rem-_st)>0.001) _valid=false;
+        }
+        if (!_valid){
+          _cur = roundQty(Math.max(_mn, Math.min(_mn, product.quantity)));
+          if (product.quantity < _mn && product.quantity>0) _cur = roundQty(product.quantity);
+        } else { _cur = roundQty(_cur); }
+        dom.saleQty.value = String(_cur);
+        try{ dom.saleQty.step=String(_st); dom.saleQty.min=String(_mn); dom.saleQty.inputMode='decimal'; }catch(e){}
+      }
+    }catch(e){}
     updateSaleTotal();
     try{ syncStep1PickerState(); }catch(e){}
     try{ renderSelectedProductDisplay(product); }catch(e){}
@@ -3495,12 +3511,34 @@
     updateSaleTotal();
   }
 
-  function onQtyChange() {
+  function onQtyInput(){
     if (!state.selectedProduct || !dom.saleQty) return;
     var unit = state.selectedProduct.unit || 'piece'; var step = stepFor(unit); var minQty = minFor(unit);
-    var qty = parseQty(dom.saleQty.value, minQty); qty=roundQty(qty);
+    try{ dom.saleQty.step=String(step); dom.saleQty.min=String(minQty); dom.saleQty.inputMode='decimal'; }catch(e){}
+    updateSaleTotal();
+    try{ syncStep1PickerState(); }catch(e){}
+  }
+  function onQtyChange() {
+    if (!state.selectedProduct || !dom.saleQty) return;
+    var raw=(dom.saleQty.value||'').trim();
+    var unit = state.selectedProduct.unit || 'piece'; var step = stepFor(unit); var minQty = minFor(unit);
+    if (raw===''){
+      var _q = roundQty(Math.max(minQty, Math.min(minQty, state.selectedProduct.quantity)));
+      if (state.selectedProduct.quantity < minQty && state.selectedProduct.quantity>0) _q = roundQty(state.selectedProduct.quantity);
+      dom.saleQty.value = String(_q);
+      try{ dom.saleQty.step=String(step); dom.saleQty.min=String(minQty); dom.saleQty.inputMode='decimal'; }catch(e){}
+      updateSaleTotal(); return;
+    }
+    if (raw.endsWith('.')){ updateSaleTotal(); return; }
+    var qty = parseQty(raw, minQty); qty=roundQty(qty);
+    var steps = Math.round((qty - minQty)/step);
+    var snapped = roundQty(minQty + steps*step);
+    var diff = Math.abs(qty - snapped);
+    if (diff>0.001 && diff < step + 0.001) qty = snapped;
     qty = Math.max(minQty, Math.min(qty, state.selectedProduct.quantity));
-    qty=roundQty(qty); dom.saleQty.value = qty;
+    qty=roundQty(qty);
+    if (state.selectedProduct.quantity < minQty && state.selectedProduct.quantity>0) qty = roundQty(state.selectedProduct.quantity);
+    dom.saleQty.value = String(qty);
     try{ dom.saleQty.step=String(step); dom.saleQty.min=String(minQty); dom.saleQty.inputMode='decimal'; }catch(e){}
     updateSaleTotal();
   }
@@ -4715,6 +4753,16 @@ function forecastUrgencyRank(result) {
 
   // Prefill the Add Stock form from an existing product (edit mode).
   // A stale edit ID is cleared so the form stays in fresh-add mode.
+    // --- Fractional unit -> qty input sync for add_product (web parity) ---
+  function syncAddProductQtyInputs(){
+    try{
+      var u = dom.productUnit ? dom.productUnit.value : 'piece';
+      var mn = minFor(u); var st = stepFor(u);
+      if(dom.productQty){ dom.productQty.min=String(mn); dom.productQty.step=String(st); dom.productQty.inputMode='decimal'; if(dom.productQty.placeholder) dom.productQty.placeholder = String(mn); }
+      if(dom.productLowStock){ dom.productLowStock.min='0'; dom.productLowStock.step=String(st); dom.productLowStock.inputMode='decimal'; }
+    }catch(e){}
+  }
+
   function fillProductFormFromEdit(editId) {
     if (!editId) return;
     var product = state.products.find(function(p) { return p.id === editId; });
@@ -4740,6 +4788,7 @@ function forecastUrgencyRank(result) {
     if (dom.productBrand) dom.productBrand.value = product.brand || '';
     if (dom.productUnit) dom.productUnit.value = product.unit || 'piece';
     if (dom.productPackageSize) dom.productPackageSize.value = product.packageSize || '';
+    try{ syncAddProductQtyInputs(); }catch(e){}
     updateMarkupHint();
   }
 
@@ -4781,7 +4830,7 @@ function forecastUrgencyRank(result) {
 
   function saveProduct() {
     var name = dom.productName ? dom.productName.value.trim() : '';
-    var _qtyUnit = dom.productUnit ? dom.productUnit.value : 'piece'; var _qtyMin = minFor(_qtyUnit); var qty = parseQty(dom.productQty ? dom.productQty.value : 0, 0); qty=roundQty(qty);
+    var _qtyUnit = dom.productUnit ? dom.productUnit.value : 'piece'; var _qtyMin = minFor(_qtyUnit); var qty = parseQty(dom.productQty ? dom.productQty.value : String(_qtyMin), _qtyMin); qty=roundQty(qty);
     var cost = parseFloat(dom.productCost ? dom.productCost.value : 0) || 0;
     var price = parseFloat(dom.productPrice ? dom.productPrice.value : 0) || 0;
     // Product details — optional structured attributes (units, brands, categories)
@@ -6770,6 +6819,8 @@ saveState();
           return '<option value="' + k + '">' + productUnitLabel(k) + '</option>';
         }).join('');
       }
+      // fractional: keep qty inputs in sync with unit (0.25 for kg/g/L/mL)
+      try{ if(dom.productUnit) dom.productUnit.addEventListener('change', syncAddProductQtyInputs); syncAddProductQtyInputs(); }catch(e){}
       if (dom.productBrandList) {
         dom.productBrandList.innerHTML = getUsedBrands().map(function(b) {
           return '<option value="' + esc(b) + '"></option>';
@@ -6921,6 +6972,7 @@ saveState();
   window.selectProductOutOfStock = selectProductOutOfStock;
   window.adjustQty = adjustQty;
   window.onQtyChange = onQtyChange;
+  window.onQtyInput = onQtyInput;
   window.onCustomerSearch = onCustomerSearch;
   window.selectCustomer = selectCustomer;
   window.onNewDebtCustomerSearch = onNewDebtCustomerSearch;
