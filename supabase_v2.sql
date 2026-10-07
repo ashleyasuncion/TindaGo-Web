@@ -1,13 +1,13 @@
 -- TindaGo Supabase Schema v2 — run ONCE in Dashboard SQL Editor
 -- Multi-tenant: every row carries user_id = auth.uid()
 -- Keys: (user_id,id) or (user_id,date) for daily_entries/end_of_day_data
--- Mirrors AppDatabase v12 + db_indexed.js v12; expect Success No rows returned
+-- Mirrors AppDatabase v13 + db_indexed.js v13; expect Success No rows returned
 create extension if not exists pgcrypto;
 create table if not exists public.products (
  id text not null, user_id uuid not null references auth.users(id) on delete cascade,
- name text not null default '', quantity integer not null default 0,
+ name text not null default '', quantity double precision not null default 0,
  cost_price double precision not null default 0, selling_price double precision not null default 0,
- unit text not null default 'piece', low_stock_threshold integer not null default 5,
+ unit text not null default 'piece', low_stock_threshold double precision not null default 5,
  category text not null default '', subcategory text not null default '',
  brand text not null default '', package_size text not null default '',
  primary key (user_id, id)
@@ -45,7 +45,7 @@ create policy "debt_transactions_is_owner" on public.debt_transactions for all u
 create table if not exists public.specific_sales (
  id bigint not null, user_id uuid not null references auth.users(id) on delete cascade,
  date text not null default '', description text not null default '', amount double precision not null default 0,
- quantity integer not null default 1, customer_name text, profit double precision not null default 0,
+ quantity double precision not null default 1, customer_name text, profit double precision not null default 0,
  timestamp bigint not null default 0, transaction_id bigint not null default 0, payment_method text,
  primary key (user_id, id)
 );
@@ -101,3 +101,11 @@ create table if not exists public.sms_log (
 alter table public.sms_log enable row level security;
 drop policy if exists "sms_log_is_owner" on public.sms_log;
 create policy "sms_log_is_owner" on public.sms_log for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+
+-- v13 fractional migration (idempotent, safe to re-run)
+DO $$ -- v13 fractional
+BEGIN
+  BEGIN ALTER TABLE public.products ALTER COLUMN quantity TYPE double precision USING quantity::double precision; EXCEPTION WHEN OTHERS THEN NULL; END;
+  BEGIN ALTER TABLE public.products ALTER COLUMN low_stock_threshold TYPE double precision USING low_stock_threshold::double precision; EXCEPTION WHEN OTHERS THEN NULL; END;
+  BEGIN ALTER TABLE public.specific_sales ALTER COLUMN quantity TYPE double precision USING quantity::double precision; EXCEPTION WHEN OTHERS THEN NULL; END;
+END $$;

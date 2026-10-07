@@ -1,6 +1,6 @@
 /* ============================================
    TindaGo — IndexedDB Foundation (Step 1)
-   Mirrors mobile Room schema AppDatabase v12
+   Mirrors mobile Room schema AppDatabase v13
    Offline-first, vanilla JS, no deps
    ============================================
    Mobile source: AppDatabase.kt v12 entities:
@@ -9,7 +9,7 @@
      debt_transactions, expenses, sms_log
    Models.kt: ProductCatalog 12 cats / 17 units / 2-level subs
    Web before: sync localStorage sss_v3_* (~371KB app.js IIFE)
-   This file: ONE DB "tindago_db" v12, 11 stores, Promise API,
+   This file: ONE DB "tindago_db" v13, 11 stores, Promise API,
               LS → IDB one-time migration, dual-write rollback.
    Usage: <script src="db_indexed.js"></script> before app.js
           await TindaDB.ready
@@ -18,7 +18,7 @@
 ;(function (global) {
   'use strict';
   var DB_NAME = 'tindago_db';
-  var DB_VERSION = 12;
+  var DB_VERSION = 13;
   var CATEGORIES = ['pantry_staples','canned_goods','instant_dry_goods','snacks_sweets','beverages','dairy_refrigerated','fresh_section','liquor_wine','personal_care','household_care','baby_care','paper_sanitary'];
   var SUBCATEGORIES = {
     pantry_staples:['rice','cooking_oil','sugar','salt','vinegar','bread'],

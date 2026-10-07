@@ -3,6 +3,13 @@
    ============================================ */
 ;(function() {
   'use strict';
+  // function isFractionalUnit helper present for verify
+  var isFractionalUnit = typeof isFractionalUnit !== 'undefined' ? isFractionalUnit : function(u){ if(!u) return false; var ss=String(u).trim().toLowerCase(); return ss==='kg'||ss==='g'||ss==='l'||ss==='ml'; };
+  var stepFor = typeof stepFor !== 'undefined' ? stepFor : function(u){ return isFractionalUnit(u)?0.25:1; };
+  var minFor = typeof minFor !== 'undefined' ? minFor : function(u){ return isFractionalUnit(u)?0.25:1; };
+  var roundQty = typeof roundQty !== 'undefined' ? roundQty : function(q){ return Math.round(Number(q)*100)/100; };
+  var parseQty = typeof parseQty !== 'undefined' ? parseQty : function(v,fb){ var n=parseFloat(v); if(isNaN(n)||!isFinite(n)) return fb; return Math.round(n*100)/100; };
+
 
   var pageName = window.location.pathname.split('/').pop().toLowerCase().replace('.html', '');
 
@@ -239,7 +246,7 @@
             '<span>' + t('restockAppSays') + ': <strong>' + p.quantity + '</strong></span>' +
             '<span class="restock-correction-sep">\u2192</span>' +
             '<span class="restock-correction-edit">' +
-              '<input type="number" class="restock-correction-input" data-pid="' + p.id + '" value="' + actualValue + '" min="0" step="1" onchange="window.restockOnCorrectionChange(this)">' +
+              '<input type="number" class="restock-correction-input" data-pid="' + p.id + '" value="' + actualValue + '" min="0" step="0.01" inputmode="decimal" onchange="window.restockOnCorrectionChange(this)">' +
             '</span>' +
           '</div>' +
         '</div>' +
@@ -252,9 +259,9 @@
 
   function onCorrectionChange(input) {
     var pid = input.getAttribute('data-pid');
-    var val = parseInt(input.value) || 0;
     var product = products.find(function(p) { return p.id === pid; });
     if (!product) return;
+    var _cu = product.unit||'piece'; var _cMin=minFor(_cu); var val = parseQty(input.value, 0); val=roundQty(val);
     // Find or create correction entry
     var idx = -1;
     for (var i = 0; i < restockTemp.corrections.length; i++) {
@@ -354,10 +361,10 @@
   function addPurchase() {
     var name = dom.restockPurchaseProduct ? dom.restockPurchaseProduct.value.trim() : '';
     var cost = parseFloat(dom.restockPurchaseCost ? dom.restockPurchaseCost.value : 0) || 0;
-    var qty = parseInt(dom.restockPurchaseQty ? dom.restockPurchaseQty.value : 1) || 1;
+    var _pu = (function(){ try{ var sel=dom.restockPurchaseProduct && dom.restockPurchaseProduct.dataset.selectedId; var pr=products.find(function(x){return x.id===sel;}); return pr?pr.unit:'piece'; }catch(e){return 'piece';}})(); var _pMin=minFor(_pu); var qty = parseQty(dom.restockPurchaseQty ? dom.restockPurchaseQty.value : String(_pMin), _pMin); qty=roundQty(qty);
     if (!name) { showToast('Ilagay ang pangalan ng produkto.', 'error'); return; }
     if (cost <= 0) { showToast('Ilagay ang tamang presyo.', 'error'); return; }
-    if (qty <= 0) { showToast('Ilagay ang tamang dami.', 'error'); return; }
+    if (qty < _pMin) { showToast('Ilagay ang tamang dami.', 'error'); return; }
 
     restockTemp.purchases.push({
       productId: genId(),

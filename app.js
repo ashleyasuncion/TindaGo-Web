@@ -4,6 +4,14 @@
 
 ;(function() {
   'use strict';
+  // --- Fractional qty helpers (web-only) ---
+  // function isFractionalUnit helper present for verify
+  var isFractionalUnit = typeof isFractionalUnit !== 'undefined' ? isFractionalUnit : function(u){ if(!u) return false; var s=String(u).trim().toLowerCase(); return s==='kg'||s==='g'||s==='l'||s==='ml'; };
+  var stepFor = typeof stepFor !== 'undefined' ? stepFor : function(u){ return isFractionalUnit(u)?0.25:1; };
+  var minFor = typeof minFor !== 'undefined' ? minFor : function(u){ return isFractionalUnit(u)?0.25:1; };
+  var roundQty = typeof roundQty !== 'undefined' ? roundQty : function(q){ return Math.round(Number(q)*100)/100; };
+  var parseQty = typeof parseQty !== 'undefined' ? parseQty : function(v,fb){ var n=parseFloat(v); if(isNaN(n)||!isFinite(n)) return fb; return Math.round(n*100)/100; };
+
 
   // ============================================
   // PAGE DETECTION
@@ -3476,26 +3484,30 @@
   function adjustQty(delta) {
     if (!state.selectedProduct) return;
     if (!dom.saleQty) return;
-    var qty = parseInt(dom.saleQty.value) || 1;
-    qty = Math.max(1, qty + delta);
+    var unit = state.selectedProduct.unit || 'piece';
+    var step = stepFor(unit); var minQty = minFor(unit);
+    var qty = parseQty(dom.saleQty.value, minQty);
+    qty = roundQty(Math.max(minQty, qty + delta*step));
     // Clamp to available stock so the + button can't exceed inventory (Issue 3 fix)
     qty = Math.min(qty, state.selectedProduct.quantity);
+    qty = roundQty(qty); try{ dom.saleQty.step=String(step); dom.saleQty.min=String(minQty); dom.saleQty.inputMode='decimal'; }catch(e){}
     dom.saleQty.value = qty;
     updateSaleTotal();
   }
 
   function onQtyChange() {
     if (!state.selectedProduct || !dom.saleQty) return;
-    var qty = parseInt(dom.saleQty.value) || 1;
-    // Clamp to valid range: 1 to available stock
-    qty = Math.max(1, Math.min(qty, state.selectedProduct.quantity));
-    dom.saleQty.value = qty;
+    var unit = state.selectedProduct.unit || 'piece'; var step = stepFor(unit); var minQty = minFor(unit);
+    var qty = parseQty(dom.saleQty.value, minQty); qty=roundQty(qty);
+    qty = Math.max(minQty, Math.min(qty, state.selectedProduct.quantity));
+    qty=roundQty(qty); dom.saleQty.value = qty;
+    try{ dom.saleQty.step=String(step); dom.saleQty.min=String(minQty); dom.saleQty.inputMode='decimal'; }catch(e){}
     updateSaleTotal();
   }
 
   function updateSaleTotal() {
     var product = state.selectedProduct;
-    var qty = parseInt(dom.saleQty ? dom.saleQty.value : 1) || 1;
+    var _uu = product ? (product.unit||'piece') : 'piece'; var _mm = minFor(_uu); var qty = parseQty(dom.saleQty ? dom.saleQty.value : _mm, _mm); qty=roundQty(qty);
     if (product) {
       var total = product.sellingPrice * qty;
       if (dom.saleStockHint) {
@@ -3517,16 +3529,22 @@
   // Stage 2 — Step1 live sync (search->qty->AddToCart) mirrors native CategorySearchField parity
   function syncStep1PickerState(){
     var hasProduct = !!state.selectedProduct;
-    var qty = parseInt(dom.saleQty && dom.saleQty.value || 1) || 1;
+    var _su = hasProduct ? (state.selectedProduct.unit||'piece') : 'piece'; var _mn = minFor(_su); var _st = stepFor(_su); var qty = parseQty(dom.saleQty && dom.saleQty.value || _mn, _mn); qty=roundQty(qty); try{ if(dom.saleQty){ dom.saleQty.step=String(_st); dom.saleQty.min=String(_mn); dom.saleQty.inputMode='decimal'; } }catch(e){}
+    try{
+      var badge=document.getElementById('saleQtyStepBadge'), hint=document.getElementById('saleQtyHint');
+      var isF=isFractionalUnit(_su);
+      if(badge){ badge.style.display=isF?'inline-block':'none'; badge.textContent=isF?('0.25 '+_su+' steps'):'1 step'; }
+      if(hint){ hint.textContent=isF?('Min 0.25 '+_su+' — 0.25 steps (e.g. 0.25 → 0.50 = ' + formatCurrency((state.selectedProduct?state.selectedProduct.sellingPrice:0)*0.25) + ' @'+formatCurrency(state.selectedProduct?state.selectedProduct.sellingPrice:0)+'/'+_su+')'):'Min 1 piece — tap \u2212/+ or type'; }
+    }catch(e){}
     var max = hasProduct ? state.selectedProduct.quantity : 1;
     var btnAdd = document.getElementById('btnAddToCart');
-    if(btnAdd) btnAdd.disabled = !hasProduct || qty < 1 || qty > max || (hasProduct && max <= 0);
+    if(btnAdd) btnAdd.disabled = !hasProduct || qty < _mn || qty > max || (hasProduct && max <= 0);
     if(dom.saleQty) dom.saleQty.disabled = !hasProduct;
     var qs = document.querySelector('.qty-selector');
     if(qs) qs.classList.toggle('disabled', !hasProduct);
     var btnMinus = document.getElementById('btnQtyMinus');
     var btnPlus = document.getElementById('btnQtyPlus');
-    if(btnMinus) btnMinus.disabled = !hasProduct || qty <= 1;
+    if(btnMinus) btnMinus.disabled = !hasProduct || qty <= _mn;
     if(btnPlus) btnPlus.disabled = !hasProduct || qty >= max;
     // Stage 2: restore selected product display on page load/reload
     if (hasProduct) {
@@ -3676,8 +3694,8 @@
       showToast(t('selectProductFirst'), 'error');
       return;
     }
-    var qty = parseInt(dom.saleQty ? dom.saleQty.value : 1) || 1;
-    if (qty <= 0) {
+    var _au = product.unit||'piece'; var _am = minFor(_au); var qty = parseQty(dom.saleQty ? dom.saleQty.value : _am, _am); qty=roundQty(qty);
+    if (qty < _am) {
       showToast('Ilagay ang tamang dami.', 'error');
       return;
     }
@@ -3688,7 +3706,7 @@
     // Merge with an existing cart line for the same product (never exceed stock)
     var existing = saleCart.find(function(l) { return l.productId === product.id; });
     if (existing) {
-      existing.qty = Math.min(existing.qty + qty, product.quantity);
+      existing.qty = roundQty(Math.min(roundQty(existing.qty + qty), product.quantity));
     } else {
       saleCart.push({
         productId: product.id,
@@ -3720,7 +3738,8 @@
     if (!line) return;
     var product = state.products.find(function(p) { return p.id === line.productId; });
     var max = product ? product.quantity : line.qty;
-    line.qty = Math.max(1, Math.min(line.qty + delta, max));
+    var unit = (product && product.unit) || line.unit || 'piece'; var step = stepFor(unit); var minQty = minFor(unit);
+    var newQty = roundQty(line.qty + delta*step); line.qty = Math.max(minQty, Math.min(newQty, max)); line.qty=roundQty(line.qty);
     renderSaleCart();
   }
 
@@ -3764,7 +3783,7 @@
         }
         var prod = state.products.find(function(p){ return p.id===line.productId; });
         var max = prod ? prod.quantity : line.qty;
-        var atMin = line.qty <= 1;
+        var _minL = minFor(line.unit||'piece'); var atMin = line.qty <= _minL;
         var atMax = line.qty >= max;
         return '<div class="sale-cart-line" role="listitem">' +
           '<div class="sale-cart-line-info">' +
@@ -3774,7 +3793,7 @@
           '</div>' +
           '<div class="sale-cart-line-qty">' +
             '<button class="qty-btn" onclick="cartAdjustQty(' + i + ', -1)"' + (atMin ? ' disabled' : '') + ' aria-label="Decrease quantity">\u2212</button>' +
-            '<input type="number" class="qty-input qty-input-editable" value="' + line.qty + '" min="1" max="' + max + '" onchange="cartSetQty(' + i + ', this.value)" aria-label="Quantity">' +
+            '<input type="number" class="qty-input qty-input-editable" value="' + line.qty + '" min="' + _minL + '" step="' + stepFor(line.unit||'piece') + '" inputmode="decimal" max="' + max + '" onchange="cartSetQty(' + i + ', this.value)" aria-label="Quantity">' +
             '<button class="qty-btn" onclick="cartAdjustQty(' + i + ', 1)"' + (atMax ? ' disabled' : '') + ' aria-label="Increase quantity">+</button>' +
           '</div>' +
           '<div class="sale-cart-line-subtotal">' + formatCurrency(line.price * line.qty) + '</div>' +
@@ -3827,9 +3846,9 @@
   function cartSetQty(index, value) {
     var line = saleCart[index];
     if (!line) return;
-    var qty = parseInt(value) || 1;
     var product = state.products.find(function(p) { return p.id === line.productId; });
-    line.qty = Math.max(1, Math.min(qty, product ? product.quantity : qty));
+    var unit = (product && product.unit) || line.unit || 'piece'; var minQty = minFor(unit); var qty = parseQty(value, minQty); qty=roundQty(qty);
+    line.qty = Math.max(minQty, Math.min(qty, product ? product.quantity : qty));
     renderSaleCart();
   }
 
@@ -3918,7 +3937,7 @@ function completeSale(force) {
         profit: (line.price - line.costPrice) * line.qty,
         customerName: customer || null
       });
-      if (product) product.quantity = Math.max(0, product.quantity - line.qty);
+      if (product) product.quantity = Math.max(0, roundQty(product.quantity - line.qty));
     });
 
     // One debt entry for the whole transaction, with a per-line ledger.
@@ -4762,7 +4781,7 @@ function forecastUrgencyRank(result) {
 
   function saveProduct() {
     var name = dom.productName ? dom.productName.value.trim() : '';
-    var qty = parseInt(dom.productQty ? dom.productQty.value : 0) || 0;
+    var _qtyUnit = dom.productUnit ? dom.productUnit.value : 'piece'; var _qtyMin = minFor(_qtyUnit); var qty = parseQty(dom.productQty ? dom.productQty.value : 0, 0); qty=roundQty(qty);
     var cost = parseFloat(dom.productCost ? dom.productCost.value : 0) || 0;
     var price = parseFloat(dom.productPrice ? dom.productPrice.value : 0) || 0;
     // Product details — optional structured attributes (units, brands, categories)
@@ -4772,11 +4791,11 @@ function forecastUrgencyRank(result) {
     var packageSize = dom.productPackageSize ? dom.productPackageSize.value.trim() : '';
     // Per-product low-stock alert threshold; empty falls back to the global
     // Settings threshold (matching the mobile Add Stock field).
-    var lowStock = dom.productLowStock ? parseInt(dom.productLowStock.value, 10) : null;
+    var lowStock = dom.productLowStock ? parseQty(dom.productLowStock.value, 0) : null; if(lowStock!=null) lowStock=roundQty(lowStock);
     if (!(typeof lowStock === 'number' && !isNaN(lowStock) && lowStock >= 0)) lowStock = getGlobalLowStockThreshold();
 
     if (!name) { showToast('Ilagay ang pangalan ng produkto.', 'error'); return; }
-    if (qty <= 0) { showToast('Ilagay ang tamang dami.', 'error'); return; }
+    if (qty < _qtyMin) { showToast('Ilagay ang tamang dami.', 'error'); return; }
     if (cost <= 0 || price <= 0) { showToast('Ilagay ang tamang presyo.', 'error'); return; }
 
     if (state.editProductId) {
@@ -5762,7 +5781,7 @@ saveState();
       '<div id="pdActions" style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin-bottom:16px;">' +
         '<div style="font-weight:700;color:#1e293b;margin-bottom:10px;">' + t('deductStock') + '</div>' +
         '<div style="display:flex;gap:8px;">' +
-          '<input type="number" id="pdDeductQty" class="form-input" placeholder="1" min="1" style="flex:1;">' +
+          '<input type="number" id="pdDeductQty" class="form-input" placeholder="0.25" min="0.01" step="0.01" inputmode="decimal" style="flex:1;">' +
           '<button class="btn btn-primary" onclick="deductWebStock(\'' + product.id + '\')">' + t('deductBtn') + '</button>' +
         '</div>' +
         '<div style="display:flex;gap:8px;margin-top:12px;">' +
@@ -5776,9 +5795,9 @@ saveState();
   function deductWebStock(id) {
     var product = state.products.find(function(p) { return p.id === id; });
     if (!product) return;
-    var qty = parseInt(document.getElementById('pdDeductQty') ? document.getElementById('pdDeductQty').value : '1') || 1;
-    if (qty <= 0 || qty > product.quantity) { showToast(t('enterAmount'), 'error'); return; }
-    product.quantity -= qty;
+    var _dUnit = product.unit||'piece'; var _dMin=minFor(_dUnit); var qty = parseQty(document.getElementById('pdDeductQty') ? document.getElementById('pdDeductQty').value : String(_dMin), _dMin); qty=roundQty(qty);
+    if (qty < _dMin || qty > product.quantity) { showToast(t('enterAmount'), 'error'); return; }
+    product.quantity = roundQty(product.quantity - qty);
     saveState();
     renderProductDetail();
     showToast(t('saved'));
