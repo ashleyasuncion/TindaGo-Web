@@ -1,0 +1,286 @@
+/* ─── TindaGo Back-Office Shared Sidebar ───
+   Used by all backoffice pages. Keeps the desktop layout as a flat
+   left rail, and turns it into a slide-in drawer on mobile via the
+   brand toggle in the topbar. Loaded AFTER each page's page-specific
+   <style> so these rules win where they need to. */
+
+/* Top bar brand click target (the menu toggle on mobile) */
+#brandToggle {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Mobile drawer overlay (hidden on desktop) */
+#sidenavOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 90;
+}
+
+/* ─── DESKTOP: Fixed sidenav rail (left sidebar) ─── */
+/* sidenavHost is now OUTSIDE .layout — it sits as a direct child of <body>.
+   On desktop we make the nav itself a fixed left rail that never scrolls. */
+@media (min-width: 769px) {
+  /* The nav element injected into #sidenavHost */
+  #sidenav,
+  #sidenavHost > .sidenav {
+    position: fixed;
+    top: 59px; /* below the 59px sticky topbar */
+    left: 0;
+    width: 220px;
+    height: calc(100vh - 59px);
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    z-index: 50;
+    overflow-y: auto;
+    /* Keep the inline-styled surface look */
+    background: var(--surface, #ffffff);
+    border-right: 1px solid var(--border, #e5e7eb);
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* Push .content right so it doesn't hide behind the fixed rail */
+  .layout .content {
+    margin-left: 220px;
+  }
+  /* When the rail is hidden (collapsed), content goes full-width */
+  body.sidebar-collapsed .layout .content {
+    margin-left: 0;
+  }
+  body.sidebar-collapsed #sidenav,
+  body.sidebar-collapsed #sidenavHost > .sidenav {
+    display: none !important;
+  }
+}
+
+/* ─── Shared nav link styles (desktop rail + mobile drawer) ─── */
+#sidenav,
+#sidenavHost > .sidenav {
+  gap: 4px;
+}
+/* The drawer close button is only meaningful on mobile (see
+   @media max-width:768px below). Keep it out of the desktop rail. */
+.sidenav-close {
+  display: none;
+}
+#sidenav a,
+#sidenavHost > .sidenav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  text-decoration: none;
+  border-radius: 10px;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+#sidenav a:hover,
+#sidenavHost > .sidenav a:hover {
+  background: var(--primary-bg, #f0fdf4);
+  color: var(--primary-dark, #15803d);
+}
+#sidenav a.active,
+#sidenavHost > .sidenav a.active {
+  background: var(--primary-light, #dcfce7);
+  color: var(--primary-dark, #15803d);
+}
+
+/* ─── MOBILE: Full-height slide-in drawer ─── */
+@media (max-width: 768px) {
+  #sidenavOverlay.show {
+    display: block;
+    opacity: 1;
+  }
+  #sidenavOverlay {
+    transition: opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  body.drawer-open {
+    overflow: hidden; /* lock background scroll while the drawer is open */
+  }
+
+  .layout .sidenav,
+  #sidenav {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: min(86vw, 300px);
+    height: 100vh;
+    height: 100dvh;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.16);
+    transition: left 0.3s ease;
+    z-index: 100;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex !important;
+    background: var(--surface, #ffffff);
+    padding: 76px 14px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .layout .sidenav.open,
+  #sidenav.open {
+    left: 0;
+  }
+
+  /* Drawer close button (injected by sidebar.js into .sidenav-close) */
+  .sidenav-close {
+    position: absolute;
+    top: max(env(safe-area-inset-top, 0px), 12px);
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--border, #e2e8f0);
+    background: var(--surface, #ffffff);
+    border-radius: 10px;
+    color: var(--text-secondary, #64748b);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 2;
+  }
+
+  /* On mobile .layout no longer needs flex column — let it stack naturally */
+  .layout {
+    flex-direction: column !important;
+  }
+
+  .layout .content {
+    padding: 16px;
+  }
+
+  /* ─── Shared mobile content polish (loaded last, applies to every page) ─── */
+  .topbar {
+    padding: 10px 14px;
+  }
+  .topbar-brand {
+    font-size: 16px;
+  }
+  .topbar-brand img {
+    width: 26px;
+    height: 26px;
+  }
+  .topbar-right {
+    gap: 8px;
+  }
+  .topbar-brand-text {
+    max-width: 46vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page-title {
+    font-size: 21px !important;
+  }
+  .card,
+  .action-card {
+    padding: 16px;
+  }
+  .kpi-card {
+    padding: 16px;
+  }
+
+  /* Forms: single column, full-width actions */
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .form-actions {
+    flex-wrap: wrap;
+  }
+  .form-actions .btn-primary,
+  .form-actions .btn-secondary {
+    flex: 1 1 auto;
+  }
+
+  /* Toolbars: stack search + selects vertically, full width */
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  .toolbar > input,
+  .toolbar > select,
+  .toolbar input,
+  .toolbar select {
+    width: 100% !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+  .toolbar > label,
+  .toolbar label {
+    margin-left: 0 !important;
+  }
+
+  /* Charts: keep canvases from blowing out the column */
+  .chart-wrap,
+  canvas {
+    max-width: 100%;
+  }
+
+  /* Dialogs become bottom sheets on small phones */
+  dialog {
+    margin: auto auto 0 !important;
+    max-height: 88dvh;
+    overflow-y: auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
+  dialog::backdrop {
+    background: rgba(15, 23, 42, 0.5);
+  }
+  .dialog-foot {
+    border-radius: 0 !important;
+    flex-wrap: wrap;
+  }
+}
+
+/* ─── SMALL MOBILE: tighter spacing ─── */
+@media (max-width: 640px) {
+  .layout .sidenav,
+  #sidenav {
+    width: min(88vw, 300px);
+  }
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .kpi-value {
+    font-size: 22px !important;
+  }
+  .quick-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .sync-pill {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+  .btn-signout {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .page-subtitle {
+    font-size: 13px;
+  }
+}
+
+/* Ultrasmall phones — single column for quick tiles */
+@media (max-width: 420px) {
+  .quick-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

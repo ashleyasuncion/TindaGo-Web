@@ -8,9 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
+<link href="sidebar.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
   <script src="db.js"></script>
+  <script src="sidebar.js"></script>
   <style>
     :root { --primary:#16a34a; --primary-dark:#15803d; --primary-light:#dcfce7; --primary-bg:#f0fdf4; --danger:#dc2626; --danger-light:#fef2f2; --bg:#f8faf9; --surface:#ffffff; --text:#1e293b; --text-secondary:#64748b; --border:#e2e8f0; --shadow:0 2px 8px rgba(0,0,0,0.08); --shadow-lg:0 8px 24px rgba(0,0,0,0.12); --radius:12px; --radius-lg:16px; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -23,11 +25,6 @@
     .btn-signout{padding:8px 16px;background:var(--surface);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:color 0.2s,border-color 0.2s}
     .btn-signout:hover{color:var(--danger);border-color:#fecaca}
     .layout{display:flex;min-height:calc(100vh - 59px)}
-    .sidenav{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);padding:16px 12px;display:flex;flex-direction:column;gap:6px}
-    .sidenav a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:14px;font-weight:600;color:var(--text-secondary);text-decoration:none;transition:background 0.15s,color 0.15s}
-    .sidenav a:hover{background:var(--bg);color:var(--text)}
-    .sidenav a.active{background:var(--primary-light);color:var(--primary-dark)}
-@media(max-width:768px){.layout{flex-direction:column}.sidenav{width:100%;flex-direction:row;flex-wrap:wrap;border-right:none;border-bottom:1px solid var(--border)}}
     .content{flex:1;min-width:0;padding:28px}
     .page-title{font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px}
     .page-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
@@ -59,24 +56,16 @@
     .btn-delete:hover{background:var(--danger-light)}
     .btn-delete:disabled{opacity:0.5;cursor:not-allowed}
     @media (max-width:900px){.form-grid{grid-template-columns:1fr}}
-    @media (max-width:640px){.layout{flex-direction:column}.sidenav{width:100%;flex-direction:row;border-right:none;border-bottom:1px solid var(--border);padding:10px;overflow-x:auto}.sidenav a{white-space:nowrap}.content{padding:16px}.topbar{padding:10px 14px}.topbar-hint{display:none}}
+    @media (max-width:640px){.layout{flex-direction:column}.content{padding:16px}.topbar{padding:10px 14px}.topbar-hint{display:none}}
   </style>
 </head>
 <body>
   <header class="topbar">
-    <a class="topbar-brand" href="dashboard.html"><img src="../img/TindaGo_logo.png" alt="TindaGo">TindaGo Back Office</a>
+    <a class="topbar-brand" href="dashboard.html" id="brandToggle" title="Toggle navigation" aria-label="Toggle navigation" aria-controls="sidenav" aria-expanded="false"><img src="../img/TindaGo_logo.png" alt="TindaGo">TindaGo Back Office</a>
     <div class="topbar-right"><span class="sync-pill nodata" id="syncPill"><span class="sync-dot"></span><span id="syncPillText">No suppliers yet</span></span><button class="btn-signout" id="btnSignout">Sign Out</button></div>
   </header>
+  <div id="sidenavHost"></div>
   <div class="layout">
-    <nav class="sidenav">
-  <a href="dashboard.html">Dashboard</a>
-  <a href="products.html">Products</a>
-  <a href="reports.html">Reports</a>
-  <a href="debts.html">Debts</a>
-  <a href="expenses.html">Expenses</a>
-  <a href="restock.html">Restock</a>
-  <a href="suppliers.html" class="active">Suppliers</a>
-</nav>
     <main class="content">
       <h1 class="page-title">Suppliers</h1>
       <p class="page-subtitle" id="pageSubtitle">Web-exclusive supplier contacts — stored per-store (user_id-scoped), never synced to the Android counter app.</p>
@@ -236,7 +225,7 @@
         }
       });
     }
-    document.querySelectorAll('.sidenav a').forEach(a=>{ if(a.getAttribute('href')===location.pathname.split('/').pop().split('?')[0]){ document.querySelectorAll('.sidenav a').forEach(x=>x.classList.remove('active')); a.classList.add('active'); }});
+    if (typeof initSidebar === 'function') initSidebar('suppliers.html');
     main().catch(err => {
       console.error('suppliers fatal:', err);
       const box = document.getElementById('errorBox');
