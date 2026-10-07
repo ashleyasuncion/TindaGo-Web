@@ -3534,7 +3534,7 @@
       var badge=document.getElementById('saleQtyStepBadge'), hint=document.getElementById('saleQtyHint');
       var isF=isFractionalUnit(_su);
       if(badge){ badge.style.display='inline-block'; badge.style.background=isF ? '#dcfce7' : '#e0f2fe'; badge.style.borderColor=isF ? '#bbf7d0' : '#bae6fd'; badge.style.color=isF ? '#15803d' : '#0369a1'; badge.textContent=isF ? ('0.25 '+_su+' steps \u2713') : '0.25 for kg/g/L/ml \u2022 1 for piece'; }
-      if(hint){ hint.textContent=isF?('Min 0.25 '+_su+' — 0.25 steps (e.g. 0.25 → 0.50 = ' + formatCurrency((state.selectedProduct?state.selectedProduct.sellingPrice:0)*0.25) + ' @'+formatCurrency(state.selectedProduct?state.selectedProduct.sellingPrice:0)+'/'+_su+')'):'Min 1 piece — tap \u2212/+ or type'; }
+      if(hint){ hint.textContent=isF?('Min 0.25 '+_su+' — 0.25 steps (e.g. 0.25 → 0.50 = ' + formatCurrency((state.selectedProduct?state.selectedProduct.sellingPrice:0)*0.25) + ' @'+formatCurrency(state.selectedProduct?state.selectedProduct.sellingPrice:0)+'/'+_su+')'):'Min 1 \u2022 kg/g/L/ml allows 0.25 steps (e.g. 0.25 = ' + formatCurrency((state.selectedProduct?state.selectedProduct.sellingPrice:0)*0.25) + ') \u2022 tap \u2212/+ or type'; }
     }catch(e){}
     var max = hasProduct ? state.selectedProduct.quantity : 1;
     var btnAdd = document.getElementById('btnAddToCart');
