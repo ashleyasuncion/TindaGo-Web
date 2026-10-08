@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pre-Order QR — TindaGo Back Office</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
+  <link href="sidebar.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="db.js"></script>
+  <script src="sidebar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <style>
+    :root { --primary:#16a34a; --primary-dark:#15803d; --primary-light:#dcfce7; --primary-bg:#f0fdf4; --danger:#dc2626; --danger-light:#fef2f2; --bg:#f8faf9; --surface:#ffffff; --text:#1e293b; --text-secondary:#64748b; --border:#e2e8f0; --shadow:0 2px 8px rgba(0,0,0,0.08); --shadow-lg:0 8px 24px rgba(0,0,0,0.12); --radius:12px; --radius-lg:16px; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:100vh;overflow:auto;-webkit-font-smoothing:antialiased}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+    .topbar-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;color:var(--primary);text-decoration:none}
+    .topbar-brand img{width:30px;height:30px;border-radius:8px}
+    .topbar-right{display:flex;align-items:center;gap:12px}
+    .btn-signout{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;background:var(--surface);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer}
+    .btn-signout:hover{color:var(--danger);border-color:#fecaca;background:var(--danger-light)}
+    .layout{display:flex;min-height:calc(100vh - 59px)}
+    .content{flex:1;min-width:0;padding:28px}
+    .page-title{font-size:24px;font-weight:800;color:var(--text);margin-bottom:6px}
+    .page-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
+    .error-box{display:none;background:var(--danger-light);color:var(--danger);border:1px solid #fecaca;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+    .error-box.show{display:block}
+    .success-box{display:none;background:var(--primary-light);color:var(--primary-dark);border:1px solid #bbf7d0;border-radius:var(--radius);padding:12px 16px;font-size:14px;font-weight:500;margin-bottom:16px}
+    .success-box.show{display:block}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:20px;margin-bottom:20px}
+    .card h2{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+    .card .hint{font-size:13px;color:var(--text-secondary);margin-bottom:16px;line-height:1.5}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .form-group{display:flex;flex-direction:column;gap:6px}
+    .form-group.full{grid-column:1 / -1}
+    .form-group label{font-size:12px;font-weight:600;color:var(--text-secondary);letter-spacing:0.3px;text-transform:uppercase}
+    .form-input{width:100%;padding:10px 12px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--surface);border:1.5px solid var(--border);border-radius:10px;outline:none;transition:border-color 0.2s, box-shadow 0.2s}
+    .form-input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,163,74,0.15)}
+    .form-input::placeholder{color:#94a3b8}
+    .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0 2px}
+    .switch-label{font-size:14px;font-weight:600}
+    .switch-sub{font-size:12px;color:var(--text-secondary);margin-top:2px}
+    .switch-wrap{display:flex;align-items:center;gap:10px}
+    .switch{position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0}
+    .switch input{opacity:0;width:0;height:0;position:absolute}
+    .slider{position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:26px;transition:background 0.2s}
+    .slider::before{content:"";position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+    .switch input:checked + .slider{background:var(--primary)}
+    .switch input:checked + .slider::before{transform:translateX(18px)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:filter 0.15s, background 0.15s, color 0.15s, border-color 0.15s}
+    .btn-primary{background:var(--primary);color:#fff;box-shadow:0 1px 3px rgba(22,163,74,0.4)}
+    .btn-primary:hover{filter:brightness(1.05)}
+    .btn-primary:disabled{background:var(--border);color:var(--text-secondary);box-shadow:none;cursor:not-allowed}
+    .btn-outline{background:var(--surface);color:var(--primary-dark);border:1.5px solid var(--primary)}
+    .btn-outline:hover{background:var(--primary-light)}
+    .qr-box{display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px;text-align:center}
+    .qr-canvas{border-radius:8px}
+    .qr-url{font-size:12px;color:var(--text-secondary);word-break:break-all;max-width:320px;line-height:1.5}
+    .qr-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .status-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px}
+    .status-chip.on{color:var(--primary-dark);background:var(--primary-light);border:1px solid #bbf7d0}
+    .status-chip.off{color:var(--text-secondary);background:var(--bg);border:1px solid var(--border)}
+    @media (max-width:640px){.form-grid{grid-template-columns:1fr}.content{padding:16px}}
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <a href="dashboard.html" class="topbar-brand"><img src="../img/TindaGo_logo.png" alt="TindaGo logo">TindaGo Back Office</a>
+  <div class="topbar-right">
+    <span id="storeChip" class="topbar-hint">Signed in</span>
+    <button type="button" id="btnSignout" class="btn-signout" title="Sign Out" aria-label="Sign Out">
+      <svg class="btn-signout-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+</header>
+<div id="sidenavHost"></div>
+<div class="layout">
+<main class="content">
+  <h1 class="page-title">Pre-Order QR</h1>
+  <p id="pageSubtitle" class="page-subtitle">Set up your public pre-order page and print the QR your customers scan.</p>
+  <div id="errorBox" class="error-box"></div>
+  <div id="successBox" class="success-box"></div>
+
+  <div class="card">
+    <h2>Store profile</h2>
+    <p class="hint">This is what customers see on <code>preorder/?store=…</code> before they order.</p>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label for="fName">Store name</label>
+        <input id="fName" class="form-input" placeholder="My Store" maxlength="60">
+      </div>
+      <div class="form-group full">
+        <label for="fAddress">Address</label>
+        <input id="fAddress" class="form-input" placeholder="e.g. 123 Sampaguita St, Barangay 4" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label for="fOwner">Owner name</label>
+        <input id="fOwner" class="form-input" placeholder="Owner" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label for="fPhone">Phone (display only)</label>
+        <input id="fPhone" class="form-input" placeholder="e.g. 0917 123 4567" maxlength="40">
+      </div>
+      <div class="form-group full switch-row">
+        <div>
+          <div class="switch-label">Enable pre-ordering</div>
+          <div class="switch-sub">When off, scanning the QR opens the page but the store shows as unavailable.</div>
+        </div>
+        <div class="switch-wrap">
+          <span id="statusChip" class="status-chip off">OFF</span>
+          <label class="switch">
+            <input type="checkbox" id="fEnabled">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group full">
+        <button type="button" id="btnSave" class="btn btn-primary">Save &amp; update QR</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Customer QR</h2>
+    <p class="hint">Scan this to open your pre-order page. Print it and place it at the counter / window.</p>
+    <div class="qr-box">
+      <canvas id="qrCanvas" class="qr-canvas" width="0" height="0"></canvas>
+      <div class="qr-url" id="qrUrl">Loading…</div>
+      <div class="qr-actions">
+        <button type="button" id="btnCopy" class="btn btn-outline">Copy URL</button>
+        <button type="button" id="btnPrint" class="btn btn-outline">Print / Download</button>
+      </div>
+    </div>
+  </div>
+</main>
+</div>
+
+<script>
+  const $ = function (id) { return document.getElementById(id); };
+  function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+  function showError(m) { var b = $('errorBox'); if (b) { b.textContent = m; b.classList.add('show'); } }
+  function clearError() { var b = $('errorBox'); if (b) { b.textContent = ''; b.classList.remove('show'); } }
+  function showSuccess(m) { var b = $('successBox'); if (b) { b.textContent = m; b.classList.add('show'); } }
+  function clearSuccess() { var b = $('successBox'); if (b) { b.textContent = ''; b.classList.remove('show'); } }
+  function clearBanners() { clearError(); clearSuccess(); }
+
+  // Build the canonical public pre-order URL for the signed-in store.
+  // The same URL a printed QR encodes; customers land on preorder/?store=<uid>.
+  function buildPreorderUrl(uid) {
+    var origin = window.location.origin;
+    var base = origin + location.pathname.replace(/backoffice\/[^/]*$/, '') + 'preorder/';
+    // collapse double slashes (e.g. trailing) for cleanliness
+    base = base.replace(/([^:]\/)\/+/g, '$1');
+    return base + '?store=' + encodeURIComponent(uid);
+  }
+
+  function drawQR(url) {
+    var canvas = $('qrCanvas');
+    if (!window.qrcode || !url) { $('qrUrl').textContent = 'QR unavailable'; return; }
+    var qr = window.qrcode(0, 'M');      // version auto, EC level M
+    qr.addData(url, 'Byte');
+    qr.make();
+    var modCount = qr.getModuleCount();
+    var cell = Math.max(2, Math.floor(280 / modCount));
+    var size = modCount * cell;
+    canvas.width = size; canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#1e293b';
+    for (var r = 0; r < modCount; r++) {
+      for (var c = 0; c < modCount; c++) {
+        if (qr.isDark(r, c)) ctx.fillRect(c * cell, r * cell, cell, cell);
+      }
+    }
+    $('qrUrl').textContent = url;
+    $('qrUrl').setAttribute('data-url', url);
+  }
+
+  function updateStatusChip(enabled) {
+    var chip = $('statusChip');
+    if (!chip) return;
+    chip.textContent = enabled ? 'ON' : 'OFF';
+    chip.className = 'status-chip ' + (enabled ? 'on' : 'off');
+  }
+
+  // ── Init ──
+  async function main() {
+    const session = await requireAuth();
+    if (!session) return;
+    $('btnSignout').addEventListener('click', signOut);
+    DB.init(session);
+    $('pageSubtitle').textContent =
+      'Set up your public pre-order page and print the QR your customers scan · signed in as ' +
+      (session.user.email || 'store');
+
+    // Load the existing profile, if any
+    let profile = null;
+    clearBanners();
+    try {
+      profile = await DB.getStoreProfile();
+    } catch (e) {
+      showError('Could not load your store profile: ' + (e.message || 'unknown error'));
+    }
+    if (profile) {
+      $('fName').value = profile.store_name || '';
+      $('fAddress').value = profile.address || '';
+      $('fOwner').value = profile.owner_name || '';
+      $('fPhone').value = profile.phone_display || '';
+      $('fEnabled').checked = !!profile.is_preorder_enabled;
+    }
+    updateStatusChip($('fEnabled').checked);
+    $('fEnabled').addEventListener('change', function () { updateStatusChip($('fEnabled').checked); });
+
+    // Draw the live QR using the signed-in user's UUID
+    var preorderUrl = buildPreorderUrl(session.user.id);
+    try { drawQR(preorderUrl); } catch (e) { console.error('drawQR:', e); $('qrUrl').textContent = 'Could not render QR'; }
+
+    // Copy URL
+    $('btnCopy').addEventListener('click', function () {
+      var url = $('qrUrl').getAttribute('data-url') || preorderUrl;
+      function done() { $('btnCopy').textContent = 'Copied!'; setTimeout(function () { $('btnCopy').textContent = 'Copy URL'; }, 1500); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(function () { copyFallback(url); done(); });
+      } else { copyFallback(url); done(); }
+    });
+    function copyFallback(text) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    // Print / download the QR as PNG
+    $('btnPrint').addEventListener('click', function () {
+      var canvas = $('qrCanvas');
+      if (!canvas || !canvas.width) return;
+      var win = window.open('', '_blank');
+      if (!win) return;
+      win.document.write('<html><head><title>Pre-Order QR</title></head><body style="text-align:center;font-family:sans-serif;padding:24px">');
+      win.document.write('<h2>' + esc($('fName').value || 'TindaGo Store') + '</h2>');
+      if ($('fAddress').value) win.document.write('<p>' + esc($('fAddress').value) + '</p>');
+      win.document.write('<img src="' + canvas.toDataURL('image/png') + '" style="width:320px;height:320px">');
+      win.document.write('<p style="font-size:12px;color:#666">Scan to open the pre-order page</p>');
+      win.document.write('</body></html>');
+      win.document.close();
+      win.focus();
+      setTimeout(function () { win.print(); }, 250);
+    });
+
+    // Save profile + refresh QR
+    $('btnSave').addEventListener('click', async function () {
+      clearBanners();
+      const name = $('fName').value.trim();
+      if (!name) { showError('Store name is required.'); return; }
+      setSaving(true);
+      try {
+        const row = await DB.upsertStoreProfile({
+          storeName: name,
+          ownerName: $('fOwner').value.trim(),
+          address: $('fAddress').value.trim(),
+          phoneDisplay: $('fPhone').value.trim(),
+          isPreorderEnabled: $('fEnabled').checked
+        });
+        if (!row) { showError('Could not save profile — check your connection and try again.'); return; }
+        showSuccess('Pre-order settings saved.');
+        // Regenerate the QR with the (possibly new) store name shown in print header
+        try { drawQR(preorderUrl); } catch (e) { console.error('drawQR:', e); }
+      } catch (e) {
+        console.error('save profile:', e);
+        showError('Save failed: ' + (e.message || 'unknown error'));
+      } finally {
+        setSaving(false);
+      }
+    });
+  }
+
+  if (typeof initSidebar === 'function') initSidebar('preorder_qr.html');
+  main().catch(function (err) {
+    console.error('preorder_qr fatal:', err);
+    var box = document.getElementById('errorBox');
+    if (box) { box.textContent = 'Pre-Order QR page failed to start: ' + (err.message || 'unknown error'); box.classList.add('show'); }
+  });
+
+  function setSaving(on) {
+    var btn = $('btnSave');
+    btn.disabled = on;
+    btn.textContent = on ? 'Saving…' : 'Save & update QR';
+  }
+</script>
+</body>
+</html>
+

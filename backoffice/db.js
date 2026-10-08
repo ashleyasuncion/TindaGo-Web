@@ -328,5 +328,40 @@ const DB = {
             .eq('id', id);
         if (error) { console.error('deleteSupplier:', error); return error; }
         return null;
+    },
+
+    // ── STORE PROFILES (Phase 6: public pre-order identity) ──
+    // One row per user (user_id PK). Anon RLS allows read; the web page
+    // writes only the signed-in owner's row via this helper.
+    async getStoreProfile() {
+        const { data, error } = await sb
+            .from('store_profiles')
+            .select('*')
+            .eq('user_id', this.uid())
+            .maybeSingle();
+        if (error) { console.error('getStoreProfile:', error); return null; }
+        return data;
+    },
+
+    // Upsert the signed-in owner's profile. onConflict 'user_id' matches the
+    // store_profiles PK so re-saves update instead of erroring. updated_at is
+    // epoch ms (bigint) — consistent with the project's bigint timestamps.
+    async upsertStoreProfile(p) {
+        const row = {
+            user_id: this.uid(),
+            store_name: p.storeName || '',
+            owner_name: p.ownerName || '',
+            address: p.address || '',
+            phone_display: p.phoneDisplay || '',
+            is_preorder_enabled: !!p.isPreorderEnabled,
+            updated_at: Date.now()
+        };
+        const { data, error } = await sb
+            .from('store_profiles')
+            .upsert(row, { onConflict: 'user_id' })
+            .select()
+            .single();
+        if (error) { console.error('upsertStoreProfile:', error); return null; }
+        return data;
     }
 };

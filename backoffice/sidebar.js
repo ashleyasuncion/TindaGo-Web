@@ -21,7 +21,8 @@
     { href: 'debts.html', label: 'Debts' },
     { href: 'expenses.html', label: 'Expenses' },
     { href: 'restock.html', label: 'Restock' },
-    { href: 'suppliers.html', label: 'Suppliers' }
+    { href: 'suppliers.html', label: 'Suppliers' },
+    { href: 'preorder_qr.html', label: 'Pre-Order QR' }
   ];
 
   // Returns the current page's filename, e.g. "products.html"
