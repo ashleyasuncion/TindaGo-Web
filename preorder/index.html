@@ -123,6 +123,23 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
 .error-try-code .btn-add{padding:11px 18px;border-radius:10px}
 .error-hint{font-size:12px;color:var(--text-secondary)}
 .empty-state{background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;color:var(--text-secondary);font-size:14px}
+/* ── Landing homepage (entry gate shown after QR scan before the catalog) ── */
+.landing{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;background:radial-gradient(circle at 50% 10%,var(--primary-light) 0%,var(--bg) 46%)}
+.landing-logo{width:88px;height:88px;border-radius:24px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;box-shadow:0 6px 20px rgba(22,163,74,.35);margin-bottom:20px}
+.landing-store{font-size:24px;font-weight:800;line-height:1.25}
+.landing-address{font-size:14px;color:var(--text-secondary);margin-top:6px;max-width:320px}
+.landing-status-row{margin-top:14px}
+.landing-tagline{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--text-secondary);margin-top:10px}
+.landing-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px}
+.landing-chip.on{color:var(--primary-dark);background:var(--primary-light);border:1px solid #bbf7d0}
+.landing-chip.paused{color:var(--amber);background:var(--amber-light);border:1px solid #fde68a}
+.landing-chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.landing-cta{margin-top:26px;width:100%;max-width:320px;background:var(--primary);color:#fff;border:none;border-radius:16px;padding:16px;font-size:17px;font-weight:800;font-family:var(--font);cursor:pointer;box-shadow:0 6px 18px rgba(22,163,74,.35);transition:filter .15s, transform .1s}
+.landing-cta:hover{filter:brightness(1.06)}
+.landing-cta:active{transform:scale(.985)}
+.landing-cta[disabled]{background:var(--border);color:var(--text-secondary);box-shadow:none;cursor:not-allowed}
+.landing-hint{font-size:12px;color:var(--text-secondary);margin-top:12px;max-width:300px}
+.landing-foot{margin-top:36px;font-size:11px;color:var(--text-secondary);opacity:.8}
 /* ── Responsive: tablet / desktop (phones unaffected — rules below only apply ≥768px) ── */
 @media (min-width:768px){
 .page{max-width:960px;padding:24px 24px 120px}
@@ -172,6 +189,22 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
 </style>
 </head>
 <body>
+
+<!-- Landing homepage: entry gate shown right after QR scan, before the
+     catalog. Swap via #landingView / #landingButton (see app.js enterLanding)
+     — a pure branding layer, never duplicates the menu. -->
+<div id="landingView" class="landing hidden">
+  <div class="landing-logo" id="landingLogo">T</div>
+  <div class="landing-store" id="landingStoreName">TindaGo Store</div>
+  <div class="landing-address" id="landingStoreAddress"></div>
+  <div class="landing-status-row">
+    <span class="landing-chip on" id="landingChip"><span class="dot"></span><span id="landingChipText">Live</span></span>
+  </div>
+  <div class="landing-tagline">Order ahead · skip the line</div>
+  <button type="button" id="landingButton" class="landing-cta">Shop Now</button>
+  <div class="landing-hint" id="landingHint">Tap Shop Now to view this store&#39;s menu and order ahead for pickup.</div>
+  <div class="landing-foot">Powered by TindaGo</div>
+</div>
 
 <!-- Error view: invalid / missing store UID -->
 <div id="errorView" class="hidden">

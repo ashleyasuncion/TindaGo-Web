@@ -14,14 +14,56 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /**
- * Read the ?store=<uid> and &demo=1 query params from the current URL.
- * Returns { storeUid: string|null, demo: boolean }.
+ * Read the ?store=<uid>, ?code=<short slug> and &demo=1 query params from the
+ * current URL. Returns { storeUid, storeCode, demo }.
+ *
+ * ?store= is the back-compat direct-UUID path (QRs printed before the short-code
+ * rollout still work). ?code= is the friendly short-code path resolved to a UUID
+ * via get_uid_by_slug before the profile/products fetch. When both are absent the
+ * app falls through to the store-code entry screen.
  */
 function parsePreorderUrl() {
     const params = new URLSearchParams(window.location.search);
     const storeUid = (params.get('store') || '').trim();
+    const storeCode = (params.get('code') || '').trim();
     const demo = params.get('demo') === '1' || params.get('demo') === 'true';
-    return { storeUid: storeUid || null, demo };
+    return { storeUid: storeUid || null, storeCode: storeCode || null, demo };
+}
+
+/**
+ * Resolve a friendly store code (slug) to the store's auth.users UUID via the
+ * get_uid_by_slug RPC. Returns the UUID string, or null when unknown/error.
+ */
+async function resolveStoreCode(storeCode) {
+    if (!storeCode) return null;
+    try {
+        const { data, error } = await sb.rpc('get_uid_by_slug', { p_slug: storeCode });
+        if (error) { console.error('resolveStoreCode:', error); return null; }
+        const row = Array.isArray(data) && data.length ? data[0] : null;
+        return (row && row.user_id) ? String(row.user_id) : null;
+    } catch (e) {
+        console.error('resolveStoreCode throw:', e);
+        return null;
+    }
+}
+
+/**
+ * Create/refresh the owner's slug row from store_profiles.store_code without
+ * requiring an extra field on the profile form. The stored code is kept in sync
+ * with store_slugs (single source of truth = store_profiles.store_code).
+ */
+async function syncStoreSlug(storeCode, storeUid) {
+    if (!storeCode || !storeUid) return;
+    try {
+        await sb.from('store_slugs').upsert(
+            { slug: storeCode, user_id: storeUid, updated_at: Date.now() },
+            { onConflict: 'slug' }
+        );
+    } catch (e) {
+        // Non-blocking: a failed sync just means the printed code won't resolve
+        // until it's saved again; the owner page already wrote store_code.
+        console.error('syncStoreSlug:', e);
+    }
 }
 
 /**

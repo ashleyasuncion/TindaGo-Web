@@ -355,6 +355,7 @@ const DB = {
             owner_name: p.ownerName || '',
             address: p.address || '',
             phone_display: p.phoneDisplay || '',
+            store_code: (p.storeCode || '').trim(),
             is_preorder_enabled: !!p.isPreorderEnabled,
             updated_at: Date.now()
         };
@@ -364,6 +365,19 @@ const DB = {
             .select()
             .single();
         if (error) { console.error('upsertStoreProfile:', error); DB._lastProfileError = (error && error.message) || String(error); return null; }
+        return data;
+    },
+
+    // Owner-maintained short-code → uid mapping the customer page resolves
+    // (?code= → get_uid_by_slug). RLS allows the owner to write their own row.
+    async upsertStoreSlug(slug) {
+        if (!slug || !String(slug).trim()) return null;
+        const { data, error } = await sb
+            .from('store_slugs')
+            .upsert({ slug: String(slug).trim(), user_id: this.uid(), updated_at: Date.now() }, { onConflict: 'slug' })
+            .select()
+            .single();
+        if (error) { console.error('upsertStoreSlug:', error); return null; }
         return data;
     },
 

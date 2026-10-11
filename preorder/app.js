@@ -54,6 +54,53 @@ var state = {
     submitted: false
 };
 
+// ── Landing page (entry gate shown after QR scan, before catalog) ──
+var LANDING_HINT_DEFAULT = "Tap Shop Now to view this store's menu and order ahead for pickup.";
+function enterLanding(profile) {
+    var nameEl = $('landingStoreName');
+    var addrEl = $('landingStoreAddress');
+    var chip = $('landingChip');
+    var chipText = $('landingChipText');
+    var btn = $('landingButton');
+    var hint = $('landingHint');
+
+    if (nameEl) nameEl.textContent = state.storeName || 'TindaGo Store';
+    if (addrEl) addrEl.textContent = state.storeAddress || '';
+
+    // Status chip tied to is_preorder_enabled (no profile yet / true = Live)
+    var enabled = !profile || profile.is_preorder_enabled !== false;
+    if (chip && chipText) {
+        chip.className = enabled ? 'landing-chip on' : 'landing-chip paused';
+        chipText.textContent = enabled ? 'Live' : 'Paused';
+    }
+    if (hint) {
+        hint.textContent = enabled ? LANDING_HINT_DEFAULT
+            : "This store isn't accepting online orders right now. Please visit the store directly.";
+    }
+
+    if (btn) {
+        btn.disabled = !enabled;
+        btn.textContent = enabled ? 'Shop Now' : 'Pre-ordering is off';
+        btn.onclick = function () {
+            if (btn.disabled) return;
+            exitLanding();
+        };
+    }
+
+    $('landingView').classList.remove('hidden');
+    $('appView').classList.add('hidden');
+    $('errorView').classList.add('hidden');
+}
+
+function exitLanding() {
+    $('landingView').classList.add('hidden');
+    $('appView').classList.remove('hidden');
+    renderHeader();
+    buildCategoryOptions(state.products);
+    applyFilter();
+    renderSummary();
+}
+
 // Quick lookup by product id
 function getProduct(id) {
     for (var i = 0; i < state.products.length; i++) {
@@ -309,8 +356,8 @@ function renderDropdown(level, dd) {
 function buildCategoryOptions() { renderDropdown('categories', $('categoryDropdown')); }
 
 function wireCategorySearch() {
-    var sc = $('searchControl'), btn = $('categoryButton'), label = $('categoryLabel'),
-        dd = $('categoryDropdown'), ab = $('actionButton'), input = $('searchInput');
+    var sc = $('searchControl'), btn =$('categoryButton'), label =$('categoryLabel'),
+        dd =$('categoryDropdown'), ab = $('actionButton'), input = $('searchInput');
     if (!sc || !btn || !dd || !ab || !input) return;
 
     function updLabel() {
@@ -537,7 +584,7 @@ async function submitPreOrder() {
         showReceipt(payload, false);
     } catch (e) {
         console.error('submitPreOrder:', e);
-        $('receiptStatus').textContent = 'Sorry, we couldn\u2019t save your order. Please try again.';
+        $('receiptStatus').textContent = "Sorry, we couldn't save your order. Please try again.";
         $('receiptStatus').className = 'receipt-status error';
         state.submitted = false;
         setTimeout(function () {
@@ -621,14 +668,20 @@ function wireStoreCodeEntry() {
     function submit() {
         var code = (input ? input.value : '').trim();
         if (!code || !code.length) { if (input) input.focus(); return; }
-        // The store code is the store owner's UID. If the whole ?store=... URL
-        // was pasted, extract just the uid so the redirect is clean.
-        if (code.indexOf('store=') !== -1) {
-            var m = /[?&]store=([^&]+)/.exec(code);
-            if (m && m[1]) code = decodeURIComponent(m[1]);
-        }
+        // The store code is a friendly slug (e.g. TGO-MNL01). If the whole
+        // ?store= or ?code= URL was pasted, extract just the identifier so the
+        // redirect is clean. UUIDs keep the ?store= path; slug-looking codes use
+        // ?code= (resolved via get_uid_by_slug during init).
+        var m = /[?&](store|code)=([^&]+)/.exec(code);
         var params = new URLSearchParams(window.location.search);
-        params.set('store', code);
+        if (m && m[1] && m[2]) {
+            var val = decodeURIComponent(m[2]);
+            params.set(m[1], val);
+        } else if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(code)) {
+            params.set('store', code);   // looks like a raw UUID
+        } else {
+            params.set('code', code);    // friendly short code
+        }
         window.location.search = params.toString();
     }
     if (go) go.addEventListener('click', submit);
@@ -642,6 +695,19 @@ async function init() {
     var url = parsePreorderUrl();
     state.storeUid = url.storeUid;
     state.demo = url.demo;
+
+    // Short-code path: ?code=<friendly slug> resolves to the store's UUID via
+    // get_uid_by_slug before any profile/products fetch. Falls through to the
+    // code-entry screen when the slug is unknown.
+    if (!state.storeUid && url.storeCode) {
+        state.storeUid = await resolveStoreCode(url.storeCode);
+        if (state.storeUid) {
+            // Keep URL params readable — replace ?code with ?store for the rest
+            // of the session? No: leave the ?code intact so the store's friendly
+            // link stays friendly and bookmarks keep working. The resolved UID is
+            // held in state. Alternatively rewrite location. Chosen: state-only.
+        }
+    }
 
     // DEV_FALLBACK: if no ?store= param in URL, try localStorage
     if (!state.storeUid) {
@@ -661,8 +727,14 @@ async function init() {
         // an invitation to type a code, not as a "wrong link" error.
         var welcomeTitle = document.querySelector('#errorView .error-title');
         var welcomeText = document.querySelector('#errorView .error-text');
-        if (welcomeTitle) welcomeTitle.textContent = 'Welcome to TindaGo';
-        if (welcomeText) welcomeText.textContent = 'Enter your store code below to start your order.';
+        if (url.storeCode && !state.storeUid) {
+            // A ?code= was provided but didn't resolve — say so, not generic copy.
+            if (welcomeTitle) welcomeTitle.textContent = 'Store code not found';
+            if (welcomeText) welcomeText.textContent = 'We couldn\'t find a store for "' + url.storeCode + '". Check the code and try again, or enter another code below.';
+        } else {
+            if (welcomeTitle) welcomeTitle.textContent = 'Welcome to TindaGo';
+            if (welcomeText) welcomeText.textContent = 'Enter your store code below to start your order.';
+        }
 
         $('appView').classList.add('hidden');
         $('errorView').classList.remove('hidden');
@@ -713,9 +785,8 @@ async function init() {
         state.storeName = 'Demo Store';
         state.storeAddress = 'Sample address for demo mode';
         state.products = DEMO_PRODUCTS.slice();
-        renderHeader();
-        renderProducts();
-        renderSummary();
+        // Show landing page (pre-ordering always enabled in demo)
+        enterLanding(null);
         return;
     }
 
@@ -723,35 +794,19 @@ async function init() {
     state.isLoading = true;
     renderHeader();
     renderProducts();
+
     var profile = await fetchStoreProfile(state.storeUid);
     if (profile && profile.store_name) {
         state.storeName = profile.store_name;
         state.storeAddress = profile.address || '';
     }
 
-    // Phase 6 C: the Back Office "Enable pre-ordering" switch now actually gates
-    // this page (it was written by preorder_qr.html but never read). A store with
-    // no profile row (undefined) stays open, so existing stores don't break.
-    if (profile && profile.is_preorder_enabled === false) {
-        var preoffTitle = document.querySelector('#errorView .error-title');
-        var preoffText = document.querySelector('#errorView .error-text');
-        if (preoffTitle) preoffTitle.textContent = 'Pre-ordering is off';
-        if (preoffText) {
-            preoffText.textContent = 'This store isn\u2019t accepting online orders right now. '
-                + 'Please visit the store directly.';
-        }
-        $('appView').classList.add('hidden');
-        $('errorView').classList.remove('hidden');
-        return;
-    }
-
     var all = await fetchPublicProducts(state.storeUid);
     state.products = all.filter(function (p) { return Number(p.quantity) > 0; });
     state.isLoading = false;
-    renderHeader();
-    buildCategoryOptions(state.products);
-    applyFilter();
-    renderSummary();
+
+    // Show landing page (handles pre-order enabled/disabled)
+    enterLanding(profile);
 }
 
 if (document.readyState === 'loading') {
@@ -759,4 +814,3 @@ if (document.readyState === 'loading') {
 } else {
     init().catch(console.error);
 }
-

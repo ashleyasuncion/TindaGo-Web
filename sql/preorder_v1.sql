@@ -125,9 +125,66 @@ $$;
 revoke all on function public.get_public_products(uuid) from public;
 grant execute on function public.get_public_products(uuid) to anon, authenticated;
 
+-- ----------------------------------------------------------------------------
+-- 4. store_slugs — short-code mapping exposed to the public pre-order page
+--    Owner-friendly code (e.g. TGO-MNL01) -> store's auth.users UUID, so the
+--    customer URL carries ?code=<slug> instead of an internal UUID. The slug
+--    table is the ONLY public surface for resolving a code; it stays
+--    RLS-guarded (SELECT open, write owner-only) and never holds secrets.
+--    Auto-initialized to an empty-but-present table so schema is always current.
+-- ----------------------------------------------------------------------------
+create table if not exists public.store_slugs (
+  slug text primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at bigint not null default 0,
+  updated_at bigint not null default 0
+);
+
+alter table public.store_slugs enable row level security;
+
+-- anyone may look up a slug -> uid (the whole point: anon URL resolution).
+drop policy if exists "store_slugs_public_select" on public.store_slugs;
+create policy "store_slugs_public_select" on public.store_slugs
+  for select using (true);
+
+-- only the owner creates/updates/deletes their own slug row(s).
+drop policy if exists "store_slugs_owner_all" on public.store_slugs;
+create policy "store_slugs_owner_all" on public.store_slugs
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+create index if not exists store_slugs_user_idx on public.store_slugs (user_id);
+
+-- get_uid_by_slug — SECURITY DEFINER RPC: anon resolves a friendly code to the
+-- store's internal UUID. Returns empty set when the slug is unknown.
+drop function if exists public.get_uid_by_slug(text);
+
+create or replace function public.get_uid_by_slug(p_slug text)
+returns table (user_id uuid)
+language sql security definer stable as
+$$
+  select ss.user_id
+  from public.store_slugs ss
+  where ss.slug = p_slug
+  limit 1;
+$$;
+
+revoke all on function public.get_uid_by_slug(text) from public;
+grant execute on function public.get_uid_by_slug(text) to anon, authenticated;
+
+-- ----------------------------------------------------------------------------
+-- 4b. store_code on store_profiles — single source of truth for the friendly
+--     identifier displayed where the QR is generated. The slug row (above) is
+--     created/updated by the owner; the customer page resolves code->uid through
+--     get_uid_by_slug, so this column only needs to exist, be writable by the
+--     owner, and be readable via the existing public profile select.
+-- ----------------------------------------------------------------------------
+alter table public.store_profiles
+  add column if not exists store_code text not null default '';
+
 -- ============================================================================
 -- END Phase 6 (A) schema — idempotent, reversible:
 --   drop table if exists public.pre_orders;
 --   drop table if exists public.store_profiles;
 --   drop function if exists public.get_public_products(uuid);
+--   drop function if exists public.get_uid_by_slug(text);
 -- ============================================================================
