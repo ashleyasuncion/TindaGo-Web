@@ -8,28 +8,6 @@
 
 'use strict';
 
-// ── Ensure an anonymous Supabase session exists ──
-// Supabase requires a JWT for any write operation. Without a prior login,
-// an anonymous JWT ensures inserts carry the required Authorization header.
-async function ensureAnonSession() {
-    try {
-        const { data: { session } } = await sb.auth.getSession();
-        if (!session) {
-            const { data, error } = await sb.auth.signInAnonymously();
-            if (error) {
-                console.error('Anonymous sign-in failed:', error);
-            } else {
-                console.info('Anonymous session established');
-            }
-        }
-    } catch (e) {
-        console.error('ensureAnonSession threw:', e);
-    }
-}
-
-// Call it immediately so all later inserts carry the JWT.
-ensureAnonSession();
-
 // ── Small DOM helpers (match backoffice style) ──
 function $(id) { return document.getElementById(id); }
 function esc(s) {
@@ -598,10 +576,13 @@ async function submitPreOrder() {
         return;
     }
 
-    // Real mode: insert into pre_orders (anonymous INSERT is allowed by RLS policy)
+    // Real mode: insert into pre_orders (anonymous INSERT is allowed by RLS
+    // policy). No .select() — that would try to read the row back, which anon
+    // can't (pre_orders_is_owner requires auth.uid() = user_id) and would fail
+    // the whole insert with a 401 even though the write succeeded.
     try {
         var payload = buildOrderPayload(tempId);
-        var res = await sb.from('pre_orders').insert([payload]).select('temp_id, id');
+        var res = await sb.from('pre_orders').insert([payload]);
         if (res.error) throw new Error(res.error.message);
         showReceipt(payload, false);
     } catch (e) {
