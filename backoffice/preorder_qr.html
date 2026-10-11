@@ -22,6 +22,10 @@
     .topbar-brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;color:var(--primary);text-decoration:none}
     .topbar-brand img{width:30px;height:30px;border-radius:8px}
     .topbar-right{display:flex;align-items:center;gap:12px}
+    .topbar-hint{font-size:12px;font-weight:600;color:var(--text-secondary);background:var(--bg);border:1px solid var(--border);padding:6px 12px;border-radius:20px}
+    .sync-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--primary-dark);background:var(--primary-light);padding:6px 12px;border-radius:20px;border:1px solid #bbf7d0}
+    .sync-pill.nodata{color:var(--text-secondary);background:var(--bg);border-color:var(--border)}
+    .sync-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
     .btn-signout{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;background:var(--surface);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font);border:1.5px solid var(--border);border-radius:10px;cursor:pointer}
     .btn-signout:hover{color:var(--danger);border-color:#fecaca;background:var(--danger-light)}
     .layout{display:flex;min-height:calc(100vh - 59px)}
@@ -70,9 +74,9 @@
 </head>
 <body>
 <header class="topbar">
-  <a href="dashboard.html" class="topbar-brand"><img src="../img/TindaGo_logo.png" alt="TindaGo logo">TindaGo Back Office</a>
+  <a href="dashboard.html" class="topbar-brand" id="brandToggle" title="Toggle navigation" aria-label="Toggle navigation" aria-controls="sidenav" aria-expanded="false"><img src="../img/TindaGo_logo.png" alt="TindaGo logo">TindaGo Back Office</a>
   <div class="topbar-right">
-    <span id="storeChip" class="topbar-hint">Signed in</span>
+    <span class="sync-pill nodata" id="syncPill"><span class="sync-dot"></span><span id="syncPillText">Loading&hellip;</span></span>
     <button type="button" id="btnSignout" class="btn-signout" title="Sign Out" aria-label="Sign Out">
       <svg class="btn-signout-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
     </button>
@@ -143,9 +147,15 @@
 <script>
   const $ = function (id) { return document.getElementById(id); };
   function esc(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
-  function showError(m) { var b = $('errorBox'); if (b) { b.textContent = m; b.classList.add('show'); } }
+  function showBanner(b) {
+    // The banners render ABOVE the form cards, so with the Save button further
+    // down the page the feedback would otherwise land off-screen and the click
+    // would look like it did nothing.
+    try { b.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {}
+  }
+  function showError(m) { var b = $('errorBox'); if (b) { b.textContent = m; b.classList.add('show'); showBanner(b); } }
   function clearError() { var b = $('errorBox'); if (b) { b.textContent = ''; b.classList.remove('show'); } }
-  function showSuccess(m) { var b = $('successBox'); if (b) { b.textContent = m; b.classList.add('show'); } }
+  function showSuccess(m) { var b = $('successBox'); if (b) { b.textContent = m; b.classList.add('show'); showBanner(b); } }
   function clearSuccess() { var b = $('successBox'); if (b) { b.textContent = ''; b.classList.remove('show'); } }
   function clearBanners() { clearError(); clearSuccess(); }
 
@@ -189,6 +199,17 @@
     chip.className = 'status-chip ' + (enabled ? 'on' : 'off');
   }
 
+  // Paint the shared topbar sync-pill (same convention as every other
+  // backoffice page). "Live" here means the store profile exists AND
+  // pre-ordering is enabled — i.e. scanning the QR leads somewhere useful.
+  function paintSyncPill(hasProfile, enabled) {
+    var pill = $('syncPill'), txt = $('syncPillText');
+    if (!pill || !txt) return;
+    if (!hasProfile) { pill.className = 'sync-pill nodata'; txt.textContent = 'No profile yet'; return; }
+    if (enabled) { pill.className = 'sync-pill'; txt.textContent = 'Pre-orders live'; }
+    else { pill.className = 'sync-pill nodata'; txt.textContent = 'Pre-orders paused'; }
+  }
+
   // ── Init ──
   async function main() {
     const session = await requireAuth();
@@ -215,7 +236,8 @@
       $('fEnabled').checked = !!profile.is_preorder_enabled;
     }
     updateStatusChip($('fEnabled').checked);
-    $('fEnabled').addEventListener('change', function () { updateStatusChip($('fEnabled').checked); });
+    paintSyncPill(!!profile, $('fEnabled').checked);
+    $('fEnabled').addEventListener('change', function () { updateStatusChip($('fEnabled').checked); paintSyncPill(!!profile, $('fEnabled').checked); });
 
     // Draw the live QR using the signed-in user's UUID
     var preorderUrl = buildPreorderUrl(session.user.id);
@@ -248,7 +270,7 @@
       if ($('fAddress').value) win.document.write('<p>' + esc($('fAddress').value) + '</p>');
       win.document.write('<img src="' + canvas.toDataURL('image/png') + '" style="width:320px;height:320px">');
       win.document.write('<p style="font-size:12px;color:#666">Scan to open the pre-order page</p>');
-      win.document.write('</body></html>');
+      win.document.write('<\/body><\/html>'); // escaped closing tags: a raw one inside this file hijacks Live Server's snippet injection and kills the page script
       win.document.close();
       win.focus();
       setTimeout(function () { win.print(); }, 250);
@@ -268,9 +290,18 @@
           phoneDisplay: $('fPhone').value.trim(),
           isPreorderEnabled: $('fEnabled').checked
         });
-        if (!row) { showError('Could not save profile — check your connection and try again.'); return; }
+        if (!row) {
+          // db.js keeps the real PostgREST message; show it so a failing save is
+          // diagnosable instead of a generic "check your connection".
+          var why = (typeof DB !== 'undefined' && DB._lastProfileError)
+            ? DB._lastProfileError
+            : 'check your connection and try again.';
+          showError('Could not save profile — ' + why);
+          return;
+        }
         showSuccess('Pre-order settings saved.');
-        // Regenerate the QR with the (possibly new) store name shown in print header
+        // Regenerate the QR and refresh the topbar pill to match the saved state
+        paintSyncPill(true, $('fEnabled').checked);
         try { drawQR(preorderUrl); } catch (e) { console.error('drawQR:', e); }
       } catch (e) {
         console.error('save profile:', e);

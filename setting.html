@@ -183,6 +183,16 @@
               <button class="btn btn-secondary btn-full" onclick="handleCloudSignOut()">Sign Out</button>
             </div>
             <div id="cloudSyncStatus" style="font-size:var(--text-xs);margin-top:8px;min-height:1.2em;word-break:break-word;"></div>
+            <!-- ── Back Office access (shared Supabase backend) ── -->
+            <!-- Web-first prototype of the mobile "View Back Office" link.
+                 Opens the deployed Back Office in a new tab; it uses its own
+                 Supabase session, so a signed-out visitor is redirected to
+                 backoffice/login.html by backoffice/config.js#requireAuth(). -->
+            <a class="btn btn-outline btn-full" id="cloudViewBackOfficeBtn"
+               href="https://tindago.vercel.app/backoffice/dashboard.html"
+               target="_blank" rel="noopener" style="margin-top:12px;">
+              View Back Office / View Cloud Data
+            </a>
           </div>
         </div>
 

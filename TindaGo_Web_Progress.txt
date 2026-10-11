@@ -1730,3 +1730,709 @@ AFFECTED FILES:
  - git/TindaGo/TindaGo_Web_Progress.txt (this entry only for Plan B; code already in 85b1bb4: setting.html 19161B, supabase.js 6438B, sync.js 20807B, supabase_v2.sql 7096B)
  - No new interval/timer — Plan A 60s maybeAutoSync + 60s wireSettingsCard + visibility/online retained.
 ===============================================================================
+
+================================================================================
+2026-10-06..08 — WEB LOG CATCH-UP (commits 40b9727..a73bb82 + uncommitted app.js)
+Date: 2026-10-08 (retrospective log — all items below were missing from this log)
+Status: COMMITTED (7 commits) + 1 UNCOMMITTED app.js change (rice piece→kg seed fix)
+Scope: WEB ONLY — fractional quantity (Oct 7) + backoffice shared mobile sidebar &
+       icon sign-out (Oct 8). Docs/spec + UID doc edits included.
+================================================================================
+
+A) FRACTIONAL QUANTITY SUPPORT (Decision A) — Oct 7, commits 40b9727 / 342b0a7 / e45622d / 5b967bd
+Spec: docs/fractional_qty_spec.md (NEW, 66L — full Decision A design:
+     isFractionalUnit kg|g|l|ml → stepFor/minFor 0.25, else 1; zero migration,
+     DB stays v13 double; B/C deferred).
+
+1) 40b9727 — feat(fractional): make 0.25 kg/g/L/ml steps visible + fix restock crash
+   - add_product.html (+2/-2), app.js (+71/-37), checkout.html (+4/-3), db_indexed.js (+4/-2),
+     restock.html (+1/-1), restock.js (+11/-4), supabase_v2.sql (+12/-4) — 7 files, +78/-43.
+2) 342b0a7 — fix(checkout): keep fractional step visible on load in Step 1
+   - app.js (+1/-1), checkout.html (+3/-3) — 2 files, +4/-4.
+3) e45622d — fix(checkout): keep fractional hint visible for piece too
+   - app.js (+1/-1) — 1 file.
+4) 5b967bd — Add fractional quantity support (main commit)
+   - add_product.html (+16), app.js (+62/-4), checkout.html (+1/-1),
+     docs/fractional_qty_spec.md (NEW +66) — summary +140/-6.
+
+   WHAT CHANGED (combined):
+   - Helpers (app.js top, restock.js mirror): isFractionalUnit/stepFor/minFor/roundQty/parseQty
+     (kg/g/L/ml → 0.25 step & min; piece-family → 1).
+   - Checkout Step 1 picker: saleQty min/step/inputMode overridden live via syncStep1PickerState
+     (0.25 for fractional, 1 for piece); steps badge + per-unit cost hint; +/− snap to step;
+     Add-to-cart disabled when qty < min || > stock; cart lines use per-line step/inputmode.
+   - Add/Edit product: unit dropdown now ships 17 static options fallback (piece,sachet,pack,
+     box,bottle,can,kg,g,L,mL,bundle,dozen,sack,loaf,tube,bar,sticks) matching db_indexed.js UNITS;
+     syncAddProductQtyInputs() keeps productQty/productLowStock min/step/inputMode in sync;
+     saveProduct validates qty ≥ min.
+   - Restock: purchase qty min 0.01 step 0.01 decimal; onCorrectionChange/addPurchase fractional;
+     restock crash on fractional qty fixed.
+   - supabase_v2.sql: quantity/lowStockThreshold columns set to double precision (data type
+     parity — SQLite/JSON already dynamic, no data migration needed under Option A).
+
+   ONE-TIME DATA FIX (in docs/fractional_qty_spec.md):
+   - Bug report (0.5 reverted to 1) was a data issue: rice seeded as piece → picker correctly
+     rejects 0.5. Fix = rice piece → kg, NOT picker change.
+   - UNCOMMITTED in app.js working tree (+6/-6): seed s25–s30 (Doña Maria/Dinorado/Sinandomeng/
+     Maharlika/Jasmine/Jasmate Rice) changed unit sack→kg, packageSize→kg, quantity 20→100,
+     cost/selling re-priced to per-kg (e.g. s25 20sack@360→100kg@72, selling 414→82.8).
+     SEE NEXT STEPS — still needs commit.
+
+B) DOCS — 2026-10-06, commit c38043b — fill B1 UIDs for isolated accounts
+   - TindaGo_Web_Progress.txt only (+2/-2): web/mobile account labels in Plan B section.
+
+C) BACK-OFFICE SHARED MOBILE SIDEBAR — Oct 8, commit 916f362
+   - 11 files, +632/-134: NEW backoffice/sidebar.js (178L) + backoffice/sidebar.css (286L)
+     + backoffice/transform.js (+62) shared mobile nav; dashboard.html/debts.html/expenses.html/
+     products.html/reports.html/restock.html/suppliers.html refactored to shared sidebar;
+     NEW backoffice/check-inline.js (+30).
+
+D) BACK-OFFICE ICON-BASED SIGN-OUT BUTTONS — Oct 8, commit a73bb82
+   - 8 files, +32/-25: dashboard/debts/expenses/products/reports/restock/suppliers .html +
+     sidebar.css — text Sign Out → icon-based button (consistent 44px touch target).
+
+VERIFICATION (2026-10-08):
+- node --check app.js restock.js db_indexed.js sync.js backup.js — PASS (spec docs/fractional_qty_spec.md).
+- verify_stage3.py 29/29 OK per fractional spec (prior baseline 28/28).
+- git log --since=2026-10-05: 8 commits (this catch-up covers 7; d417e7c Selected Product Display
+  already logged 2026-10-05). HEAD = a73bb82, main up to date with origin/main.
+- git status: 1 file modified (app.js rice seed — see (A) one-time data fix) — NOT yet committed.
+
+NEXT:
+- Commit the app.js rice piece→kg seed change (Stage: data-fix, no schema change) then push.
+- Consider a mobile-parity Fractional Quantity entry (mobile Implements models.kt helpers +
+  Room v13 — see TindaGo_Mobile_Progress.txt 2026-10-08) — shared spec lives in this repo's docs/.
+================================================================================
+
+
+================================================================================
+2026-10-09 — CHECKOUT WIZARD LAYOUT: FIXED BOTTOM NAV, STACKED PAYMENT, SPACING
+Date: 2026-10-09
+Status: IMPLEMENTED + VERIFIED (UNCOMMITTED — style.css + checkout.html)
+Scope: WEB ONLY — checkout wizard (all 4 steps). Mobile CheckoutScreen.kt left
+       untouched (issue requirement 11: apply to web app first).
+================================================================================
+
+WHAT CHANGED (user-facing):
+- Wizard Nav (Close / Next / Back / Complete Sale) is now fixed to the bottom of
+  the screen across all four checkout steps. Expanding content no longer pushes it
+  down, so the Step 1 Selected Product display, Step 2 Sales Cart and Step 4
+  Checkout Confirm Summary can use the available vertical space.
+- Step 3 Payment options (Cash / GCash / Credit) now stack vertically
+  (hamburger-style), one full-width row each, instead of side by side.
+- More intentional vertical spacing throughout the flow: larger gaps between the
+  Checkout Stepper and the first element of each step, and between section titles
+  and the content below them.
+
+WHAT CHANGED (code):
+- style.css:
+  * .wizard-nav -> position:absolute; bottom:0; left:0; right:0; surface bg,
+    top border, 12px 16px padding, shadow, z-index:15. Anchors to .app-container
+    and takes the nav out of normal flow (mirrors the existing .restock-sticky-bar),
+    so it stays inside the scaled .phone-frame.
+  * .wizard-nav .btn -> white-space:nowrap + padding 14px 10px so "Complete Sale"
+    stays on one line (uniform 78px nav height across steps).
+  * .checkout-step fade is now opacity-only — removed translateY from the base
+    rule and @keyframes checkoutFade. A transform would make .checkout-step the
+    containing block for the absolutely-positioned nav and cause a jump during the
+    220ms transition (fade parity with mobile AnimatedContent retained).
+  * .checkout-page -> padding-top:18px (stepper -> first element gap) and
+    padding-bottom:80px (clearance under the 78px fixed nav, no overlap).
+  * .checkout-section-title margin 18px 0 8px -> 20px 0 14px.
+  * .checkout-picker margin-bottom 2px -> 18px.
+  * .payment-toggle -> flex-direction:column; gap:10px; padding:6px;
+    margin-bottom:16px. .payment-btn -> width:100%, padding 13px 16px,
+    text-align:left (font stays --text-sm; removed flex:1).
+- checkout.html:
+  * Removed the duplicate inline .payment-toggle/.payment-btn rules (they were
+    overriding style.css); style.css now owns payment styling.
+  * Removed the inline margin-bottom:10px on the Step 2 "Review Cart" title so the
+    CSS section-title spacing applies.
+
+VERIFICATION (2026-10-09):
+- Headless Chrome, real checkout.html markup + real style.css (scripts stripped to
+  bypass the day-open redirect), window 1200x1000:
+  * All 4 .wizard-nav: computed position:absolute, navBottom == .app-container
+    bottom (delta 0), height 78px -> pinned on every step.
+  * .checkout-page padding-bottom 80px > nav 78px -> no content overlap.
+  * Step 2 section title -> stepper gap = 18px (previously ~0 via
+    .checkout-section-title:first-child{margin-top:0}).
+  * .payment-toggle flex-direction:column; buttons at distinct rows
+    (tops 233/288/343), each 349px wide (full-width rows).
+  * Step 4 "Complete Sale" single line (scrollWidth == clientWidth), keeping all
+    four navs at 78px.
+- Temp lab files removed; git diff scoped to style.css + checkout.html.
+
+AFFECTED FILES:
+- git/TindaGo/style.css, git/TindaGo/checkout.html — UNCOMMITTED.
+- This log entry (TindaGo_Web_Progress.txt).
+
+NEXT:
+- Commit: "fix(checkout): fixed bottom wizard nav, stacked payment toggle, spacing"
+  when ready (web is on main @ e9e9baa + this uncommitted batch).
+================================================================================
+
+================================================================================
+2026-10-09 - VIEW BACK OFFICE LINK (web prototype) - IMPLEMENTED; FEATURE UNCONFIRMED
+Date: 2026-10-09
+Status: IMPLEMENTED (web side only) - whole feature end-to-end UNCONFIRMED
+Scope: WEB ONLY (prototype) - web-first prototype of the mobile Back Office access link.
+       >>> The feature is NOT confirmed: the Android module does not build, so the
+       >>> mobile entry point has never been run. See MOBILE log 2026-10-09. <<<
+================================================================================
+
+WHAT CHANGED:
+- git/TindaGo/setting.html (Cloud Sync card, ~L191): added an always-visible outlined anchor
+  #cloudViewBackOfficeBtn "View Back Office / View Cloud Data"
+  href="https://tindago.vercel.app/backoffice/dashboard.html" target="_blank" rel="noopener".
+  Uses existing .btn .btn-outline .btn-full classes; no CSS or JS added (+10 lines).
+
+VERIFICATION (web, 2026-10-09):
+- Static/DOM check PASS: anchor present, balanced <a>/</a> (4/4), correct href/target/rel/id;
+  Cloud Sync section still closes correctly before </main>. git diff scoped to setting.html.
+- NOT rendered: headless render of setting.html hung (scripts/IndexedDB do not settle in
+  headless) -> no screenshot verification, so the web UI is NOT visually confirmed.
+
+WHY THE FEATURE IS UNCONFIRMED:
+- "Back Office Access from the Mobile App" is the actual feature; the web prototype button is
+  a stepping stone. The Android module fails to compile on an in-progress Phase 6 D4 file
+  (PreOrdersScreen.kt), so the mobile entry point has not been built or run.
+
+AFFECTED FILES:
+- git/TindaGo/setting.html (+10).
+
+NEXT:
+- Port is confirmed/closed only after the Android module builds and the mobile tap-through
+  succeeds (see mobile log). Until then treat this feature as UNFINISHED / UNCONFIRMED.
+================================================================================
+
+
+================================================================================
+2026-10-09 — PHASE 6 (WEB) LOG CATCH-UP: COMMITS 7f4634b, e9e9baa, bbd5e95 + REFINEMENTS
+Date: 2026-10-09 (log gap closed this pass — this work was never entered here)
+Status: COMMITS = DONE (in history); refinements = IMPLEMENTED, UNCOMMITTED
+Scope: WEB — customer pre-order page (preorder/), back-office pre-order QR settings,
+       Phase 6 plan + SQL schema.
+================================================================================
+
+WHY THIS ENTRY EXISTS (log gap):
+- 7f4634b "feat(phase6-B): customer pre-order web page (isolated preorder/)" — committed
+  2026-10-08 22:03 — never documented in this log (the 2026-10-06..08 catch-up entry
+  above stops at a73bb82).
+- e9e9baa "feat(phase6-C): store QR code settings (backoffice)" — committed 2026-10-08
+  22:46 — only ever referenced as "WEB HEAD @ e9e9baa" in TindaGo_Universal_Progress.txt;
+  no feature entry existed.
+- bbd5e95 "feat(phase6-A): pre-orders schema (pre_orders + store_profiles + RPC)" —
+  committed 2026-10-09 10:14: docs/Phase6_PreOrder_TempID_Plan.md (+278) and
+  sql/preorder_v1.sql (+124). The 08:11 status snapshot still listed docs/ + sql/ as
+  untracked; they are committed now.
+
+WHAT THE COMMITS CONTAIN:
+- phase6-B (7f4634b): isolated customer-facing pre-order page under preorder/
+  (index.html, app.js, config.js) — customer scans the store QR, browses live stock,
+  builds a cart and submits a pre-order into the store's pre_orders table.
+- phase6-C (e9e9baa): backoffice/preorder_qr.html — store QR settings page wired to
+  store_profiles (store name/address + "Enable pre-ordering" switch) with live QR draw.
+- phase6-A (bbd5e95): planning doc + SQL only (no JS): pre_orders, store_profiles, RPC.
+
+UNCOMMITTED SAME-DAY REFINEMENTS (working tree, 2026-10-09):
+- preorder/config.js: fetchStoreProfile() also selects is_preorder_enabled.
+- preorder/app.js: Phase 6 C gate — profile.is_preorder_enabled === false renders the
+  "Pre-ordering is off" error view; no-profile (undefined) stays open so existing stores
+  don't break.
+- preorder/index.html: responsive layout — >=768px wider page + 2-col product grid,
+  >=1100px 3-col grid; phones unaffected.
+- backoffice/db.js: DB._lastProfileError captures the real PostgREST message from
+  getStoreProfile/upsertStoreProfile failures.
+- backoffice/preorder_qr.html: topbar sync pill (No profile yet / Pre-orders paused /
+  Pre-orders live), brand click toggles the sidenav, error/success banners scroll into
+  view, and Save failures show the real DB._lastProfileError instead of a generic
+  "check your connection" message.
+
+VERIFICATION (documentation pass, 2026-10-09):
+- node --check preorder/app.js, preorder/config.js, backoffice/db.js — ALL PASS.
+- git log/show: the three commits present with the expected stats.
+- NOT done: live QR render and customer order submission end-to-end in a browser.
+
+AFFECTED FILES:
+- COMMITTED: docs/Phase6_PreOrder_TempID_Plan.md, sql/preorder_v1.sql (bbd5e95);
+  preorder/* and backoffice QR (7f4634b, e9e9baa).
+- UNCOMMITTED: preorder/app.js, preorder/config.js, preorder/index.html,
+  backoffice/db.js, backoffice/preorder_qr.html.
+
+NEXT:
+- SCRATCH still untracked from this work: backoffice/_js1.txt, backoffice/_js2.txt,
+  backoffice/check.html and workspace-root _head_preorder.html, parse_test.js (preorder
+  header experiments) - delete-or-commit decision pending.
+- Commit the preorder/backoffice refinement batch.
+- Browser-test the enable-gate and the QR -> pre-order flow (needs a signed-in store
+  profile with pre-ordering enabled).
+================================================================================
+
+================================================================================
+2026-10-09 — UNIFIED PAGE HEADERS + SETTINGS GEAR (day/morning/closing/debts/inventory)
+Date: 2026-10-09 (work ~18:12–20:11)
+Status: IMPLEMENTED + STATICALLY VERIFIED; UNCOMMITTED
+Scope: WEB ONLY. (debts.html / inventory.html also carry Orders-batch changes — see the
+       Orders Inbox entry below; this entry covers only the header/settings part.)
+================================================================================
+
+WHAT CHANGED (user-facing):
+- day, morning, closing, debts and inventory pages now share one header pattern:
+  Manage Store (grid icon) LEFT, page title CENTERED, tutorial "?" + Settings gear RIGHT.
+  Previously the title sat left and/or Manage Store sat right, and the debts/inventory
+  headers were inline-styled back-arrow variants with no Settings entry point.
+- Result: every one of those five pages now has a direct Settings (gear) link.
+
+WHAT CHANGED (code):
+- day.html, morning.html, closing.html: header markup restructured to the unified
+  pattern ("unified main-page header" comment; #headerPageTitle centered with inline
+  flex:1; settings gear added/kept in header-actions; Manage Store moved to header-left).
+- debts.html, inventory.html: inline back-arrow header replaced by the same unified
+  header (manageStoreBtn -> morning.html).
+- Tooling produced during the work: extract_headers.py + unify_headers.py +
+  unify_headers2.py are STAGED (git add); the following remain untracked —
+  diff_day_settings.py, diff_settings.js, dump_full_settings.py, dump_full_settings2.py,
+  dump_morning_settings.py, fix_day_settings.py, fix_morning_settings.js,
+  fix_morning_settings2.py, fix_orders_settings.py, morning_header_check.js, nav_check.js,
+  final_verify.js, verify_morning_header.py.
+
+VERIFICATION (documentation pass, 2026-10-09):
+- Structure grep: manageStoreBtn + headerPageTitle + settings gear (href setting.html)
+  present in ALL SIX pages (day, morning, closing, debts, inventory, orders).
+- NOTE: NOT visually rendered — no screenshot/layout check has been recorded, so treat
+  the headers as statically verified only.
+
+AFFECTED FILES (UNCOMMITTED): day.html, morning.html, closing.html, debts.html,
+inventory.html; STAGED: extract_headers.py, unify_headers.py, unify_headers2.py;
+untracked helper scripts listed above.
+
+NEXT:
+- Visual pass over the five reworked headers before committing.
+- Decide whether the header helper scripts are committed or deleted.
+================================================================================
+
+================================================================================
+2026-10-09 — ORDERS INBOX v14: NEW ORDERS PAGE + PRE-ORDER SYNC + I18N REPAIR + NOTIFIER
+Date: 2026-10-09 (work ~16:49–23:36)
+Status: IMPLEMENTED + STATICALLY VERIFIED; UNCOMMITTED.
+        >>> Browser run PENDING — see OUTSTANDING. <<<
+Scope: WEB ONLY — in-app owner-facing Orders page on the existing prototype stack
+       (app.js / IndexedDB / Supabase REST). Mobile has its own Phase 6 D screens.
+================================================================================
+
+WHAT CHANGED (user-facing):
+- New "Orders" tab in the bottom nav (debts.html, inventory.html, orders.html — 3 tabs:
+  Order / Stock / Debt; the old Umaga/Morning tab was removed from those navs) opens the
+  new orders.html inbox of pending customer pre-orders.
+- Orders page: "Total Orders" summary card, "View Pre-Orders" button (opens the customer
+  preorder/index.html), "Check for orders" button, order cards (temp id, timestamp, item
+  lines in pesos, total, payment method/status, customer note), and a detail overlay with
+  Validate & Record Sale / Cancel Order actions.
+- Floating red pending-count badge (#ordersBubble) added to debts, inventory, orders and
+  restock pages; tapping it opens orders.html.
+- Validate = stock-checked sale recorded (products decremented, sale lines pushed) and
+  the row PATCHed to fulfilled/paid; Cancel = items returned to stock and the row PATCHed
+  to cancelled. Both require connectivity + a signed-in Supabase session and show
+  localized success/error toasts.
+- Alerts: two-tone WebAudio chime on new orders (mute persisted in localStorage
+  sss_v3_ordersChimeMuted) plus a background notifier that runs on EVERY page —
+  permission-gated browser Notification (tag tindago-orders, no stacking) + chime, on a
+  15s poll with a per-session high-water mark (no alert for orders already pending at
+  page load; chime suppressed on the orders page itself).
+- Full EN + FIL localization for the page (see I18N INCIDENT below).
+
+WHAT CHANGED (code), by file — all UNCOMMITTED unless noted:
+- NEW orders.html (untracked): page shell — unified header (manageStoreBtn ->
+  morning.html, centered data-i18n title, tutorial + settings gear), summary card,
+  pre-orders link, #ordersCheckBtn, #manageOrdersList, 3-tab bottom nav (active =
+  orders), ordersBubble.
+- app.js (478 changed lines vs HEAD; includes the previously-logged rice seed fix):
+  * DOM registry: manageOrdersList, manageTotalOrders, ordersCheckBtn, ordersBubble,
+    ordersDetailOverlay.
+  * i18n: ~40 orders-related keys added to strings.en and 39 to strings.fil (ordersTitle,
+    ordersTotalLabel, ordersCheckBtn, orders Validate/Cancel/Detail/Back series,
+    ordersTabTitle, viewPreordersLink, ordersLink, ...) plus wrong-language corrections
+    in en (ordersTotalLabel -> "Total Orders", viewPreordersLink -> "View Pre-Orders",
+    ordersEmpty -> English, effective smsNoPhone English) and new fil keys
+    viewPreordersLink + the original Tagalog smsNoPhone.
+  * Router: new pageName === 'orders' branch — applyTranslations + renderOrdersInbox +
+    checkForOrders + 60s polling interval, cleared on pagehide, re-armed on pageshow
+    (bfcache restore).
+  * Orders Inbox implementation (~350 lines): renderOrdersInbox (cards, peso totals,
+    empty state), checkForOrders -> pullPreOrdersOnly (chime + bubble refresh when
+    newCount > 0), openOrderDetail/closeOrderDetail, validatePreOrderWeb(+Confirmed)
+    (per-line missing/short stock checks, authenticated PATCH, sale lines pushed to
+    state.sales, quantities decremented via roundQty, saveState), cancelPreOrderWeb
+    (+Confirmed) (PATCH + restock), patchPreOrderStatus (fetch PATCH /rest/v1/pre_orders
+    with apikey + Bearer headers, Prefer: resolution=merge-duplicates), ordersChime
+    (oscillator pair 880/1320Hz, localStorage mute), ordersBack (sessionStorage
+    sss_v3_ordersReturn round-trip), renderOrdersBubble (pending badge).
+  * Window exports for all orders functions; ordersNotifier IIFE appended before the
+    existing window-exports bridge.
+
+- sync.js (25 changed lines): mapPreOrderRow (snake_case Supabase row -> local object,
+  items_json kept as string for normalizePreOrder), PULL_TABLES + pre_orders entry
+  (clearPreOrders/putPreOrders/putPreOrder), and new pullPreOrdersOnly() — merge
+  incremental pull that does NOT clear the store and returns {newCount, totalCount} so
+  callers can decide whether to chime.
+- db_indexed.js (70 changed lines): DB_VERSION 13 -> 14; new 'preorders' object store
+  (keyPath id) with tempId + status indexes in onupgradeneeded; PLUS a defensive post-open
+  fixup that, if the store is missing (onupgradeneeded skipped / DB already at v14),
+  closes, re-opens at version+1 and creates it — this fixes the reported "object store
+  not found" Transaction error on pre-existing databases; normalizePreOrder (parses
+  items_json, accepts snake_case or camelCase); TindaDB API: getAllPreOrders,
+  getPreOrderByTempId, putPreOrder, putPreOrders, clearPreOrders; exportAll store list now
+  includes 'preorders'.
+- style.css (117 changed lines; the checkout-layout half is documented in the 2026-10-09
+  checkout entry above): ORDERS INBOX styles — order cards, detail overlay, orders-bubble
+  badge + pop animation, bottom-nav active underline. NOTE: the block comment says
+  "4-tab (Morning / Order / Stock / Debt)" but the shipped navs are 3-tab
+  (Order / Stock / Debt) and restock has NO Order tab — comment/data mismatch to resolve.
+- debts.html (61 changed lines): unified header (see the header entry above) + Order nav
+  tab + ordersBubble + inline 'tindago:languageChanged' script re-running
+  applyTranslations()/renderManageDebts().
+- inventory.html (55 changed lines): unified header + Order nav tab + ordersBubble +
+  languageChanged listener extended to re-translate [data-i18n] and re-render the
+  inventory list.
+- restock.html (11 changed lines): bottom-nav cleanup (Morning tab removed, id=bottomNav,
+  stocksLink data-i18n) + ordersBubble — but NO orders.html tab (nav is Stock/Debt).
+- NEW orders/ (untracked): standalone owner-inbox PROTOTYPE (index.html + config.js +
+  db.js; own palette, supabase-js CDN, does NOT link style.css) that parallels
+  orders.html — decide keep-or-drop at commit time.
+
+I18N INCIDENT (root cause of the reported Orders-page bugs) — REPAIRED:
+- An earlier automated edit deleted the `fil: {` line from the strings object, which:
+  (a) broke app.js with a SyntaxError — node --check failed at line 1346;
+  (b) left 25 English orders keys orphaned outside strings.en, so t('ordersCheckBtn')
+  returned the raw key; and
+  (c) left ~578 lines of Tagalog content orphaned — Tagalog text leaked into English mode.
+- Repair: the 25 keys were moved back inside strings.en; `fil: {` was re-inserted so the
+  Tagalog block is strings.fil again; 4 wrong-language en values corrected; the 2 missing
+  fil keys (viewPreordersLink, smsNoPhone) added.
+- Pre-repair backup kept at git/TindaGo/app.js.bak; _tmp_appjs_diff.txt is a leftover diff
+  scratch file — both PENDING CLEANUP (keep until the batch is committed).
+
+VERIFICATION (documentation pass, 2026-10-09 — re-run, all green):
+- node --check: app.js, db_indexed.js, sync.js, restock.js, backup.js, preorder/app.js,
+  preorder/config.js, backoffice/db.js — ALL PASS (app.js was FAIL before the repair).
+- strings object evaluated in a vm sandbox: en = 642 keys, fil = 612 keys; ALL 39
+  orders-related keys present in BOTH languages (zero missing in fil); spot checks PASS:
+  en.ordersCheckBtn "Check for orders", en.ordersTotalLabel "Total Orders",
+  en.viewPreordersLink "View Pre-Orders", en.ordersEmpty "No pending orders yet.",
+  effective en.smsNoPhone English, fil.ordersCheckBtn "Surihin ang mga order",
+  fil.viewPreordersLink "Tingnan ang Pre-Orders", fil.smsNoPhone Tagalog.
+- Structure greps: #ordersBubble in debts/inventory/orders/restock; href=orders.html nav
+  tab in debts/inventory/orders; unified header elements in all six pages.
+
+OUTSTANDING / KNOWN ISSUES (do NOT treat the feature as shipped):
+- Browser verification PENDING: hard-refresh (Ctrl+Shift+R) and exercise the Orders page
+  end-to-end in BOTH languages — no live run has been recorded yet.
+- restock.html has the bubble but no Order nav tab; style.css "4-tab" comment disagrees
+  with the shipped 3-tab navs.
+- 31 i18n keys (backup*, restockTutorial*, quickSell*, sms*) still have NO fil
+  translations and fall back to English in Tagalog mode — pre-existing, outside Orders.
+- Scratch/tooling left in the tree (delete-or-commit decision pending): untracked
+  insert_i18n_orders.js, fix_orders_en.js, fix_orders_language.js,
+  verify_orders_language.js, extract_orders_text_usage.js, reinsert_orders.js,
+  insert_orders_inbox.js, fix_insert.js, find_collapsed.js, orders_functions.txt,
+  orders_functions_check.js, orders_router_branch.txt, orders_window_exports.txt,
+  orders_notifier_block.txt, orders_notifier_check.js, parse_test.js, fixapp.js, plus
+  app.js.bak and _tmp_appjs_diff.txt.
+
+AFFECTED FILES (UNCOMMITTED): app.js, sync.js, db_indexed.js, style.css, debts.html,
+inventory.html, restock.html; NEW orders.html + orders/; tooling untracked/staged.
+
+NEXT:
+- Browser-test the full flow (Check for orders -> detail -> validate -> cancel; EN+FIL),
+  then commit suggested: "feat(orders): in-app pre-orders inbox (v14) with i18n, sync,
+  bubble + notifier".
+================================================================================
+
+================================================================================
+[2026-10-09] FIX -- backoffice/preorder_qr.html INERT UNDER LIVE SERVER (external web)
+
+Symptom: http://127.0.0.1:5500/backoffice/preorder_qr.html loaded but was completely
+dead -- no sidebar, no QR (stuck "Loading..."), no buttons, no auth redirect:
+"frontend broken and not functioning".
+
+Root cause (caught via headless Chrome console): the Print handler contained
+  win.document.write('</body></html>');
+a RAW closing-tag literal inside the page inline JS. Live Server injects its
+livereload snippet before the FIRST </body> in the served bytes, so it spliced
+its <script> block into the middle of that JS string -->
+  Uncaught SyntaxError: Invalid or unexpected token (line 273)
+--> the ENTIRE inline script failed to parse, so NOTHING on the page initialized.
+node --check passed because it checks the clean disk file; only the SERVED bytes
+were corrupted. Repo-wide scan: only preorder_qr.html (and scratch copy
+backoffice/check.html) contain </body> inside JS -- no other page is affected.
+
+Fix: escaped the closing tags as '<\/body><\/html>' on line 273 (JS-identical
+runtime output; the backslash defeats Live Server's literal match).
+
+VERIFIED (headless Chrome, 2026-10-09, all green):
+- Served file now contains exactly one </body> and one </html> (the real tags).
+- Inline script node --check PASS; ZERO console errors on load; livereload now
+  injects at the real </body> and logs "Live reload enabled." from login.html.
+- Signed-out load correctly redirects to backoffice/login.html (requireAuth),
+  proving the full page script executes end-to-end.
+
+AFFECTED FILES (UNCOMMITTED): backoffice/preorder_qr.html (line 273, one line).
+NOTE: scratch backoffice/check.html still has the raw literal -- it is slated for
+the pending scratch-file cleanup; do NOT commit it.
+
+NEXT: unchanged -- sign in as tindago@test.com and run the pre-order E2E test
+(customer link preorder/?store=1e97da84-9353-4dbd-b461-f1c539f78faf).
+================================================================================
+
+[2026-10-09] FIX -- orders.html IN-APP ORDERS INBOX INERT (3 STACKED BUGS)
+Date: 2026-10-09
+
+REPORT: order placed via http://127.0.0.1:5500/preorder/?store=1e97da84-9353-4dbd-b461-f1c539f78faf
+did NOT appear/notify on http://127.0.0.1:5500/orders.html, but DID show on
+/orders/ (standalone inbox, queries Supabase directly with the login session).
+
+ROOT CAUSE -- three stacked defects on the v14 inbox path (app.js + sync.js):
+1) sync.js pullPreOrdersOnly() was never exported to window (missing from both
+   TindaSync and the global export block). app.js checkForOrders() called it as
+   a bare global --> "ReferenceError: pullPreOrdersOnly is not defined" thrown
+   synchronously inside init() on the orders branch --> the 60s poll never
+   started AND init aborted before setupEvents(). No pull, no chime, no
+   notification -- ever.
+2) Wrong auth world: pullPreOrdersOnly required the prototype Settings session
+   (localStorage tindago_sync_prefs, written only by supabase.js sign-in), but
+   the owner signs in via backoffice/login.html, which stores its session under
+   the supabase-js key sb-gncnluxjrpmbjmtzcwsv-auth-token -- the session
+   /orders/ uses (hence /orders/ worked). Even with a valid token, fetchRows()
+   filtered pre_orders by the PROTOTYPE uid() = wrong store bucket.
+3) ordersCheckBtn ("Check for orders") had NO handler anywhere -- no inline
+   onclick in orders.html, nothing in setupEvents. Click = no-op.
+
+FIX:
+- sync.js: NEW resolveWebSession() -- prefers the shared back-office
+  supabase-js session (parses object/array/wrapper storage shapes; auto-refreshes
+  an expired access_token via /auth/v1/token?grant_type=refresh_token and writes
+  it back), falls back to the prototype tindago_sync_prefs session; returns
+  {token, uid, email, source} or null. fetchRows(token, table, forceUid) now
+  takes an explicit uid. pullPreOrdersOnly uses both. Exports added to TindaSync
+  AND window (bug 1).
+- app.js: patchPreOrderStatus (Validate & Record Sale / Cancel Order) now
+  resolves via resolveWebSession() (was SB()-gated; failed identically). Orders
+  init branch wires ordersCheckBtn once (bug 3).
+
+VERIFICATION (2026-10-09, all green):
+- node --check sync.js + app.js PASS.
+- Node vm harness 17/17: backoffice session preferred; fetch URL carries
+  user_id=eq.<backoffice uid> + Bearer token; rows mapped into TindaDB;
+  newCount/totalCount correct; settings-session fallback; null + "Not signed in"
+  contract when signed out; expired-token refresh persists; array storage shape;
+  window exports present (the app.js bare-call path).
+- Live E2E vs Live Server (headless Chrome CDP) 8/8: zero console errors, zero
+  uncaught exceptions (old build crashed with ReferenceError on this page),
+  checkForOrders() does not throw, Check button wired, renderOrdersInbox ran,
+  button click yields the offline/sign-in toast (async catch contract works).
+
+AFFECTED FILES (UNCOMMITTED): sync.js, app.js -- alongside still-untracked
+orders.html + orders/ and the earlier backoffice/preorder_qr.html fix.
+NOT VERIFIED HERE: signed-in half of the flow (repo policy: no passwords
+committed). Owner must confirm: sign in as tindago@test.com, open orders.html,
+order from the QR link above --> order appears + chime within 60s (or click
+"Check for orders").
+
+CLEANUP DONE THIS ENTRY: deleted scratch backoffice/check.html, _js1.txt,
+_js2.txt + TEMP _qr_inline*, qr_dom*, qr_*.png, chr_qrA-F.
+NEXT: unchanged -- commit+push 3 outstanding commits + these fixes +
+orders.html/orders/ so Vercel serves preorder/; remaining root scratch scripts;
+31 missing fil translations; rest.html Order tab gap.
+ADDENDUM (same entry): ordersNotifier (app.js, runs on EVERY page load) now
+also completes the v14 notifier/bubble story:
+- Every ~60s (4 x 15s ticks) it refreshes the local pre_orders cloud cache via
+  resolveWebSession() + pullPreOrdersOnly() -- previously NO page other than
+  orders.html ever refreshed that cache, so the app-wide browser Notification
+  and the orders-bubble badge could never see a newly placed order. Skipped on
+  the orders page (its own 60s poll already pulls), skipped instantly when
+  signed out (zero network traffic).
+- After each local count it calls renderOrdersBubble(), so the badge on
+  debts/inventory/restock (which ship #ordersBubble markup) stays current.
+VERIFIED: node --check app.js PASS; headless-Chrome E2E re-run ALL GREEN on
+orders.html (8/8) and index.html (4/4) -- zero console errors, zero uncaught
+exceptions on both.
+================================================================================
+
+[2026-10-09] FIX -- CANCEL/VALIDATE PRE-ORDER FAIL WITH "SB is not defined"
+Date: 2026-10-09
+
+REPORT: Cancelling or validating an incoming pre-order on `orders.html` threw:
+`Could not cancel order: SB is not defined` (or validate failure).
+
+ROOT CAUSE:
+`patchPreOrderStatus()` (app.js:7119) called the private helper `SB()` which is defined inside `sync.js`'s IIFE scope and was never exported to `window`. Because `app.js` runs in its own IIFE scope, `SB` was undefined, throwing `ReferenceError: SB is not defined` synchronously before session resolution could even execute.
+
+FIX:
+- `app.js`: replaced the `SB()` call in `patchPreOrderStatus()` with direct lookup of the public Supabase config exported to `window` by `supabase.js` (`window.Supabase || window.TindaSupabase`), matching the config source that `SB()` wraps.
+- Validated via `node --check app.js` (PASS).
+
+================================================================================
+
+[2026-10-10] FIX -- VALIDATE WORKS ON orders/ BUT NOT ON orders.html ("IT SHOULD BE THE OTHER WAY AROUND")
+Date: 2026-10-10
+
+REPORT: An incoming pre-order could be validated from the standalone
+`orders/` inbox, but the same Validate on `orders.html` failed — and per the
+owner the prototype (orders.html) is the one that is supposed to work.
+
+ROOT CAUSE (two independent defects):
+1. `validatePreOrderWebConfirmed` (app.js) checked stock against the
+   prototype's LOCAL `state.products` (localStorage `sss_v3_products`; seeded
+   with the 120 sample `s*` rows when empty). A QR pre-order references the
+   store's CLOUD product UUIDs (Supabase `products` for the session uid), so
+   the local lookup never matched -> toast "No longer in catalog: ..." ->
+   return BEFORE any network call. `orders/` instead queries the cloud
+   `products` table (orders/db.js getProductsForValidate) — which is exactly
+   why it worked there. Proven headless: seeded session + pending order with a
+   UUID item id, mocked /rest/v1/*; BEFORE run aborted with
+   "No longer in catalog: Test Item" and ZERO REST calls (4/4 assertions).
+2. `TindaDB.putPreOrder` — and every single-row put* API (putProduct, putSale,
+   putSmsLog, putMeta, ...) — threw `ReferenceError: putOne is not defined`:
+   db_indexed.js references `putOne` 20+ times but never defines it (true at
+   HEAD too — long-standing latent bug). The bulk `putMany` path used by
+   pullPreOrdersOnly was fine, which is why order pulls still worked. Found by
+   the harness seed step.
+
+FIX:
+- sync.js: two new exported helpers mirroring orders/db.js (raw REST, same
+  headers/endpoint shapes as the working page):
+  * fetchValidateCatalog(ids) — resolveWebSession() + GET
+    /rest/v1/products select=id,name,quantity,cost_price,selling_price,unit
+    &id=in.(...) &user_id=eq.<uid> -> {sess, map} keyed by String(id)
+    (cost_price owner-only via RLS).
+  * commitValidatedOrder(sess, lines, pay) — POST specific_sales rows (shared
+    transactionId, cost-based profit, per-line rows — orders/ shape) then a
+    per-product read-modify-write stock decrement (composite PK filtered by
+    user_id + id).
+- app.js: `validatePreOrderWebConfirmed` rewritten async — cloud catalog
+  check (same "No longer in catalog"/"Not enough stock" messages) ->
+  commitValidatedOrder -> patchPreOrderStatus (orders/'s order: sale lines ->
+  stock decrement -> status) -> local mirror (state.sales push + local stock
+  decrement when the product exists locally + saveState) -> ordersFulfilledToast
+  (works in en+fil); catch -> "Could not validate order: ...".
+  Cancel path untouched (patch-only, still works via the prior SB fix).
+- db_indexed.js: added the missing `putOne(storeName, row)` generic helper
+  (single-row analog of putMany, resolves with the row).
+
+VERIFIED:
+- node --check app.js / sync.js / db_indexed.js: PASS (all three).
+- Headless-Chrome CDP A/B harness (native WebSocket — no ws module needed):
+  BEFORE (--expect=old): 4/4 — "No longer in catalog: Test Item",
+  zero REST calls (root-cause proof).
+  AFTER (--expect=ok): 6/6 — success toast "Na-validate ang order TEST-999 —
+  idinagdag sa benta."; exact REST sequence GET products in.(uuid) -> POST
+  specific_sales -> GET quantity -> PATCH quantity -> PATCH pre_orders
+  fulfilled; zero console errors, zero uncaught exceptions.
+NOT VERIFIED HERE: signed-in half against real Supabase (repo policy: no
+passwords committed) — request shapes are 1:1 with the working orders/ calls;
+owner should confirm once signed in as tindago@test.com: validate an order on
+orders.html -> success toast + row leaves pending on next pull + stock drops.
+
+AFFECTED FILES (UNCOMMITTED): app.js, sync.js, db_indexed.js — alongside the
+still-uncommitted orders feature (orders.html, orders/, prior i18n/v15/SB fixes).
+CLEANUP DONE THIS ENTRY: deleted TEMP e2e_validate_check.js, probe_validate.js,
+sync_mid.txt, chr_validate_e2e + chr_validate_probe profiles, and the older
+pending TEMP e2e_orders_check.js, sync_orders_harness.js, chr_orders_e2e.
+NEXT: unchanged — commit+push 3 outstanding commits + orders feature + this fix
+so Vercel serves it; remaining root scratch scripts; 31 missing fil
+translations; rest.html Order tab gap.
+
+================================================================================
+
+[2026-10-10] PROGRESS LOG -- SESSION STATUS SNAPSHOT (pausing here)
+Date: 2026-10-10
+
+DONE THIS SESSION (details in entry immediately above, lines 2275+):
+1. Fixed "SB is not defined" in patchPreOrderStatus (app.js) -- Cancel/Validate
+   on orders.html no longer crash synchronously. [logged 2026-10-09]
+2. Diagnosed + fixed the Validate gap (orders.html vs orders/): local-catalog
+   check replaced with cloud catalog + commit helpers (sync.js
+   fetchValidateCatalog / commitValidatedOrder, app.js async
+   validatePreOrderWebConfirmed). Same order as orders/: sale lines -> stock
+   decrement -> status; local state.sales mirror after cloud commit.
+3. Fixed latent "putOne is not defined" in db_indexed.js (every single-row
+   put* -- putPreOrder, putProduct, putSale, putSmsLog, putMeta -- was broken
+   at HEAD; bulk putMany pulls were unaffected).
+
+VERIFICATION STATE:
+- node --check app.js / sync.js / db_indexed.js: PASS (final gate).
+- Headless-Chrome A/B harness: BEFORE 4/4 (root-cause proof: "No longer in
+  catalog", zero REST) -> AFTER 6/6 (Tagalog success toast, exact REST
+  sequence GET products -> POST specific_sales -> stock GET/PATCH -> PATCH
+  pre_orders fulfilled, zero console errors / exceptions). Harness + all TEMP
+  scratch deleted after use (repo has no tests dir; prior session convention).
+- NOT verified: signed-in half against real Supabase (no passwords committed).
+  Owner one-time check: as tindago@test.com on orders.html, validate an order
+  -> success toast, row leaves pending on next pull, cloud stock drops.
+
+GIT STATE AT PAUSE (local main, NOT pushed):
+- HEAD bbd5e95, 3 commits ahead of origin/main (7f4634b preorder/,
+  e9e9baa QR settings, bbd5e95 pre-orders schema).
+- Modified (18 files, +1728/-114): app.js, sync.js, db_indexed.js,
+  TindaGo_Web_Progress.txt + prior-session work (backoffice/*, preorder/*,
+  checkout/closing/day/debts/inventory/morning/restock/setting.html, style.css).
+- Untracked feature: orders.html + orders/ (still uncommitted).
+- Untracked scratch (pending cleanup, not for commit): extract_headers.py,
+  unify_headers*.py, fix_orders_*.js/py, insert_i18n_orders.js,
+  verify_orders_language.js, extract_orders_text_usage.js, final_verify.js,
+  nav_check.js, morning_header_check.js, diff_/dump_/fix_* settings scripts.
+
+RESUME HERE (unchanged backlog):
+- Commit + push: 3 outstanding commits + orders feature + this session's fixes
+  so Vercel serves it; then delete root scratch scripts.
+- 31 missing fil translations (incl. order page copy); rest.html Order tab gap.
+- Owner signed-in E2E of Validate on real Supabase (see above).
+STATUS: validate-fix task COMPLETE and logged; working tree left UNCOMMITTED
+by design. Pausing here.
+
+================================================================================
+2026-10-10 — ORDERS FAST-POLL ≤2s (Option A, web-only) — DONE
+Date: 2026-10-10
+Status: IMPLEMENTED + STATICALLY VERIFIED (live Supabase E2E still owner-side)
+
+WHAT CHANGED (user-facing):
+- orders.html inbox now auto-shows new customer pre-orders in <=2s.
+  No reload, no Check-button click needed. Chime + bubble unchanged.
+- Validate auto-close unchanged (success toast -> 2600ms -> orders.html).
+
+WHAT CHANGED (code, git/TindaGo/app.js only, sync.js untouched):
+- Added var ordersChecking = false reentrancy guard next to ordersPollTimer.
+- checkForOrders(loud=true): skips if ordersChecking; auto ticks call
+  checkForOrders(false) = silent (console.warn only), manual
+  #ordersCheckBtn calls checkForOrders(true) = loud toasts as before.
+- Orders branch: 60000ms -> 1500ms interval (1500 + ~300-500ms REST
+  still lands under 2s budget); startOrdersPoll()/stopOrdersPoll()
+  helpers clear before re-create (fixes pageshow double-timer bug);
+  skip tick while document.hidden; initial pull is silent.
+- Added visibilitychange (visible -> check now) + window focus + online
+  listeners (guarded by window._tindagoOrdersFocusWired, pageName check).
+- No customer preorder/ submit path, no validate/cancel, no
+  order_detail.html, no Realtime/WebSocket (deferred — see why below).
+
+WHY NOT REALTIME:
+- Checked supabase.js (fetch auth only), preorder/config.js (select+rpc
+  only), supabase_v2.sql (no publication). No existing channel to reuse.
+- Realtime would need publication SQL + supabase-js in owner app +
+  auth socket + fallback poll anyway. Overkill for prototype; 1.5s poll
+  = ~40 GET pre_orders/min only while Orders page open.
+
+VERIFICATION:
+- node --check app.js — clean.
+- Manual spec: Network shows GET pre_orders every ~1.5s, no overlap,
+  no toast spam offline; submit from preorder/index.html?store=<uid>
+  -> card <2s; validate still auto-closes, card gone on return.
+- NOT yet run live here (needs signed-in owner session).
+
+FILES AFFECTED (1 modified + this log):
+  app.js (orders branch, checkForOrders, timer lifecycle)
+  TindaGo_Web_Progress.txt (this entry)
+
+RESUME: commit + push orders fast-poll with prior uncommitted batch;
+owner live E2E (submit->appear timing, validate auto-close).
+================================================================================

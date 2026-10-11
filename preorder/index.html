@@ -5,18 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Order Ahead — TindaGo</title>
 <meta name="description" content="Order ahead from your local store. Pick up your items without the wait.">
+<meta property="og:title" content="Order Ahead — TindaGo">
+<meta property="og:description" content="Order ahead from your local store. Pick up your items without the wait.">
+<meta property="og:image" content="../img/TindaGo_logo.png">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<script src="config.js?v=20261010c"></script>
 <style>
 :root{--primary:#16a34a;--primary-dark:#15803d;--primary-light:#dcfce7;--bg:#f6f8f7;--surface:#fff;--text:#1e293b;--text-secondary:#64748b;--border:#e2e8f0;--danger:#dc2626;--amber:#d97706;--amber-light:#fef3c7;--radius:14px;--radius-lg:18px;--shadow:0 2px 10px rgba(0,0,0,0.08);--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
 .hidden{display:none !important}
-.page{max-width:480px;margin:0 auto;padding:16px 16px 96px}
+.desktop-layout{max-width:1200px;margin:0 auto;padding:0 24px 96px}
 .store-header{text-align:center;padding:20px 8px 16px}
 .store-header .logo{width:52px;height:52px;border-radius:14px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;box-shadow:var(--shadow)}
 .store-name{font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
@@ -40,6 +44,22 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
 .step-btn{width:28px;height:28px;border:none;border-radius:8px;background:var(--primary);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--font);line-height:1}
 .step-qty{font-weight:800;font-size:15px;min-width:18px;text-align:center}
 
+.toolbar-search{padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;outline:none;width:100%}
+.toolbar-search:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,163,74,0.12)}
+.chip-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.chip{padding:6px 12px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer}
+.storefront-main{display:grid;grid-template-columns:1fr 320px;gap:24px;margin-top:24px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+/* Loading skeleton while products are fetched from Supabase */
+.skeleton{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.skeleton-left{flex:1;display:flex;flex-direction:column;gap:8px}
+.skeleton-line{height:12px;border-radius:6px;background:linear-gradient(90deg,#eef2f7 25%,#e5e9ef 50%,#eef2f7 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+.skeleton-line.w60{width:60%}.skeleton-line.w40{width:40%}
+.skeleton-right{width:76px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.skeleton-box{width:56px;height:28px;border-radius:8px;background:linear-gradient(90deg,#e5e9ef 25%,#dde2e8 50%,#e5e9ef 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media (min-width:768px){.skeleton{margin-bottom:0}}
+
 
 /* Sticky summary bar */
 .summary-bar{position:sticky;bottom:12px;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:0 4px 20px rgba(0,0,0,0.14);padding:12px 16px;max-width:448px;margin:0 auto}
@@ -57,6 +77,21 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
 .payment-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .pay-btn{border:1.5px solid var(--border);background:var(--surface);border-radius:10px;padding:10px 4px;font-size:13px;font-weight:700;font-family:var(--font);color:var(--text-secondary);cursor:pointer;transition:all .15s}
 .pay-btn.active{border-color:var(--primary);color:var(--primary-dark);background:var(--primary-light)}
+/* Stage 5 — cart review step (in-place swap; single-page feel) */
+.review-items{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.review-item{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.review-item-info{min-width:0}
+.review-item-name{font-size:14px;font-weight:700}
+.review-item-price{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.review-item-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.review-item-total{font-size:14px;font-weight:800;min-width:76px;text-align:right}
+.review-total{display:flex;justify-content:space-between;font-size:15px;font-weight:800;padding-top:10px;border-top:1px dashed var(--border);margin-top:4px}
+.review-actions{display:flex;gap:10px;margin-top:16px}
+.btn-back{background:var(--surface);color:var(--text-secondary);border:1.5px solid var(--border);border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;transition:border-color .15s}
+.btn-back:hover{border-color:var(--text-secondary)}
+.btn-place{flex:1;background:var(--primary);color:#fff;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:800;font-family:var(--font);cursor:pointer;box-shadow:0 2px 8px rgba(22,163,74,.35);transition:filter .15s}
+.btn-place:hover{filter:brightness(1.06)}
+.btn-place[disabled]{background:var(--border);color:var(--text-secondary);cursor:not-allowed;box-shadow:none}
 /* Receipt */
 .receipt{text-align:center;padding-top:8px}
 .receipt-check{width:64px;height:64px;border-radius:50%;background:var(--primary-light);color:var(--primary-dark);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;margin:0 auto 14px}
@@ -81,7 +116,59 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
 .error-view .logo{width:64px;height:64px;border-radius:16px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;margin-bottom:16px}
 .error-title{font-size:18px;font-weight:800;margin-bottom:8px}
 .error-text{font-size:14px;color:var(--text-secondary);max-width:320px}
+.error-try{display:none;flex-direction:column;align-items:center;gap:12px;margin-top:20px;width:100%;max-width:320px}
+.error-try.visible{display:flex}
+.error-try-code{display:flex;gap:8px;width:100%}
+.error-try-code input{flex:1;width:auto}
+.error-try-code .btn-add{padding:11px 18px;border-radius:10px}
+.error-hint{font-size:12px;color:var(--text-secondary)}
 .empty-state{background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius);padding:24px;text-align:center;color:var(--text-secondary);font-size:14px}
+/* ── Responsive: tablet / desktop (phones unaffected — rules below only apply ≥768px) ── */
+@media (min-width:768px){
+.page{max-width:960px;padding:24px 24px 120px}
+.store-header{padding:28px 8px 20px}
+.store-header .logo{width:60px;height:60px;font-size:28px}
+.store-name{font-size:24px}
+.section-title{margin:24px 2px 12px}
+#productList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.product-card{margin-bottom:0}
+.summary-bar{max-width:912px;padding:14px 20px}
+.panel{padding:24px 20px}
+.error-view{max-width:560px}
+}
+@media (min-width:1100px){
+#productList{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+/* ── CategorySearchField CSS copied from category_search.css ── */
+.search-control{position:relative;display:flex;width:100%;height:52px;margin-bottom:12px}
+.category-container{position:relative;flex:1;min-width:0;height:52px;background:#fff;border:1px solid var(--border,#cfcfcf);border-right:none;border-radius:12px 0 0 12px;display:flex;align-items:center}
+.search-control.search-mode .category-container{flex:0 0 52px;width:52px;min-width:52px;justify-content:center;cursor:pointer}
+.category-button{width:100%;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border:none;background:transparent;cursor:pointer;font-size:var(--text-base,16px);color:var(--text,#222);text-align:left}
+.category-button:hover{background:#fafafa}
+.search-control.search-mode .category-button{justify-content:center;padding:0}
+.category-label{flex:1;color:#1e293b;font-size:16px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.search-control.search-mode .category-label,.search-control.search-mode .arrow{display:none}
+.arrow{margin-left:10px;font-size:12px;color:#777}
+.tiles-icon{display:none;grid-template-columns:repeat(2,7px);grid-template-rows:repeat(2,7px);gap:3px}
+.tiles-icon span{display:block;width:7px;height:7px;border:1.8px solid #444;border-radius:1.5px}
+.search-control.search-mode .tiles-icon{display:grid}
+.action-button{width:52px;height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:1px solid var(--border,#cfcfcf);border-radius:0 12px 12px 0;background:#fff;cursor:pointer;position:relative;overflow:hidden}
+.action-button:hover{background:#fafafa}
+.search-control.search-mode .action-button{flex:1;width:auto;cursor:text;justify-content:flex-start;padding:0 12px}
+.search-icon-wrap{display:flex;align-items:center;justify-content:center}
+.search-control.search-mode .search-icon-wrap{display:none}
+.search-input{display:none;width:100%;height:100%;border:none;outline:none;font-size:var(--text-base,16px);color:var(--text,#222);background:transparent}
+.search-control.search-mode .search-input{display:block}
+.category-input{position:absolute;top:0;left:0;width:100%;height:100%;padding:0 12px;border:1px solid var(--border,#cfcfcf);border-radius:12px 0 0 12px;background:#fff;font-size:var(--text-base,16px);color:var(--text,#222);outline:none;display:none}
+.search-control.search-mode .category-input{display:block}
+.category-dropdown,.checkout-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;width:280px;max-height:360px;overflow-y:auto;background:#fff;border:1px solid var(--border,#cfcfcf);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:1000;padding:8px}
+.category-dropdown.open,.checkout-dropdown.open{display:block}
+.category-item{padding:10px 12px;border-radius:8px;cursor:pointer;font-size:15px;color:#333}
+.category-item:hover{background:#f0fdf4;color:#16a34a}
+.category-item.active{font-weight:600;background:#f0fdf4;color:#16a34a}
+.category-item.back{font-weight:600;color:#64748b}
+.dropdown-header{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;color:#64748b;font-size:13px;font-weight:600}
+.dropdown-divider{height:1px;background:var(--border,#e2e8f0);margin:4px 0}
 </style>
 </head>
 <body>
@@ -91,12 +178,19 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
   <div class="error-view">
     <div class="logo">T</div>
     <div class="error-title">Something went wrong</div>
-    <div class="error-text">This order link isn&#39;t quite right. Please scan the store&#39;s QR code again to open the order page.</div>
+    <div class="error-text" id="errorText">This order link isn&#39;t quite right. Try opening the store&#39;s order page, or enter the store code below to browse a store&#39;s menu.</div>
+    <div class="error-try" id="errorTry">
+      <div class="error-try-code">
+        <input type="text" id="storeCodeInput" class="toolbar-search" placeholder="Enter your store code" aria-label="Store code" autocomplete="off">
+        <button type="button" id="storeCodeGo" class="btn-add">Go</button>
+      </div>
+      <div class="error-hint">Find the store code on the store&#39;s printed sign or ask the cashier.</div>
+    </div>
   </div>
 </div>
 
 <!-- Main pre-order app -->
-<div id="appView" class="page">
+<div id="appView" class="desktop-layout">
 
   <header class="store-header">
     <div class="logo">T</div>
@@ -107,12 +201,34 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
     <div class="store-address" id="storeAddress"></div>
   </header>
 
-  <div class="section-title">Menu</div>
-  <div id="productList"></div>
+  <!-- Step 1 — menu (hidden while the review step is open) -->
+  <div id="menuSection">
+    <div class="section-title">Search what you need</div>
+    <!-- CategorySearchField control — parity with inventory (CategorySearchField) -->
+    <div class="search-control" id="searchControl">
+      <div class="category-container">
+        <button class="category-button" id="categoryButton" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="category-label" id="categoryLabel">Category</span>
+          <span class="arrow">▼</span>
+          <div class="tiles-icon"><span></span><span></span><span></span><span></span></div>
+        </button>
+        <input type="text" class="category-input" id="categoryInput" style="display:none">
+      </div>
+      <div class="action-button" id="actionButton" role="button" tabindex="0" aria-label="Search">
+        <span class="search-icon-wrap">🔍</span>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search products…">
+      </div>
+      <div class="category-dropdown" id="categoryDropdown"></div>
+    </div>
+    <div class="section-title">Menu</div>
+    <div id="productList"></div>
+  </div>
 
-  <!-- Checkout / customer-info panel -->
-  <div id="checkoutPanel" class="panel">
-    <h2>Order details</h2>
+  <!-- Step 2 — cart review (Stage 5): items + qty edit, note, payment,
+       then Place Order. Single-page feel: swapped in place, no navigation. -->
+  <div id="checkoutPanel" class="panel hidden">
+    <h2>Review your order</h2>
+    <div id="reviewItems" class="review-items"></div>
     <div class="field">
       <label for="customerNote">Note to store (optional)</label>
       <textarea id="customerNote" rows="2" placeholder="e.g. Please pack extra sachets of kape"></textarea>
@@ -124,6 +240,11 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
         <button type="button" class="pay-btn" data-pay="gcash">GCash</button>
         <button type="button" class="pay-btn" data-pay="maya">Maya</button>
       </div>
+    </div>
+    <div class="review-total"><span>Total</span><span id="reviewTotal">&#8369;0.00</span></div>
+    <div class="review-actions">
+      <button type="button" id="btnBackMenu" class="btn-back">Back to menu</button>
+      <button type="button" id="btnPlaceOrder" class="btn-place" disabled>Add items to order</button>
     </div>
   </div>
 
@@ -147,8 +268,8 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
     <button type="button" id="btnNewOrder" class="btn-new">Place another order</button>
   </div>
 
-  <!-- Sticky summary bar -->
-  <div class="summary-bar">
+  <!-- Sticky summary bar (hidden during review + receipt steps) -->
+  <div class="summary-bar" id="summaryBar">
     <div>
       <div class="summary-count" id="summaryCount">0 items</div>
       <div class="summary-total" id="summaryTotal">&#8369;0.00</div>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="img/TindaGo_logo.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TindaGo - Orders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="app-container" id="app">
+      <!-- HEADER -->
+      <header class="app-header">
+  <div class="header-left">
+    <a class="header-btn" id="manageStoreBtn" aria-label="Manage Store" href="morning.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    </a>
+  </div>
+  <h1 class="header-page-title" id="headerPageTitle" data-i18n="ordersTitle" style="flex:1;text-align:center;">Mga Order</h1>
+  <div class="header-actions">
+    <button class="header-btn header-tutorial-btn" id="headerTutorialBtn" onclick="startTutorial('orders', true)" aria-label="Tutorial">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </button>
+    <a class="header-btn" href="setting.html" style="text-decoration:none;color:white;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </a>
+  </div>
+</header>
+
+      <!-- CONTENT -->
+      <main class="app-content" id="appContent">
+        <div class="debt-summary-card" style="margin-bottom:12px;">
+          <span class="debt-summary-label" data-i18n="ordersTotalLabel">Mga Order</span>
+          <span class="debt-summary-amount" id="manageTotalOrders">0</span>
+        </div>
+        <a class="btn btn-primary btn-large" id="viewPreordersLink" href="preorder/index.html" style="margin-bottom:12px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span data-i18n="viewPreordersLink">Tingnan ang Pre-Orders</span>
+        </a>
+        <button class="btn btn-outline btn-full" id="ordersCheckBtn" style="margin-bottom:12px;">
+          <span data-i18n="ordersCheckBtn">Check for orders</span>
+        </button>
+        <div class="list-container" id="manageOrdersList"></div>
+      </main>
+
+      <!-- BOTTOM NAV -->
+      <nav class="bottom-nav" id="bottomNav">
+        <a class="nav-item active" href="orders.html">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/></svg>
+          <span class="nav-label" data-i18n="ordersLink">Mga Order</span>
+        </a>
+        <a class="nav-item" href="inventory.html">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <span class="nav-label" data-i18n="stocksLink">Stock</span>
+        </a>
+        <a class="nav-item" href="debts.html">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/></svg>
+          <span class="nav-label" data-i18n="debtsLink">Utang</span>
+        </a>
+      </nav>
+
+      <div id="ordersBubble" class="orders-bubble">
+        <span class="orders-bubble-badge"></span>
+      </div>
+
+      <!-- ORDER DETAIL OVERLAY -->
+      <div class="overlay" id="ordersDetailOverlay" style="display:none;z-index:60;">
+        <div class="overlay-backdrop" id="ordersDetailBackdrop"></div>
+        <div class="overlay-card">
+          <div class="overlay-header" style="background:var(--primary);color:white;">
+            <button class="header-btn" onclick="closeOrderDetail()" style="color:white;background:none;border:none;cursor:pointer;padding:6px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </button>
+            <h2 id="ordersDetailTitle" style="font-size:var(--text-lg);font-weight:700;flex:1;text-align:center;">Order Details</h2>
+            <span style="width:36px;"></span>
+          </div>
+          <div class="overlay-scroll">
+            <div style="padding:16px;">
+              <div class="order-detail-temp-id" style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:12px;">
+                Temp ID: <span id="ordersDetailTempId" style="font-weight:600;color:var(--text);"></span>
+              </div>
+              <div class="order-detail-items" id="ordersDetailItems" style="margin-bottom:16px;"></div>
+              <div class="order-detail-total-row" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+                <span style="font-size:var(--text-sm);color:var(--text-muted);" data-i18n="ordersDetailTotal">Total</span>
+                <span id="ordersDetailTotal" style="font-weight:700;font-size:var(--text-xl);"></span>
+              </div>
+              <div class="order-detail-meta" id="ordersDetailMeta" style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:12px;"></div>
+              <div class="order-detail-note" id="ordersDetailNote" style="display:none;font-size:var(--text-sm);color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;margin-bottom:16px;"></div>
+              <div class="order-detail-actions" style="display:flex;gap:10px;">
+                <button class="btn btn-primary btn-full" id="ordersDetailValidateBtn" style="flex:1;">
+                  <span data-i18n="ordersDetailValidate">Validate &amp; Record Sale</span>
+                </button>
+                <button class="btn btn-danger btn-full" id="ordersDetailCancelBtn" style="flex:1;">
+                  <span data-i18n="ordersDetailCancel">Cancel Order</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast-container" id="toastContainer"></div>
+    </div>
+    <div class="phone-home-bar"></div>
+  </div>
+
+  <!-- TUTORIAL OVERLAY -->
+  <div id="tutorialRoot">
+    <div class="tutorial-overlay" id="tutorialOverlay" style="display:none;">
+      <div class="tutorial-backdrop" id="tutorialBackdrop"></div>
+      <div class="tutorial-highlight" id="tutorialHighlight"></div>
+      <div class="tutorial-box" id="tutorialBox">
+        <div class="tutorial-step-indicator">
+          <span id="tutorialCurrent">1</span>/<span id="tutorialTotal">8</span>
+        </div>
+        <div class="tutorial-text" id="tutorialText">Welcome to TindaGo!</div>
+        <div class="tutorial-actions">
+          <button class="btn btn-secondary btn-sm" id="tutorialSkip" onclick="endTutorial()" data-i18n="skip" style="display:none;">Skip</button>
+          <button class="btn btn-secondary btn-sm" id="tutorialPrev" onclick="previousTutorial()" data-i18n="prev" style="display:none;">Previous</button>
+          <button class="btn btn-primary btn-sm" id="tutorialNext" onclick="advanceTutorial()" data-i18n="next">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="db_indexed.js"></script>
+  <script src="supabase.js"></script>
+  <script src="sync.js"></script>
+  <script src="backup.js"></script>
+  <script src="app.js"></script>
+
+  <script>
+    // Stage 2: repair the "View Pre-Orders" link — the customer storefront
+    // resolves its store from ?store=<uid>, so a bare preorder/index.html
+    // href loads with no store to show. Inject the signed-in owner's uid.
+    (function () {
+      var link = document.getElementById('viewPreordersLink');
+      if (link && !link._tindagoWired) {
+        link._tindagoWired = true;
+        try {
+          if (typeof resolveWebSession === 'function') {
+            resolveWebSession().then(function (sess) {
+              if (sess && sess.uid) {
+                link.setAttribute('href', 'preorder/index.html?store=' + encodeURIComponent(sess.uid));
+              }
+            }).catch(function () {});
+          }
+        } catch (_) {}
+      }
+    })();
+  </script>
+
+  <script>
+    try {
+      window.addEventListener('tindago:languageChanged', function () {
+        // Refresh static [data-i18n] elements (header title + labels).
+        if (typeof applyTranslations === 'function') {
+          applyTranslations();
+        } else if (typeof updateHeader === 'function' && document.getElementById('headerPageTitle')) {
+          updateHeader();
+          var els = document.querySelectorAll('[data-i18n]');
+          for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            var key = el.getAttribute('data-i18n');
+            if (key && typeof t === 'function') {
+              el.textContent = t(key);
+            }
+          }
+        }
+
+        // Refresh dynamic order list / labels.
+        if (typeof window.renderOrdersInbox === 'function') {
+          window.renderOrdersInbox();
+        }
+
+        // If the order-detail overlay is open, refresh it.
+        var overlay = document.getElementById('ordersDetailOverlay');
+        if (overlay && overlay.style.display === 'flex') {
+          var tempIdEl = document.getElementById('ordersDetailTempId');
+          var tempId = tempIdEl ? tempIdEl.textContent : null;
+          if (typeof window.renderOrderDetail === 'function' && tempId) {
+            window.renderOrderDetail(tempId);
+          }
+        }
+      });
+    } catch (e) {}
+  </script>
+</body>
+</html>
+

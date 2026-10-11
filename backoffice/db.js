@@ -8,6 +8,8 @@
 
 const DB = {
     _uid: null,
+    /** Last store-profile error message (shown by backoffice/preorder_qr.html). */
+    _lastProfileError: null,
 
     // ── Initialization ──────────────────────────────────────────────
     // Call once per page after requireAuth(): caches the user UUID used
@@ -339,7 +341,7 @@ const DB = {
             .select('*')
             .eq('user_id', this.uid())
             .maybeSingle();
-        if (error) { console.error('getStoreProfile:', error); return null; }
+        if (error) { console.error('getStoreProfile:', error); DB._lastProfileError = (error && error.message) || String(error); return null; }
         return data;
     },
 
@@ -361,7 +363,49 @@ const DB = {
             .upsert(row, { onConflict: 'user_id' })
             .select()
             .single();
-        if (error) { console.error('upsertStoreProfile:', error); return null; }
+        if (error) { console.error('upsertStoreProfile:', error); DB._lastProfileError = (error && error.message) || String(error); return null; }
+        return data;
+    },
+
+    // ── PRE-ORDERS (Phase 6: owner inbox — mirrors Android fetchPreOrders) ──
+    // Pending-only, newest first. Same filter/order the Android app uses
+    // (status=eq.pending&order=created_at.desc) so both surfaces agree.
+    async getPendingPreOrders() {
+        const { data, error } = await sb
+            .from('pre_orders')
+            .select('*')
+            .eq('user_id', this.uid())
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+        if (error) { console.error('getPendingPreOrders:', error); return []; }
+        return data.map(r => ({
+            id: r.id,
+            tempId: r.temp_id,
+            itemsJson: r.items_json,
+            totalAmount: r.total_amount,
+            paymentMethod: r.payment_method,
+            paymentStatus: r.payment_status,
+            status: r.status,
+            customerNote: r.customer_note,
+            createdAt: r.created_at,
+            expiresAt: r.expires_at,
+            fulfilledAt: r.fulfilled_at
+        }));
+    },
+
+    // Owner-only status/payment update. Mirrors SyncRepository.syncPreOrderStatus:
+    // sets status (+payment/fulfilled) on the owner's row. Dual filter (user_id,
+    // id) matches the composite v2 PK so one store can never touch another's.
+    async updatePreOrderStatus(id, fields) {
+        const row = { ...fields };
+        const { data, error } = await sb
+            .from('pre_orders')
+            .update(row)
+            .eq('user_id', this.uid())
+            .eq('id', id)
+            .select()
+            .single();
+        if (error) { console.error('updatePreOrderStatus:', error); return null; }
         return data;
     }
 };

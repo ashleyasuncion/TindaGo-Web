@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="img/TindaGo_logo.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TindaGo - Order Details</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="app-container" id="app">
+      <!-- HEADER -->
+      <header class="app-header" style="background:var(--primary);color:white;">
+        <button class="header-btn" onclick="historyBack()" style="color:white;background:none;border:none;cursor:pointer;display:flex;align-items:center;padding:6px;" aria-label="Back">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <h1 style="font-size:var(--text-xl);font-weight:700;flex:1;text-align:center;" id="orderDetailTitleText" data-i18n="ordersDetailTitle">Order Details</h1>
+        <button class="header-btn header-tutorial-btn" id="headerTutorialBtn" onclick="startTutorial('order_detail', true)" aria-label="Tutorial" style="color:white;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+      </header>
+
+      <!-- CONTENT -->
+      <main class="app-content" id="appContent">
+        <div style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:16px;">
+          <strong>Temp ID:</strong> <span id="orderDetailTempId" style="font-weight:600;color:var(--text);"></span>
+        </div>
+        <div id="orderDetailItems" style="margin-bottom:16px;"></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-top:2px solid var(--border);margin-bottom:12px;">
+          <span style="font-size:var(--text-base);font-weight:600;" data-i18n="ordersDetailTotal">Total</span>
+          <span id="orderDetailTotal" style="font-weight:700;font-size:var(--text-xl);color:var(--primary);"></span>
+        </div>
+        <div id="orderDetailMeta" style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:12px;"></div>
+        <div id="orderDetailNote" style="display:none;font-size:var(--text-sm);color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:20px;"></div>
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <button class="btn btn-primary" id="orderDetailValidateBtn" style="flex:1;">
+            <span data-i18n="ordersValidateSale">Validate Sale</span>
+          </button>
+          <button class="btn btn-danger" id="orderDetailCancelBtn" style="flex:1;">
+            <span data-i18n="ordersCancel">Cancel Order</span>
+          </button>
+        </div>
+      </main>
+
+      <div class="toast-container" id="toastContainer"></div>
+    </div>
+    <div class="phone-home-bar"></div>
+  </div>
+
+  <!-- TUTORIAL OVERLAY (outside phone-frame for correct position:fixed behavior) -->
+  <div id="tutorialRoot">
+    <div class="tutorial-overlay" id="tutorialOverlay" style="display:none;">
+      <div class="tutorial-backdrop" id="tutorialBackdrop"></div>
+      <div class="tutorial-highlight" id="tutorialHighlight"></div>
+      <div class="tutorial-box" id="tutorialBox">
+        <div class="tutorial-step-indicator">
+          <span id="tutorialCurrent">1</span>/<span id="tutorialTotal">5</span>
+        </div>
+        <div class="tutorial-text" id="tutorialText">Welcome to TindaGo!</div>
+        <div class="tutorial-actions">
+          <button class="btn btn-secondary btn-sm" id="tutorialSkip" onclick="endTutorial()" data-i18n="skip" style="display:none;">Skip</button>
+          <button class="btn btn-secondary btn-sm" id="tutorialPrev" onclick="previousTutorial()" data-i18n="prev" style="display:none;">Previous</button>
+          <button class="btn btn-primary btn-sm" id="tutorialNext" onclick="advanceTutorial()" data-i18n="next">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('[LOAD] Starting script loading sequence...');
+    window.onerror = function(msg, url, line, col, error) {
+      console.error('[GLOBAL ERROR]', msg, 'at', url + ':' + line + ':' + col);
+      console.error('[ERROR DETAIL]', error);
+      alert('JavaScript Error: ' + msg + ' at line ' + line);
+    };
+  </script>
+  <script src="db_indexed.js" onerror="console.error('[LOAD ERROR] db_indexed.js failed to load')"></script>
+  <script>console.log('[LOAD] db_indexed.js loaded');</script>
+  <script src="supabase.js" onerror="console.error('[LOAD ERROR] supabase.js failed to load')"></script>
+  <script>console.log('[LOAD] supabase.js loaded');</script>
+  <script src="sync.js" onerror="console.error('[LOAD ERROR] sync.js failed to load')"></script>
+  <script>console.log('[LOAD] sync.js loaded');</script>
+  <script src="backup.js" onerror="console.error('[LOAD ERROR] backup.js failed to load')"></script>
+  <script>console.log('[LOAD] backup.js loaded');</script>
+  <script src="app.js" onerror="console.error('[LOAD ERROR] app.js failed to load - THIS IS THE PROBLEM!')"></script>
+  <script>console.log('[LOAD] app.js loaded successfully');</script>
+  <script>
+    console.log('[INIT] order_detail.html initialization script starting...');
+    
+    function initOrderDetail() {
+      console.log('[INIT] DOMContentLoaded fired. URL:', window.location.href);
+      console.log('[INIT] Search params:', window.location.search);
+      
+      var m = /[?&]order=([^&]+)/.exec(window.location.search || '');
+      if (!m) {
+        console.warn('[INIT] No order parameter found, redirecting to orders.html');
+        window.location.href = 'orders.html';
+        return;
+      }
+      
+      var tempId;
+      try { tempId = decodeURIComponent(m[1]); } catch(_) { tempId = m[1]; }
+      console.log('[INIT] Extracted tempId:', tempId);
+      
+      // Check if critical objects/functions are available
+      console.log('[INIT] typeof TindaDB:', typeof TindaDB);
+      console.log('[INIT] typeof renderOrderDetailPage:', typeof renderOrderDetailPage);
+      
+      // Poll for function availability (handles async loading)
+      var attempts = 0;
+      function tryRender() {
+        attempts++;
+        console.log('[INIT] Render attempt #' + attempts);
+        
+        if (typeof renderOrderDetailPage === 'function') {
+          console.log('[INIT] ✓ renderOrderDetailPage found! Calling it now...');
+          renderOrderDetailPage(tempId);
+        } else if (attempts < 20) {
+          console.log('[INIT] renderOrderDetailPage not ready yet, retrying in 100ms...');
+          setTimeout(tryRender, 100);
+        } else {
+          console.error('[INIT] ✗ FAILED: renderOrderDetailPage never became available after 2 seconds');
+          console.error('[INIT] This means app.js did not load or has a syntax error');
+          alert('ERROR: Order details cannot load. Check console for details.');
+        }
+      }
+      
+      tryRender();
+    }
+    
+    document.addEventListener('DOMContentLoaded', initOrderDetail);
+    console.log('[INIT] DOMContentLoaded listener attached');
+  </script>
+</body>
+</html>

@@ -18,7 +18,10 @@
 ;(function (global) {
   'use strict';
   var DB_NAME = 'tindago_db';
-  var DB_VERSION = 13;
+  // v15: the v14 preorders fixup bumped stored DBs to 15 while this constant
+  // stayed 14 → every open() threw VersionError ("requested version (14) is
+  // less than the existing version (15)"). Must match/exceed the stored version.
+  var DB_VERSION = 15;
   var CATEGORIES = ['pantry_staples','canned_goods','instant_dry_goods','snacks_sweets','beverages','dairy_refrigerated','fresh_section','liquor_wine','personal_care','household_care','baby_care','paper_sanitary'];
   var SUBCATEGORIES = {
     pantry_staples:['rice','cooking_oil','sugar','salt','vinegar','bread'],
@@ -42,6 +45,43 @@
   var readyResolve, readyReject;
   var ready = new Promise(function (res, rej) { readyResolve = res; readyReject = rej; });
   // ── Open / Upgrade ──────────────────────────────────
+  function attachConn(db) {
+    dbInstance = db;
+    db.onclose = function () { dbInstance = null; };
+    db.onversionchange = function () { try { db.close(); } catch (_) {} dbInstance = null; };
+    return db;
+  }
+  // v15 defensive fixup: if 'preorders' is missing on the opened connection
+  // (DB created before this code was deployed), bump the stored version by
+  // one, create the store + indexes, and KEEP the new connection as
+  // dbInstance. (The original v14 fixup had two bugs: it closed the NEW
+  // connection instead of keeping it, and it left dbInstance pointing at the
+  // closed old connection.)
+  function ensurePreorders(db) {
+    if (db.objectStoreNames.contains('preorders')) return Promise.resolve(db);
+    console.warn('[TindaDB] preorders store missing — adding now');
+    return new Promise(function (resolve) {
+      try {
+        var ver = db.version;
+        var req2 = indexedDB.open(DB_NAME, ver + 1);
+        req2.onupgradeneeded = function (e) {
+          var d = e.target.result;
+          if (!d.objectStoreNames.contains('preorders')) {
+            var s = d.createObjectStore('preorders', { keyPath: 'id' });
+            s.createIndex('tempId', 'tempId', { unique: false });
+            s.createIndex('status', 'status', { unique: false });
+          }
+        };
+        req2.onsuccess = function () {
+          var newDb = attachConn(req2.result);
+          try { db.close(); } catch (_) {}
+          resolve(newDb);
+        };
+        req2.onerror = function () { console.warn('[TindaDB] preorders fixup failed:', req2.error); resolve(db); };
+        req2.onblocked = function () { console.warn('[TindaDB] preorders fixup blocked — close other tabs'); resolve(db); };
+      } catch (_) { resolve(db); }
+    });
+  }
   function openDB() {
     return new Promise(function (resolve, reject) {
       if (dbInstance) return resolve(dbInstance);
@@ -63,6 +103,9 @@
         ensureStore('end_of_day_data', { keyPath: 'date' });
         ensureStore('restock_log', { keyPath: 'id' });
         ensureStore('sms_log', { keyPath: 'id', autoIncrement: true });
+        // v14 (orders inbox): local cache of Supabase pre_orders rows.
+        // Additive — existing stores untouched; old clients simply lack it.
+        ensureStore('preorders', { keyPath: 'id' });
         ensureStore('app_meta', { keyPath: 'key' });
         try { if (!products.indexNames.contains('category')) products.createIndex('category', 'category', { unique: false }); } catch (_) {}
         try { if (!products.indexNames.contains('brand')) products.createIndex('brand', 'brand', { unique: false }); } catch (_) {}
@@ -92,14 +135,32 @@
           var sms = e.target.transaction.objectStore('sms_log');
           if (!sms.indexNames.contains('debtId')) sms.createIndex('debtId', 'debtId', { unique: false });
         } catch (_) {}
+        try {
+          var pre = e.target.transaction.objectStore('preorders');
+          if (!pre.indexNames.contains('tempId')) pre.createIndex('tempId', 'tempId', { unique: false });
+          if (!pre.indexNames.contains('status')) pre.createIndex('status', 'status', { unique: false });
+        } catch (_) {}
       };
       req.onsuccess = function () {
-        dbInstance = req.result;
-        dbInstance.onclose = function () { dbInstance = null; };
-        dbInstance.onversionchange = function () { try { dbInstance.close(); } catch (_) {} dbInstance = null; };
-        resolve(dbInstance);
+        var db = attachConn(req.result);
+        ensurePreorders(db).then(resolve, function () { resolve(dbInstance || db); });
       };
-      req.onerror = function () { reject(req.error); };
+      req.onerror = function () {
+        var err = req.error;
+        // VersionError: the stored DB is NEWER than DB_VERSION (e.g. the
+        // preorders fixup already bumped it in an earlier session). Opening
+        // at the lower version makes every TindaDB call fail, so reopen at
+        // whatever version exists on disk instead.
+        if (err && err.name === 'VersionError') {
+          var reqN = indexedDB.open(DB_NAME);
+          reqN.onsuccess = function () {
+            var db = attachConn(reqN.result);
+            console.warn('[TindaDB] VersionError recovery — opened at stored version', db.version);
+            ensurePreorders(db).then(resolve, function () { resolve(dbInstance || db); });
+          };
+          reqN.onerror = function () { reject(reqN.error || err); };
+        } else reject(err);
+      };
       req.onblocked = function () { console.warn('[TindaDB] open blocked — close other tabs'); };
     });
   }
@@ -122,6 +183,21 @@
         var req = tx.objectStore(storeName).get(key);
         req.onsuccess = function () { resolve(req.result || null); };
         req.onerror = function () { reject(req.error); };
+      });
+    });
+  }
+  // v15 fix: putOne was referenced by every single-row put* API (putProduct,
+  // putSale, putPreOrder, putSmsLog, putMeta, ...) but never defined — calling
+  // any of them threw "ReferenceError: putOne is not defined". Single-row
+  // analog of putMany (same store.put semantics, resolves with the row).
+  function putOne(storeName, row) {
+    if (!row) return Promise.resolve();
+    return openDB().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx = db.transaction(storeName, 'readwrite');
+        tx.objectStore(storeName).put(row);
+        tx.oncomplete = function () { resolve(row); };
+        tx.onerror = function () { reject(tx.error); };
       });
     });
   }
@@ -213,6 +289,26 @@
       amount: Number(e.amount) || 0,
       note: String(e.note || ''),
       timestamp: Number(e.timestamp) || Number(e.createdAt) || Date.now()
+    };
+  }
+  // v14 (orders inbox): Supabase pre_orders row -> local preorder object.
+  // Accepts snake_case (sync pull) or camelCase (already normalized).
+  function normalizePreOrder(r) {
+    if (!r || typeof r !== 'object') return r;
+    var items = r.items;
+    if (typeof items === 'string') { try { items = JSON.parse(items || '[]'); } catch (_) { items = []; } }
+    if (!Array.isArray(items)) items = [];
+    return {
+      id: Number(r.id) || r.id,
+      tempId: String(r.tempId != null ? r.tempId : (r.temp_id || '')),
+      items: items,                       // [{id,name,unit,price,qty}]
+      totalAmount: Number(r.totalAmount != null ? r.totalAmount : r.total_amount) || 0,
+      paymentMethod: String(r.paymentMethod || r.payment_method || 'cash'),
+      paymentStatus: String(r.paymentStatus || r.payment_status || 'unpaid'),
+      status: String(r.status || 'pending'),
+      customerNote: String(r.customerNote != null ? r.customerNote : (r.customer_note || '')),
+      createdAt: Number(r.createdAt != null ? r.createdAt : r.created_at) || Date.now(),
+      expiresAt: Number(r.expiresAt != null ? r.expiresAt : r.expires_at) || 0
     };
   }
 
@@ -378,6 +474,21 @@
     putTransaction: function(txRow){ return putOne('debt_transactions', { id: Number(txRow.id)||txRow.id||Date.now(), debtId: Number(txRow.debtId||txRow.debt_id)||0, type: String(txRow.type||'debt'), description: txRow.description||null, amount: Number(txRow.amount)||0, timestamp: Number(txRow.timestamp)||Date.now() }); },
     putTransactions: function(arr){ var self=this; return Promise.all((arr||[]).map(function(r){ return self.putTransaction(r); })); },
     clearTransactions: function(){ return clearStore('debt_transactions'); },
+    // Pre-orders (v14 orders inbox — local cache of Supabase pre_orders)
+    getAllPreOrders: function(){ return getAllFrom('preorders').then(function(arr){ return (arr||[]).map(normalizePreOrder); }); },
+    getPreOrderByTempId: function(tempId){
+      return openDB().then(function(db){
+        return new Promise(function(res,rej){
+          var tx=db.transaction('preorders','readonly');
+          var req=tx.objectStore('preorders').index('tempId').get(String(tempId));
+          req.onsuccess=function(){ res(req.result?normalizePreOrder(req.result):null); };
+          req.onerror=function(){ rej(req.error); };
+        });
+      });
+    },
+    putPreOrder: function(o){ return putOne('preorders', normalizePreOrder(o)); },
+    putPreOrders: function(arr){ return putMany('preorders', (arr||[]).map(normalizePreOrder)); },
+    clearPreOrders: function(){ return clearStore('preorders'); },
     // App Meta
     getMeta: getMeta,
     putMeta: putMeta,
@@ -397,7 +508,7 @@
     putExpenseLog: function(v){ return putMeta('expenseLog', Array.isArray(v)?v:[]); },
     // Bulk
     exportAll: function(){
-      var stores=['products','specific_sales','customer_debts','debt_payments','debt_transactions','expenses','daily_entries','end_of_day_data','restock_log','sms_log','app_meta'];
+      var stores=['products','specific_sales','customer_debts','debt_payments','debt_transactions','expenses','daily_entries','end_of_day_data','restock_log','sms_log','preorders','app_meta'];
       var out={};
       var p=Promise.resolve();
       stores.forEach(function(name){

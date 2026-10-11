@@ -18,9 +18,9 @@ async function upsert(token,table,rows){
  });
  if(!res.ok){var t='';try{t=await res.text();}catch(e){}var _e=new Error('Failed to sync '+table+': '+res.status+' '+(t||res.statusText));try{_e.status=res.status;}catch(_){}throw _e;}
 }
-async function fetchRows(token,table){
+async function fetchRows(token,table,forceUid){
  var s=SB();var base=s.SUPABASE_URL,key=s.SUPABASE_ANON_KEY;
- var u=uid();
+ var u=forceUid||uid();
  var url=base+'/rest/v1/'+table+'?select=*';
  if(u) url+='&user_id=eq.'+encodeURIComponent(u);
  var res=await fetch(url,{method:'GET',headers:{apikey:key,Authorization:'Bearer '+token}});
@@ -109,6 +109,9 @@ function mapDailyRow(r){return{date:String(r.date||''),stockExpenses:Number(r.st
 function mapEodRow(r){return{date:String(r.date||''),cashInDrawer:Number(r.cash_in_drawer)||0,stockCheckDone:!!r.stock_check_done,debtPaymentsDone:!!r.debt_payments_done,finished:!!r.finished,recordedSales:Number(r.recorded_sales)||0,actualSales:Number(r.actual_sales)||0,salesDiff:Number(r.sales_diff)||0,profit:Number(r.profit)||0,expenses:Number(r.expenses)||0,netProfit:Number(r.net_profit)||0};}
 function mapRestockRow(r){return{id:String(r.id),date:String(r.date||''),itemsJson:String(r.items_json||'[]'),totalCost:Number(r.total_cost)||0};}
 function mapSmsRow(r){return{id:Number(r.id)||0,debtId:Number(r.debt_id)||0,customerName:String(r.customer_name||''),phoneNumber:String(r.phone_number||''),type:String(r.type||'reminder'),messageBody:String(r.message_body||''),status:String(r.status||'sent'),timestamp:Number(r.timestamp)||Date.now()};}
+// v14 (orders inbox): Supabase pre_orders row -> local preorder object.
+// items_json stays a string here; normalizePreOrder (db_indexed.js) parses it.
+function mapPreOrderRow(r){return{id:Number(r.id)||0,tempId:String(r.temp_id||''),items:r.items_json||'[]',totalAmount:Number(r.total_amount)||0,paymentMethod:String(r.payment_method||'cash'),paymentStatus:String(r.payment_status||'unpaid'),status:String(r.status||'pending'),customerNote:String(r.customer_note||''),createdAt:Number(r.created_at)||Date.now(),expiresAt:Number(r.expires_at)||0};}
 var PULL_TABLES=[
  {supabase:'products',clear:'clearProducts',bulk:'putProducts',single:'putProduct',map:mapProductRow},
  {supabase:'customer_debts',clear:'clearDebts',bulk:'putDebts',single:'putDebt',map:mapDebtRow},
@@ -119,7 +122,8 @@ var PULL_TABLES=[
  {supabase:'daily_entries',clear:'clearDailyEntries',bulk:null,single:'putDailyEntry',map:mapDailyRow},
  {supabase:'end_of_day_data',clear:'clearEndOfDay',bulk:null,single:'putEndOfDay',map:mapEodRow},
  {supabase:'restock_log',clear:'clearRestockLogs',bulk:null,single:'putRestockLog',map:mapRestockRow},
- {supabase:'sms_log',clear:'clearSmsLogs',bulk:null,single:'putSmsLog',map:mapSmsRow}
+ {supabase:'sms_log',clear:'clearSmsLogs',bulk:null,single:'putSmsLog',map:mapSmsRow},
+ {supabase:'pre_orders',clear:'clearPreOrders',bulk:'putPreOrders',single:'putPreOrder',map:mapPreOrderRow}
 ];
 async function syncAll(){
  var s=SB();if(!s||!s.isLoggedIn()) throw new Error('Not signed in — sign in first');
@@ -164,6 +168,154 @@ async function pullAll(){
  }
  try{s.saveLastSyncTime(Date.now());}catch(e){}
  return total?('Restored '+total+' rows from cloud — reload to see changes'):('No cloud rows yet');
+}
+// v14.1 (orders inbox): shared web-session resolver. The web origin hosts TWO
+// sign-in worlds that do NOT share storage:
+//   1) backoffice/login.html signs in with the supabase-js CDN client, which
+//      persists its session in localStorage 'sb-<projectRef>-auth-token'
+//      (the same identity orders/ and the QR pre-order store use);
+//   2) the prototype Settings cloud card (supabase.js) keeps 'tindago_sync_prefs'.
+// Orders must follow the back-office session when present so preorders.html shows
+// exactly what orders/ shows, and fall back to the Settings session otherwise.
+// Returns {token, uid, email, source} or null when no session exists.
+function _jwtExpSec(token){
+ try{
+  var p=String(token).split('.')[1];if(!p)return 0;
+  p=p.replace(/-/g,'+').replace(/_/g,'/');while(p.length%4)p+='=';
+  var j=JSON.parse(atob(p));return Number(j&&j.exp)||0;
+ }catch(_){return 0;}
+}
+async function _refreshBackofficeIfExpired(storageKey,root,node){
+ var at=node&&(node.access_token||(node.session&&node.session.access_token))||null;
+ if(!at)return null;
+ var exp=_jwtExpSec(at);
+ if(!exp||exp*1000>Date.now()+60000)return at; // still valid (or unverifiable — server decides)
+ var rt=node&&(node.refresh_token||(node.session&&node.session.refresh_token))||null;
+ if(!rt)return at;
+ var s=SB();if(!s||!s.SUPABASE_URL)return at;
+ try{
+  var res=await fetch(s.SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token',{
+   method:'POST',headers:{apikey:s.SUPABASE_ANON_KEY,'Content-Type':'application/json'},
+   body:JSON.stringify({refresh_token:rt})
+  });
+  var j;try{j=await res.json();}catch(_){j={};}
+  if(res.ok&&j.access_token){
+   if(node.session&&typeof node.session==='object'){
+    node.session.access_token=j.access_token;if(j.refresh_token)node.session.refresh_token=j.refresh_token;
+   }else{
+    node.access_token=j.access_token;if(j.refresh_token)node.refresh_token=j.refresh_token;
+   }
+   try{g.localStorage.setItem(storageKey,JSON.stringify(root));}catch(_){}
+   return j.access_token;
+  }
+ }catch(_){}
+ return at;
+}
+async function resolveWebSession(){
+ // 1) shared back-office session (supabase-js v2 storage: object, array, or wrapper shapes)
+ var keys=['sb-gncnluxjrpmbjmtzcwsv-auth-token','sb-https://gncnluxjrpmbjmtzcwsv.supabase.co-auth-token'];
+ for(var i=0;i<keys.length;i++){
+  try{
+   var raw=g.localStorage?g.localStorage.getItem(keys[i]):null;
+   if(!raw)continue;
+   var root=JSON.parse(raw);
+   var node=Array.isArray(root)?root[root.length-1]:root;
+   if(node&&node.value&&typeof node.value==='object')node=node.value;
+   var user=node&&(node.user||(node.session&&node.session.user))||null;
+   var uu=user&&user.id?String(user.id):null;
+   if(!node||!uu)continue;
+   var token=await _refreshBackofficeIfExpired(keys[i],root,node);
+   if(!token)continue;
+   return {token:token,uid:uu,email:user&&user.email?String(user.email):null,source:'backoffice'};
+  }catch(_){}
+ }
+ // 2) prototype Settings session (tindago_sync_prefs)
+ try{
+  var s=SB();
+  if(s&&s.isLoggedIn&&s.isLoggedIn()){
+   var t2=s.getToken(),u2=s.getUserId();
+   if(t2&&u2)return {token:t2,uid:String(u2),email:s.getEmail?s.getEmail():null,source:'settings'};
+  }
+ }catch(_){}
+ return null;
+}
+// v14 (orders inbox): pull pre_orders only — used by "Check for orders" and background poll.
+// Returns {newCount, totalCount} so callers can decide whether to chime.
+// Does NOT clear the store; merges incrementally so previously-fetched rows survive.
+async function pullPreOrdersOnly(){
+ var sess=await resolveWebSession(); if(!sess) throw new Error('Not signed in');
+ var token=sess.token; if(!token) throw new Error('No token');
+ var u=sess.uid; if(!u) throw new Error('Missing user');
+ var db=DB(); if(!db) throw new Error('Local DB not ready');
+ try{if(db.ready&&typeof db.ready.then==='function') await db.ready;}catch(e){}
+ var cfg={supabase:'pre_orders',map:mapPreOrderRow};
+ var raw=await fetchRows(token,cfg.supabase,u);
+ var mapped=(raw||[]).map(cfg.map);
+ var beforeCount=0;
+ try{var all=await db.getAllPreOrders(); beforeCount=all.filter(function(o){return o.status==='pending';}).length;}catch(_){}
+ if(mapped.length && typeof db.putPreOrders==='function') await db.putPreOrders(mapped);
+ var afterCount=0;
+ try{var all2=await db.getAllPreOrders(); afterCount=all2.filter(function(o){return o.status==='pending';}).length;}catch(_){}
+ return {newCount:afterCount-beforeCount, totalCount:afterCount};
+}
+// v14.2 (orders validate): cloud catalog read — mirrors orders/db.js
+// getProductsForValidate. Resolves the shared web session and returns
+// {sess, map} where map is keyed by String(id) with {name, quantity,
+// costPrice, sellingPrice, unit}. cost_price is owner-only (RLS).
+async function fetchValidateCatalog(ids){
+  var sess=await resolveWebSession(); if(!sess) throw new Error('Not signed in — sign in via Settings to sync orders');
+  var s=SB(); if(!s||!s.SUPABASE_URL) throw new Error('Supabase config not loaded');
+  var clean=[];
+  (ids||[]).forEach(function(x){ var v=String(x==null?'':x).replace(/["\\()]/g,''); if(v&&clean.indexOf(v)===-1) clean.push(v); });
+  if(!clean.length) return {sess:sess,map:{}};
+  var url=s.SUPABASE_URL+'/rest/v1/products?select=id,name,quantity,cost_price,selling_price,unit&id=in.('+
+    clean.map(function(v){return '"'+v+'"';}).join(',')+')&user_id=eq.'+encodeURIComponent(sess.uid);
+  var res=await fetch(url,{method:'GET',headers:{apikey:s.SUPABASE_ANON_KEY,Authorization:'Bearer '+sess.token}});
+  if(!res.ok){var t='';try{t=await res.text();}catch(e){}var _e=new Error('Failed to fetch catalog: '+res.status+' '+(t||res.statusText));try{_e.status=res.status;}catch(_){}throw _e;}
+  var rows;try{rows=await res.json();}catch(e){rows=[];}
+  if(!Array.isArray(rows)) rows=[];
+  var map={};
+  rows.forEach(function(r){ map[String(r.id)]={ id:String(r.id), name:r.name||'', quantity:Number(r.quantity)||0, costPrice:Number(r.cost_price)||0, sellingPrice:Number(r.selling_price)||0, unit:r.unit||'piece' }; });
+  return {sess:sess,map:map};
+}
+// v14.2 (orders validate): commit a validated pre-order to the cloud — sale
+// lines then stock decrement, mirroring orders/db.js insertSaleLines +
+// decrementStock (shared transactionId, cost-based profit, per-line rows;
+// composite PK filtered by user_id + id).
+async function commitValidatedOrder(sess, lines, paymentMethod){
+  var s=SB(); if(!s||!s.SUPABASE_URL) throw new Error('Supabase config not loaded');
+  if(!sess||!sess.token||!sess.uid) throw new Error('Not signed in — sign in via Settings to sync orders');
+  var token=sess.token,u=sess.uid;
+  var now=Date.now();
+  var d=new Date(),pad=function(n){return String(n).padStart(2,'0');};
+  var dateStr=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  var txId=now;
+  var rows=(lines||[]).map(function(ln){
+    var qty=Number(ln.qty)||0,price=Number(ln.price)||0;
+    return { user_id:u, id:now+Math.floor(Math.random()*1000000), date:dateStr,
+      description:String(ln.name||'')+(qty>1?' x '+qty:''), amount:Math.round(price*qty*100)/100,
+      quantity:qty, customer_name:null, profit:Math.round((price-(Number(ln.costPrice)||0))*qty*100)/100,
+      timestamp:now, transaction_id:txId, payment_method:paymentMethod||'cash' };
+  });
+  if(rows.length){
+    var res=await fetch(s.SUPABASE_URL+'/rest/v1/specific_sales',{method:'POST',
+      headers:{apikey:s.SUPABASE_ANON_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json',Prefer:'return=representation'},
+      body:JSON.stringify(rows)});
+    if(!res.ok){var t='';try{t=await res.text();}catch(e){}var _e=new Error('Failed to record sale: '+res.status+' '+(t||res.statusText));try{_e.status=res.status;}catch(_){}throw _e;}
+  }
+  var ls=lines||[];
+  for(var i=0;i<ls.length;i++){
+    var ln=ls[i];
+    var qurl=s.SUPABASE_URL+'/rest/v1/products?select=quantity&id=eq.'+encodeURIComponent(String(ln.productId).replace(/["\\()]/g,''))+'&user_id=eq.'+encodeURIComponent(u);
+    var qres=await fetch(qurl,{method:'GET',headers:{apikey:s.SUPABASE_ANON_KEY,Authorization:'Bearer '+token}});
+    if(!qres.ok){var q1='';try{q1=await qres.text();}catch(e){}throw new Error('Stock read failed: '+qres.status+' '+(q1||qres.statusText));}
+    var qrows;try{qrows=await qres.json();}catch(e){qrows=[];}
+    var cur=(qrows&&qrows[0]&&Number(qrows[0].quantity))||0;
+    var next=Math.max(0,cur-(Number(ln.qty)||0));
+    var pres=await fetch(qurl,{method:'PATCH',headers:{apikey:s.SUPABASE_ANON_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({quantity:next})});
+    if(!pres.ok){var p1='';try{p1=await pres.text();}catch(e){}throw new Error('Stock update failed: '+pres.status+' '+(p1||pres.statusText));}
+  }
+  return txId;
 }
 async function signIn(email,password){
  var s=SB();if(!s||!s.signIn) throw new Error('Supabase not loaded');
@@ -243,7 +395,7 @@ function handleAutoSyncChange(val){
  try{ wireSettingsCard(); }catch(_){}
  try{ maybeAutoSync(); }catch(_){}
 }
-var TindaSync={syncAll:syncAll,pullAll:pullAll,restoreFromCloud:pullAll,signIn:signIn,signOut:signOut,isLoggedIn:isLoggedIn,getLastSyncTime:getLastSyncTime,getEmail:getEmail,wireSettingsCard:wireSettingsCard,maybeAutoSync:maybeAutoSync,isDue:isDue,isAuthError:isAuthError,getIntervalHours:getIntervalHours,handleAutoSyncChange:handleAutoSyncChange,_upsert:upsert,_fetchRows:fetchRows};
+var TindaSync={syncAll:syncAll,pullAll:pullAll,restoreFromCloud:pullAll,pullPreOrdersOnly:pullPreOrdersOnly,resolveWebSession:resolveWebSession,signIn:signIn,signOut:signOut,isLoggedIn:isLoggedIn,getLastSyncTime:getLastSyncTime,getEmail:getEmail,wireSettingsCard:wireSettingsCard,maybeAutoSync:maybeAutoSync,isDue:isDue,isAuthError:isAuthError,getIntervalHours:getIntervalHours,handleAutoSyncChange:handleAutoSyncChange,_upsert:upsert,_fetchRows:fetchRows};
 try{g.TindaSync=TindaSync;}catch(e){}
 try{g.Sync=TindaSync;}catch(e){}
 try{
@@ -295,5 +447,5 @@ try{
   else setTimeout(_autoHook, 0);
  }
 }catch(e){}
-try{ g.maybeAutoSync=maybeAutoSync; g.isDue=isDue; g.isAuthError=isAuthError; g.handleAutoSyncChange=handleAutoSyncChange; }catch(e){}
+try{ g.maybeAutoSync=maybeAutoSync; g.isDue=isDue; g.isAuthError=isAuthError; g.handleAutoSyncChange=handleAutoSyncChange; g.pullPreOrdersOnly=pullPreOrdersOnly; g.resolveWebSession=resolveWebSession; g.fetchValidateCatalog=fetchValidateCatalog; g.commitValidatedOrder=commitValidatedOrder; }catch(e){}
 })(typeof window!=='undefined'?window:this);

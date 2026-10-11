@@ -99,15 +99,24 @@ create policy "store_profiles_owner_all" on public.store_profiles
 -- 3. get_public_products(store_uid) — narrow, read-only public projection.
 --    SECURITY DEFINER bypasses RLS ONLY inside this function. It returns the
 --    minimal field set the customer page needs and NEVER exposes cost_price,
---    low_stock_threshold, category/subcategory internals, etc.
+--    low_stock_threshold or other owner-private internals.
+--    (category + subcategory are sari-sari-store grouping keys the customer
+--    search control needs for its drill-down — added v2/v3.)
 -- ----------------------------------------------------------------------------
+-- v2: added category so the customer search/dropdown filters by real categories.
+-- v3: added subcategory so the search control's category -> subcategory drill-down
+--     (category_search.js parity) can render and filter by subcategory.
+--     NOTE: subcategory is a sari-sari-store grouping key, not a private field
+--     (never exposes cost_price / cost_price-derived data).
+drop function if exists public.get_public_products(uuid);
+
 create or replace function public.get_public_products(p_store_uuid uuid)
 returns table (
   id text, name text, unit text, price double precision,
-  quantity double precision, package_size text, brand text
+  quantity double precision, package_size text, brand text, category text, subcategory text
 ) language sql security definer stable as
 $$
-  select id, name, unit, selling_price, quantity, package_size, brand
+  select id, name, unit, selling_price, quantity, package_size, brand, category, subcategory
   from public.products
   where user_id = p_store_uuid and quantity > 0
   order by name asc;

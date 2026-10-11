@@ -22,6 +22,7 @@
     { href: 'expenses.html', label: 'Expenses' },
     { href: 'restock.html', label: 'Restock' },
     { href: 'suppliers.html', label: 'Suppliers' },
+    { href: 'preorders.html', label: 'Pre-Orders' },   // Stage 6 hybrid: replaces legacy orders.html/order_detail.html (archived 2026-10-11; see archive/README_retired.txt)
     { href: 'preorder_qr.html', label: 'Pre-Order QR' }
   ];
 

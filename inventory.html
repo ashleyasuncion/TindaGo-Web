@@ -135,20 +135,22 @@
     <div class="phone-notch"></div>
     <div class="app-container" id="app">
       <!-- HEADER -->
-      <header class="app-header" style="background:var(--primary);color:white;">
-        <button class="header-btn" onclick="historyBack()" style="color:white;background:none;border:none;cursor:pointer;display:flex;align-items:center;padding:6px;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        </button>
-        <h1 style="font-size:var(--text-xl);font-weight:700;flex:1;text-align:center;" data-i18n="stockTitle">Stock</h1>
-        <div class="header-actions">
-          <button class="header-btn header-tutorial-btn" id="headerTutorialBtn" onclick="startTutorial('inventory', true)" aria-label="Tutorial" style="color:white;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </button>
-          <a class="header-btn" href="setting.html" style="text-decoration:none;color:white;">
+      <header class="app-header">
+  <div class="header-left">
+    <a class="header-btn" id="manageStoreBtn" aria-label="Manage Store" href="morning.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    </a>
+  </div>
+  <h1 class="header-page-title" id="headerPageTitle" data-i18n="stockTitle" style="flex:1;text-align:center;">Stock</h1>
+  <div class="header-actions">
+    <button class="header-btn header-tutorial-btn" id="headerTutorialBtn" onclick="startTutorial('inventory', true)" aria-label="Tutorial">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </button>
+    <a class="header-btn" href="setting.html" style="text-decoration:none;color:white;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </a>
-        </div>
-      </header>
+  </div>
+</header>
 
       <!-- CONTENT -->
       <main class="app-content" id="appContent">
@@ -192,9 +194,9 @@
 
       <!-- BOTTOM NAV -->
       <nav class="bottom-nav" id="bottomNav">
-        <a class="nav-item" href="morning.html">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
-          <span class="nav-label" data-i18n="navMorning">Umaga</span>
+        <a class="nav-item" href="backoffice/preorders.html">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/></svg>
+          <span class="nav-label" data-i18n="ordersLink">Mga Order</span>
         </a>
         <a class="nav-item active" href="inventory.html">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
@@ -205,6 +207,9 @@
           <span class="nav-label" data-i18n="debtsLink">Utang</span>
         </a>
       </nav>
+      <div id="ordersBubble" class="orders-bubble">
+        <span class="orders-bubble-badge"></span>
+      </div>
 
       <div class="toast-container" id="toastContainer"></div>
     </div>
@@ -439,15 +444,31 @@
       }
     });
 
-    // Re-render on language change if the dropdown is open.
+    // Re-render on language change: keep the category dropdown label in sync,
+    // and refresh the rendered inventory list / labels.
     try{
       window.addEventListener('tindago:languageChanged', function(){
         updLabel();
         if(categoryDropdown.classList.contains('open')){
           openDropdown();
         }
+        if(typeof applyTranslations === 'function'){
+          applyTranslations();
+        } else if(typeof updateHeader === 'function' && document.getElementById('headerPageTitle')){
+          updateHeader();
+        }        if(typeof window.renderManageInventory === 'function'){
+          window.renderManageInventory();
+        }
+        if(typeof applyTranslations !== 'function'){
+          var _els = document.querySelectorAll('[data-i18n]');
+          for(var _i=0;_i<_els.length;_i++){
+            var _el=_els[_i];
+            var _k=_el.getAttribute('data-i18n');
+            if(_k && typeof t === 'function'){ _el.textContent = t(_k); }
+          }
+        }
       });
-    }catch(e){}
+    }catch(e){} 
 
     updLabel();
 

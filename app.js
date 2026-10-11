@@ -114,7 +114,9 @@
       'backupEnabledToggle', 'backupFreqDaily', 'backupFreqWeekly', 'backupLocationLabel', 'backupStatusLabel', 'backupFileInput',
       'cddCreditLimit',
       'setupOverlay', 'setupStoreName', 'setupOwnerName', 'setupLanguage',
-      'toastContainer'
+      'toastContainer',
+      'manageOrdersList', 'manageTotalOrders',
+      'ordersCheckBtn', 'ordersBubble', 'ordersDetailOverlay',
     ];
     ids.forEach(function(id) {
       dom[id] = document.getElementById(id);
@@ -239,7 +241,7 @@
       creditLimitSaved: 'Credit limit saved.',
       smsSendReceipt: 'Ipadala ang Receipt',
       smsSendReminder: 'Ipadala ang Paalala',
-      smsNoPhone: 'Walang telepono. I-edit ang utang para magdagdag para sa SMS.',
+      smsNoPhone: 'No phone number. Edit the debt to add one for SMS.',
       phoneLabel: 'Numero ng Telepono (opsyonal)',
       smsSendReceipt: 'Send Receipt',
       smsSendReminder: 'Send Reminder',
@@ -656,6 +658,34 @@
       debtsTitle: 'Debts',
       debtsTotalLabel: 'Total Debt',
       newDebtBtn: 'New Debt',
+      ordersTitle: "Orders",
+      ordersTotalLabel: 'Total Orders',
+      viewPreordersLink: 'View Pre-Orders',
+      ordersLink: 'Orders',
+      // Orders inbox (v14) — en
+      ordersCheckForOrders: 'Check for orders',
+      ordersPendingCount: '{n} pending',
+      ordersTotalAmount: '₱{amount}',
+      ordersNoOrders: 'No pending orders yet.',
+      ordersEmpty: 'No pending orders yet.',
+      ordersValidateSale: 'Validate → Sale',
+      ordersCancel: 'Cancel',
+      ordersValidateConfirm: 'Validate {tempId} ({amount}) into a sale?',
+      ordersCancelConfirm: 'Cancel order {tempId}? This cannot be undone.',
+      ordersFulfilledToast: 'Order {tempId} validated — added to sales.',
+      ordersCancelToast: 'Order {tempId} cancelled.',
+      ordersOfflineError: 'Cannot {action} while offline. Please check your connection.',
+      ordersChimeMuted: 'Orders chime muted',
+      ordersTabTitle: 'Orders / Mga Order',
+      ordersPaymentMethod: 'Payment: {method}',
+      ordersItemCount: '{n} item(s)',
+      ordersShowItems: 'Show items',
+      ordersHideItems: 'Hide items',
+      ordersShowMore: 'Show more ({n} left)',
+      ordersNotifBody: '{n} new pending order(s) \u2014 tap to open',
+      ordersDetailTitle: 'Order Details',
+      ordersValidate: 'Validate',
+      ordersCancelBtn: 'Cancel Order',
       stocksLink: 'Stock',
       debtsLink: 'Debts',
       // Add product
@@ -712,8 +742,61 @@
       lowStock: 'Low Stock',
       outOfStock: 'Out of Stock',
       selectedProduct: 'Selected product',
+      ordersTitle: "Orders",
+      ordersTotalLabel: "Total Orders",
+      ordersNoOrders: "No pending orders — you're all caught up!",
+      ordersPaymentMethod: "Paid via {method}",
+      ordersValidateSale: "Validate Sale",
+      ordersCancel: "Cancel Order",
+      ordersCancelConfirm: "Cancel this order? Items will return to stock",
+      ordersOfflineError: "Order sync needs {action} — check your connection or sign in via Settings",
+      ordersCheckBtn: "Check for orders",
+      ordersCheckBusy: "Checking for orders...",
+      ordersValidateSuccess: "Order validated — sale recorded and stock updated",
+      ordersCancelSuccess: "Order cancelled — items returned to stock",
+      ordersBack: "Back",
+      ordersViewDetail: "View order details",
+      ordersBubble: "Orders",
+      ordersBubbleCount: "{n} new order{n}",
+      ordersChimeMuted: "Orders chime is muted",
+      ordersChimeUnmuted: "Orders chime is on",
+      ordersEmptyDetail: "No order details to show",
+      ordersDetailTotal: "Total",
+      ordersDetailItems: "Items",
+      ordersDetailPayment: "Payment",
+      ordersDetailStatus: "Status",
+      ordersDetailValidate: "Validate & Record Sale",
+      ordersDetailCancel: "Cancel Order",
     },
     fil: {
+      viewPreordersLink: 'Tingnan ang Pre-Orders',
+      smsNoPhone: 'Walang telepono. I-edit ang utang para magdagdag para sa SMS.',
+      ordersTitle: "Mga Order",
+      ordersTotalLabel: "Mga Order",
+      ordersNoOrders: "Walang pending na order — ikaw ay updated na!",
+      ordersPaymentMethod: "Bayad gamit {method}",
+      ordersValidateSale: "Ipatunay na Benta",
+      ordersCancel: "Kanselahin ang Order",
+      ordersCancelConfirm: "Kanselahin ang order na ito? Ang mga item ay babalik sa stock",
+      ordersOfflineError: "Ang order sync ay nangangailangan ng {action} — suriin ang iyong koneksyon o mag-sign in sa Settings",
+      ordersCheckBtn: "Surihin ang mga order",
+      ordersCheckBusy: "Sinasuri ang mga order...",
+      ordersValidateSuccess: "Order naipatunay — benta na idinerekord at stock na-update",
+      ordersCancelSuccess: "Order na kanselahan — ang mga item ay natalikod sa stock",
+      ordersBack: "Balik",
+      ordersViewDetail: "Tingnan ang detalye ng order",
+      ordersBubble: "Order",
+      ordersBubbleCount: "{n} bagong order{n}",
+      ordersChimeMuted: "Ang orders chime ay naka-mute",
+      ordersChimeUnmuted: "Ang orders chime ay nag-iinon",
+      ordersEmptyDetail: "Walang detalye ng order para ipakita",
+      ordersDetailTotal: "Kabuoan",
+      ordersDetailItems: "Mga Item",
+      ordersDetailPayment: "Pagbabayad",
+      ordersDetailStatus: "Estado",
+      ordersDetailValidate: "Ipapayag at I-record na Benta",
+      ordersDetailCancel: "Kanselar ang Order",
+      ordersTitle: "Mga Order",
       greeting: 'Magandang araw!',
       morningGreeting: 'Magandang umaga!',
       greetingMorning: 'Magandang umaga!',
@@ -1189,6 +1272,31 @@
       howToReports: 'Tingnan ang performance ng iyong tindahan sa Reports page.',
       howToSettings: 'I-customize ang wika, laki ng text, pangalan ng tindahan at may-ari sa Settings.',
       moreSection: 'Iba Pa',
+      ordersLink: 'Mga Order',
+      // Orders inbox (v14) — fil
+      ordersCheckForOrders: 'Suriin ang mga order',
+      ordersPendingCount: '{n} nakapending',
+      ordersTotalAmount: '₱{amount}',
+      ordersNoOrders: 'Walang nakapending na order pa.',
+      ordersEmpty: 'Walang nakapending na order pa.',
+      ordersValidateSale: 'I-validate → Benta',
+      ordersCancel: 'Kanselahin',
+      ordersValidateConfirm: 'I-validate ang {tempId} ({amount}) bilang benta?',
+      ordersCancelConfirm: 'Kanselahin ang order {tempId}? Hindi ito ma-iundo.',
+      ordersFulfilledToast: 'Na-validate ang order {tempId} — idinagdag sa benta.',
+      ordersCancelToast: 'Na-cancel ang order {tempId}.',
+      ordersOfflineError: 'Hindi makakaya ang {action} kung offline. Pakisuri ang koneksyon.',
+      ordersChimeMuted: 'Naka-mute ang tunog ng order',
+      ordersTabTitle: 'Orders / Mga Order',
+      ordersPaymentMethod: 'Pagbabayad: {method}',
+      ordersItemCount: '{n} item(s)',
+      ordersShowItems: 'Ipakita ang mga item',
+      ordersHideItems: 'Itago ang mga item',
+      ordersShowMore: 'Ipakita pa ({n} natitira)',
+      ordersNotifBody: '{n} bagong nakapending na order \u2014 i-tap para buksan',
+      ordersDetailTitle: 'Detalye ng Order',
+      ordersValidate: 'I-validate',
+      ordersCancelBtn: 'Kansela ang Order',
       stocksLink: 'Stock',
       debtsLink: 'Utang',
       // Add product
@@ -2261,12 +2369,12 @@
       { id:'s23', name:'Ho-Mi Instant Noodles', category:'instant_dry_goods', subcategory:'instant_noodles', brand:'Ho-Mi', unit:'pack', packageSize:'55g', quantity:4, costPrice:8, sellingPrice:10, lowStockThreshold:6 },
       { id:'s24', name:'Yakisoba Instant Noodles', category:'instant_dry_goods', subcategory:'instant_noodles', brand:'Yakisoba', unit:'pack', packageSize:'60g', quantity:20, costPrice:11, sellingPrice:13.75, lowStockThreshold:6 },
       // ── Pantry Staples · Rice (6) ──
-      { id:'s25', name:'Do\u00f1a Maria Jasponica', category:'pantry_staples', subcategory:'rice', brand:'Do\u00f1a Maria', unit:'sack', packageSize:'5kg', quantity:20, costPrice:360, sellingPrice:414, lowStockThreshold:2 },
-      { id:'s26', name:'Dinorado Rice', category:'pantry_staples', subcategory:'rice', brand:'Dinarado', unit:'sack', packageSize:'5kg', quantity:20, costPrice:330, sellingPrice:379.5, lowStockThreshold:2 },
-      { id:'s27', name:'Sinandomeng Rice', category:'pantry_staples', subcategory:'rice', brand:'Sinandomeng', unit:'sack', packageSize:'5kg', quantity:20, costPrice:300, sellingPrice:345, lowStockThreshold:2 },
-      { id:'s28', name:'Maharlika Rice', category:'pantry_staples', subcategory:'rice', brand:'Maharlika', unit:'sack', packageSize:'5kg', quantity:0, costPrice:320, sellingPrice:368, lowStockThreshold:2 },
-      { id:'s29', name:'Jasmine Rice', category:'pantry_staples', subcategory:'rice', brand:'Jasmine', unit:'sack', packageSize:'5kg', quantity:1, costPrice:350, sellingPrice:402.5, lowStockThreshold:2 },
-      { id:'s30', name:'Jasmate Rice', category:'pantry_staples', subcategory:'rice', brand:'Jasmate', unit:'sack', packageSize:'5kg', quantity:20, costPrice:340, sellingPrice:391, lowStockThreshold:2 },
+      { id:'s25', name:'Do\u00f1a Maria Jasponica', category:'pantry_staples', subcategory:'rice', brand:'Do\u00f1a Maria', unit:'kg', packageSize:'kg', quantity:100, costPrice:72, sellingPrice:82.8, lowStockThreshold:2 },
+      { id:'s26', name:'Dinorado Rice', category:'pantry_staples', subcategory:'rice', brand:'Dinarado', unit:'kg', packageSize:'kg', quantity:100, costPrice:66, sellingPrice:75.9, lowStockThreshold:2 },
+      { id:'s27', name:'Sinandomeng Rice', category:'pantry_staples', subcategory:'rice', brand:'Sinandomeng', unit:'kg', packageSize:'kg', quantity:100, costPrice:60, sellingPrice:69, lowStockThreshold:2 },
+      { id:'s28', name:'Maharlika Rice', category:'pantry_staples', subcategory:'rice', brand:'Maharlika', unit:'kg', packageSize:'kg', quantity:0, costPrice:64, sellingPrice:73.6, lowStockThreshold:2 },
+      { id:'s29', name:'Jasmine Rice', category:'pantry_staples', subcategory:'rice', brand:'Jasmine', unit:'kg', packageSize:'kg', quantity:5, costPrice:70, sellingPrice:80.5, lowStockThreshold:2 },
+      { id:'s30', name:'Jasmate Rice', category:'pantry_staples', subcategory:'rice', brand:'Jasmate', unit:'kg', packageSize:'kg', quantity:100, costPrice:68, sellingPrice:78.2, lowStockThreshold:2 },
       // ── Canned Goods · Sardines (6) ──
       { id:'s31', name:'Ligo Sardines in Tomato Sauce', category:'canned_goods', subcategory:'sardines', brand:'Ligo', unit:'can', packageSize:'155g', quantity:20, costPrice:20, sellingPrice:25, lowStockThreshold:4 },
       { id:'s32', name:'Mega Sardines in Tomato Sauce', category:'canned_goods', subcategory:'sardines', brand:'Mega', unit:'can', packageSize:'155g', quantity:20, costPrice:20, sellingPrice:25, lowStockThreshold:4 },
@@ -2707,8 +2815,11 @@
   /**
    * Shows a styled confirmation modal (replaces browser confirm()).
    * Returns a Promise that resolves to true (OK) or false (Cancel).
+   * @param {'danger'|'success'} variant — confirm-button style:
+   *   'success' renders a GREEN OK button (used by Validate Order);
+   *   omitted/'danger' keeps the RED OK button (Cancel, delete, reset, discard).
    */
-  function showConfirmModal(message, title, okText, cancelText) {
+  function showConfirmModal(message, title, okText, cancelText, variant) {
     return new Promise(function(resolve) {
       var overlay = document.getElementById('confirmOverlay');
       if (!overlay) {
@@ -2735,6 +2846,16 @@
       if (descEl) descEl.textContent = message;
       if (okBtn) okBtn.textContent = okText || 'OK';
       if (cancelBtn) cancelBtn.textContent = cancelText || t('cancel');
+      // Variant styling: the overlay is created once and reused, so the button
+      // class and icon are re-applied on every call. 'success' = green OK
+      // (Validate Order); default 'danger' = red OK (destructive actions).
+      var isSuccess = variant === 'success';
+      if (okBtn) {
+        okBtn.classList.remove('btn-danger', 'btn-primary');
+        okBtn.classList.add(isSuccess ? 'btn-primary' : 'btn-danger');
+      }
+      var confirmIconEl = overlay.querySelector('.confirm-modal-icon');
+      if (confirmIconEl) confirmIconEl.textContent = isSuccess ? '\u2705' : '\u26A0\uFE0F';
       overlay.classList.add('open');
       function cleanup(result) {
         overlay.classList.remove('open');
@@ -6914,7 +7035,51 @@ saveState();
         applyTranslations();
         renderExpenses();
       });
+    } else if (pageName === 'orders') {
+      // Orders inbox page (v14) — renders pending pre-orders from the
+      // IndexedDB cache; auto-pulls on open and polls every 60s while open.
+      // Validate/Cancel require connectivity + a signed-in Supabase session.
+      applyTranslations();
+      renderOrdersInbox();
+      // Stage 2: backoffice/preorders.html?order=<tempId> deep-link (web notification
+      // tap-through) — waits for the async card render, scrolls + flashes it.
+      focusOrderFromQuery();
+      // Stage 3: repair the "View Pre-Orders" link — the customer storefront
+      // resolves its store from ?store=<uid>, so a bare preorder/index.html
+      // href loads with no store to show. Inject the signed-in owner's uid.
+      var viewPreordersLink = document.querySelector('a[href^="preorder/index.html"]');
+      if (viewPreordersLink && !viewPreordersLink._tindagoWired) {
+        viewPreordersLink._tindagoWired = true;
+        try {
+          if (typeof resolveWebSession === 'function') {
+            resolveWebSession().then(function(sess) {
+              if (sess && sess.uid) viewPreordersLink.setAttribute('href', 'preorder/index.html?store=' + encodeURIComponent(sess.uid));
+            }).catch(function() {});
+          }
+        } catch(_) {}
+      }
+      // v14.1: the Check button ships in backoffice/preorders.html with no handler (no
+      // inline onclick, and setupEvents doesn't cover it) — wire it once here.
+      var ordersCheckBtn = document.getElementById('ordersCheckBtn');
+      if (ordersCheckBtn && !ordersCheckBtn._tindagoWired) {
+        ordersCheckBtn._tindagoWired = true;
+        ordersCheckBtn.addEventListener('click', function () { checkForOrders(); });
+      }
+      checkForOrders();
+      ordersPollTimer = setInterval(checkForOrders, 60000);
+      window.addEventListener('pagehide', function() {
+        if (ordersPollTimer) { clearInterval(ordersPollTimer); ordersPollTimer = null; }
+      });
+      window.addEventListener('pageshow', function(ev) {
+        if (!ev.persisted) return;
+        loadState();
+        applyTranslations();
+        renderOrdersInbox();
+        checkForOrders();
+        ordersPollTimer = setInterval(checkForOrders, 60000);
+      });
     } else if (pageName === 'help') {
+
       // Help page
       applyTranslations();
       renderHelp();
@@ -6930,6 +7095,432 @@ saveState();
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+
+// ============================================
+// ORDERS INBOX (v14) — In-App Orders Inbox
+// ============================================
+
+  var ordersPollTimer;
+  var ordersChimeContext;
+
+  function ordersChimeStorageKey() {
+    try { return 'sss_v3_ordersChimeMuted'; } catch(_) { return null; }
+  }
+  function isOrdersChimeMuted() {
+    var k = ordersChimeStorageKey();
+    if (!k) return false;
+    try { return localStorage.getItem(k) === '1'; } catch(_) { return false; }
+  }
+  function setOrdersChimeMuted(muted) {
+    var k = ordersChimeStorageKey();
+    if (!k) return;
+    try { localStorage.setItem(k, muted ? '1' : '0'); } catch(_) {}
+  }
+  function playOrdersChime() {
+    if (isOrdersChimeMuted()) return;
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!ordersChimeContext) { try { ordersChimeContext = new AC(); } catch(_) { return; } }
+      var c = ordersChimeContext;
+      if (c.state === 'suspended') { c.resume().catch(function(){}); }
+      var t = c.currentTime;
+      var o1 = c.createOscillator(), g1 = c.createGain();
+      o1.type = 'sine'; o1.frequency.value = 880;
+      g1.gain.setValueAtTime(0, t);
+      g1.gain.linearRampToValueAtTime(0.2, t + 0.005);
+      g1.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      o1.connect(g1).connect(c.destination);
+      o1.start(t); o1.stop(t + 0.14);
+      var o2 = c.createOscillator(), g2 = c.createGain();
+      o2.type = 'sine'; o2.frequency.value = 1320;
+      g2.gain.setValueAtTime(0, t + 0.09);
+      g2.gain.linearRampToValueAtTime(0.2, t + 0.095);
+      g2.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
+      o2.connect(g2).connect(c.destination);
+      o2.start(t + 0.09); o2.stop(t + 0.26);
+    } catch(_) {}
+  }
+  function getOrdersReturnPage() {
+    var p = null;
+    try { p = sessionStorage.getItem('sss_v3_ordersReturn'); } catch(_) {}
+    if (p) { try { sessionStorage.removeItem('sss_v3_ordersReturn'); } catch(_) {} }
+    return p;
+  }
+  function ordersBack() {
+    var returnPage = getOrdersReturnPage();
+    if (returnPage) { window.location.href = returnPage; return; }
+    historyBack();
+  }
+  async function patchPreOrderStatus(orderId, status, paymentStatus) {
+    // v14.1: shared web-session resolver — works with the back-office login
+    // (supabase-js session, same identity as orders/) and the Settings sign-in.
+    // NOTE: SB() is private to sync.js's IIFE (never on window) — read the
+    // public supabase.js config off window here instead (same object SB() wraps).
+    var s = (typeof window !== 'undefined') ? (window.Supabase || window.TindaSupabase || null) : null;
+    if (!s || !s.SUPABASE_URL) throw new Error('Supabase config not loaded');
+    var sess = (typeof resolveWebSession === 'function') ? await resolveWebSession() : null;
+    if (!sess) throw new Error('Not signed in — sign in via Settings to sync orders');
+    var token = sess.token;
+    if (!token) throw new Error('No auth token');
+    var u = sess.uid;
+    if (!u) throw new Error('No user id');
+    var base = s.SUPABASE_URL, key = s.SUPABASE_ANON_KEY;
+    var url = base + '/rest/v1/pre_orders?user_id=eq.' + encodeURIComponent(u) + '&id=eq.' + encodeURIComponent(Number(orderId));
+    var res = await fetch(url, {
+      method: 'PATCH',
+      headers: { apikey: key, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+      body: JSON.stringify({ status: status, payment_status: paymentStatus, fulfilled_at: Date.now() })
+    });
+    if (!res.ok) {
+      var msg = '';
+      try { msg = await res.text(); } catch(_) {}
+      if (/fulfilled_at/i.test(msg || '')) {
+        var res2 = await fetch(url, {
+          method: 'PATCH',
+          headers: { apikey: key, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates' },
+          body: JSON.stringify({ status: status, payment_status: paymentStatus })
+        });
+        if (!res2.ok) { var msg2 = ''; try { msg2 = await res2.text(); } catch(_) {} throw new Error(msg2 || res2.statusText || 'Failed to update order'); }
+        return;
+      }
+      throw new Error(msg || res.statusText || 'Failed to update order');
+    }
+  }
+  function checkForOrders() {
+    pullPreOrdersOnly()
+      .then(function(result) {
+        renderOrdersInbox();
+        if (result && result.newCount > 0) { playOrdersChime(); renderOrdersBubble(); }
+      })
+      .catch(function(err) {
+        var m = err.message || '';
+        if (m.indexOf('Not signed in') !== -1 || m.indexOf('No token') !== -1 || m.indexOf('Missing user') !== -1) {
+          showToast(t('ordersOfflineError').replace('{action}', 'sync'), 'error');
+        } else {
+          showToast('Could not check for orders: ' + (m || 'unknown'), 'error');
+        }
+        renderOrdersInbox();
+      });
+  }
+  function renderOrdersInbox() {
+    var list = dom.manageOrdersList, totalEl = dom.manageTotalOrders;
+    if (!list) return;
+    TindaDB.getAllPreOrders().then(function(rows) {
+      var pending = rows.filter(function(r) { return r.status === 'pending'; });
+      var total = 0;
+      pending.forEach(function(r) { total += Number(r.totalAmount) || 0; });
+      if (totalEl) totalEl.textContent = '\u20B1' + total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (pending.length === 0) {
+        list.innerHTML = '<div class="empty-state">\u2705 ' + t('ordersNoOrders') + '</div>';
+        renderOrdersBubble();
+        return;
+      }
+      var html = '';
+      // Stage 3: compact inbox — first 5 cards only; "Show more" reveals the
+      // next 5 per click. list._ordersShown survives re-renders (property on
+      // the container, not on its innerHTML) so polling doesn't collapse it.
+      var limit = list._ordersShown || 5;
+      var visible = pending.slice(0, limit);
+      visible.forEach(function(o) {
+        var items = o.items;
+        if (typeof items === 'string') { try { items = JSON.parse(items || '[]'); } catch(_) { items = []; } }
+        if (!Array.isArray(items)) items = [];
+        var itemsHtml = '';
+        // Stage 6 (Option B): show max 3 items in card preview
+        var previewItems = items.slice(0, 3);
+        previewItems.forEach(function(it) {
+          var qty = Number(it.qty) || 0, price = Number(it.price) || 0, name = it.name || '';
+          itemsHtml += '<div class="order-line"><span>' + esc(qty) + '\u00D7 ' + esc(name) + '</span><span>\u20B1' + (price * qty).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span></div>';
+        });
+        if (items.length > 3) {
+          itemsHtml += '<div class="order-line" style="font-style:italic;color:var(--text-secondary);font-size:var(--text-xs);">+ ' + (items.length - 3) + ' more items...</div>';
+        }
+        var time = '';
+        try { time = new Date(Number(o.createdAt)).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch(_) {}
+        var pm = o.paymentMethod || 'cash', ps = o.paymentStatus || 'unpaid';
+        // Order ID: pre_orders.id is a Date.now() bigint — show the last 6
+        // digits as #NNNNNN (full id in the title tooltip); tempId stays the
+        // canonical customer-facing reference.
+        var shortId = o.id ? String(o.id) : '';
+        if (shortId.length > 6) shortId = shortId.slice(-6);
+        // Stage 3: items collapsed by default — a toggle row (not the whole
+        // card) expands them, so Validate/Cancel never get in the way.
+        html += '<div class="order-card" data-temp-id="' + esc(o.tempId) + '">' +
+          '<div class="order-card-header"><span class="order-card-ids">' +
+            (shortId ? '<span class="order-card-id" title="' + esc(String(o.id)) + '">#' + esc(shortId) + '</span>' : '') +
+            '<span class="order-card-temp-id">' + esc(o.tempId) + '</span>' +
+          '</span><span class="order-card-time">' + esc(time) + '</span></div>' +
+          '<button type="button" class="order-card-items-toggle" data-items-toggle="' + esc(o.tempId) + '" aria-expanded="false">' +
+            '<span class="order-card-items-toggle-label">' + t('ordersShowItems') + '</span>' +
+            '<span class="order-card-items-count">' + t('ordersItemCount').replace('{n}', items.length) + '</span>' +
+            '<span class="order-card-items-chevron">\u25BE</span>' +
+          '</button>' +
+          '<div class="order-card-items" id="orderItems-' + esc(o.tempId) + '" hidden>' + itemsHtml + '</div>' +
+          '<div class="order-card-total"><span>' + t('ordersDetailTotal') + '</span><span>\u20B1' + Number(o.totalAmount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span></div>' +
+          '<div class="order-card-meta">' + t('ordersPaymentMethod').replace('{method}', pm.toUpperCase()) + ' \u00B7 ' + esc(ps) + '</div>' +
+          (o.customerNote ? '<div class="order-card-note">' + esc(o.customerNote) + '</div>' : '') +
+          '<div class="order-card-actions">' +
+            '<button class="btn btn-primary btn-sm" data-validate="' + esc(o.tempId) + '">' + t('ordersValidateSale') + '</button>' +
+            '<button class="btn btn-danger btn-sm" data-cancel="' + esc(o.tempId) + '">' + t('ordersCancel') + '</button>' +
+          '</div></div>';
+      });
+      var remaining = pending.length - visible.length;
+      if (remaining > 0) {
+        html += '<button type="button" class="btn btn-outline btn-full order-show-more" data-show-more="1">' + t('ordersShowMore').replace('{n}', remaining) + '</button>';
+      }
+      list.innerHTML = html;
+      setupOrdersListEvents();
+      renderOrdersBubble();
+    }).catch(function(err) { list.innerHTML = '<div class="empty-state">\u26A0 ' + (err.message || 'Could not load orders') + '</div>'; });
+  }
+  function setupOrdersListEvents() {
+    var list = dom.manageOrdersList;
+    if (!list || list._ordersEventsBound) return;
+    list._ordersEventsBound = true;
+    list.addEventListener('click', function(e) {
+      var v = e.target.closest('[data-validate]');
+      if (v) { validatePreOrderWeb(v.getAttribute('data-validate')); return; }
+      var c = e.target.closest('[data-cancel]');
+      if (c) { cancelPreOrderWeb(c.getAttribute('data-cancel')); return; }
+      // Stage 3: per-card items collapse toggle (collapsed by default).
+      var it = e.target.closest('[data-items-toggle]');
+      if (it) {
+        var toggleTempId = it.getAttribute('data-items-toggle');
+        var box = document.getElementById('orderItems-' + toggleTempId);
+        var expanded = it.getAttribute('aria-expanded') === 'true';
+        it.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        if (box) { if (expanded) { box.setAttribute('hidden', ''); } else { box.removeAttribute('hidden'); } }
+        var label = it.querySelector('.order-card-items-toggle-label');
+        if (label) label.textContent = expanded ? t('ordersShowItems') : t('ordersHideItems');
+        return;
+      }
+      // Stage 3: "Show more" — reveal the next 5 pending cards.
+      var sm = e.target.closest('[data-show-more]');
+      if (sm) {
+        list._ordersShown = (list._ordersShown || 5) + 5;
+        renderOrdersInbox();
+        return;
+      }
+      // Stage 6 (Option B): tapping the card navigates to dedicated detail page
+      var card = e.target.closest('.order-card');
+      if (card) { window.location.href = 'order_detail.html?order=' + encodeURIComponent(card.getAttribute('data-temp-id')); }
+    });
+  }
+  // Stage 2/6: backoffice/preorders.html?order=<tempId> deep-link target (web notification
+  // tap-through). Cards render asynchronously (IndexedDB), so poll briefly
+  // for the card, scroll to it, flash a highlight, then navigate to the
+  // dedicated detail page (Stage 6 Option B).
+  function focusOrderFromQuery() {
+    var m = /[?&]order=([^&]+)/.exec(window.location.search || '');
+    if (!m) return;
+    var tempId;
+    try { tempId = decodeURIComponent(m[1]); } catch(_) { tempId = m[1]; }
+    try {
+      var params = (window.location.search || '').replace(/^\?/, '').split('&').filter(function(p) { return p && p.indexOf('order=') !== 0; });
+      window.history.replaceState(null, '', window.location.pathname + (params.length ? '?' + params.join('&') : ''));
+    } catch(_) {}
+    var tries = 0;
+    var timer = setInterval(function() {
+      tries++;
+      var card = null;
+      var cards = document.querySelectorAll('.order-card');
+      for (var i = 0; i < cards.length; i++) {
+        if (cards[i].getAttribute('data-temp-id') === tempId) { card = cards[i]; break; }
+      }
+      if (card) {
+        clearInterval(timer);
+        try { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(_) { try { card.scrollIntoView(); } catch(_) {} }
+        card.classList.add('order-card-focus');
+        setTimeout(function() { card.classList.remove('order-card-focus'); }, 2800);
+        // Stage 6 (Option B): navigate to dedicated detail page after scroll/flash
+        setTimeout(function() {
+          window.location.href = 'order_detail.html?order=' + encodeURIComponent(tempId);
+        }, 1200);
+      } else if (tries >= 20) {
+        clearInterval(timer); // order no longer pending (or list empty) — done
+      }
+    }, 250);
+  }
+  function openOrderDetail(tempId) {
+    var overlay = dom.ordersDetailOverlay;
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    overlay.classList.add('open');
+    renderOrderDetail(tempId);
+  }
+  function closeOrderDetail() {
+    var overlay = dom.ordersDetailOverlay;
+    if (!overlay) return;
+    overlay.style.display = 'none';
+    overlay.classList.remove('open');
+  }
+  function renderOrderDetail(tempId) {
+    var overlay = dom.ordersDetailOverlay;
+    if (!overlay) return;
+    TindaDB.getAllPreOrders().then(function(rows) {
+      var order = rows.find(function(r) { return r.tempId === tempId && r.status === 'pending'; });
+      if (!order) { closeOrderDetail(); showToast(t('ordersNoOrders'), 'error'); return; }
+      var titleEl = document.getElementById('ordersDetailTitle');
+      if (titleEl) titleEl.textContent = order.tempId;
+      var tempIdEl = document.getElementById('ordersDetailTempId');
+      if (tempIdEl) tempIdEl.textContent = order.tempId;
+      var itemsEl = document.getElementById('ordersDetailItems');
+      var items = order.items;
+      if (typeof items === 'string') { try { items = JSON.parse(items || '[]'); } catch(_) { items = []; } }
+      if (!Array.isArray(items)) items = [];
+      var itemsHtml = '';
+      items.forEach(function(it) {
+        var qty = Number(it.qty) || 0, price = Number(it.price) || 0;
+        itemsHtml += '<div class="order-line"><span>' + esc(qty) + '\u00D7 ' + esc(it.name || '') + '</span><span>\u20B1' + (price * qty).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span></div>';
+      });
+      if (itemsHtml === '') itemsHtml = '<div class="empty-state">No items</div>';
+      if (itemsEl) itemsEl.innerHTML = itemsHtml;
+      var totalEl = document.getElementById('ordersDetailTotal');
+      if (totalEl) totalEl.textContent = '\u20B1' + Number(order.totalAmount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      var metaEl = document.getElementById('ordersDetailMeta');
+      if (metaEl) { var pm = order.paymentMethod || 'cash', ps = order.paymentStatus || 'unpaid'; metaEl.textContent = t('ordersPaymentMethod').replace('{method}', pm.toUpperCase()) + ' \u00B7 ' + esc(ps); }
+      var noteEl = document.getElementById('ordersDetailNote');
+      if (noteEl) { if (order.customerNote) { noteEl.style.display = ''; noteEl.textContent = order.customerNote; } else { noteEl.style.display = 'none'; } }
+      var validateBtn = document.getElementById('ordersDetailValidateBtn');
+      if (validateBtn) validateBtn.onclick = function() { closeOrderDetail(); validatePreOrderWeb(tempId); };
+      var cancelBtn = document.getElementById('ordersDetailCancelBtn');
+      if (cancelBtn) cancelBtn.onclick = function() { closeOrderDetail(); cancelPreOrderWeb(tempId); };
+    }).catch(function(err) { showToast('Could not load order details: ' + (err.message || 'unknown'), 'error'); closeOrderDetail(); });
+  }
+  // Stage 6 (Option B): dedicated page render function for order_detail.html
+  function renderOrderDetailPage(tempId) {
+    console.log('[ORDER DETAIL DEBUG] Looking for tempId:', tempId);
+    TindaDB.getAllPreOrders().then(function(rows) {
+      console.log('[ORDER DETAIL DEBUG] Total orders fetched:', rows.length);
+      console.log('[ORDER DETAIL DEBUG] All orders:', rows);
+      var order = rows.find(function(r) { return r.tempId === tempId && r.status === 'pending'; });
+      console.log('[ORDER DETAIL DEBUG] Found order:', order);
+      if (!order) { window.location.href = 'backoffice/preorders.html'; showToast(t('ordersNoOrders'), 'error'); return; }
+      var tempIdEl = document.getElementById('orderDetailTempId');
+      if (tempIdEl) tempIdEl.textContent = order.tempId;
+      var itemsEl = document.getElementById('orderDetailItems');
+      var items = order.items;
+      if (typeof items === 'string') { try { items = JSON.parse(items || '[]'); } catch(_) { items = []; } }
+      if (!Array.isArray(items)) items = [];
+      var itemsHtml = '';
+      items.forEach(function(it) {
+        var qty = Number(it.qty) || 0, price = Number(it.price) || 0;
+        itemsHtml += '<div class="order-line"><span>' + esc(qty) + '\u00D7 ' + esc(it.name || '') + '</span><span>\u20B1' + (price * qty).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '</span></div>';
+      });
+      if (itemsHtml === '') itemsHtml = '<div class="empty-state">No items</div>';
+      if (itemsEl) itemsEl.innerHTML = itemsHtml;
+      var totalEl = document.getElementById('orderDetailTotal');
+      if (totalEl) totalEl.textContent = '\u20B1' + Number(order.totalAmount).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      var metaEl = document.getElementById('orderDetailMeta');
+      if (metaEl) { var pm = order.paymentMethod || 'cash', ps = order.paymentStatus || 'unpaid'; metaEl.textContent = t('ordersPaymentMethod').replace('{method}', pm.toUpperCase()) + ' \u00B7 ' + esc(ps); }
+      var noteEl = document.getElementById('orderDetailNote');
+      if (noteEl) { if (order.customerNote) { noteEl.style.display = ''; noteEl.textContent = order.customerNote; } else { noteEl.style.display = 'none'; } }
+      var validateBtn = document.getElementById('orderDetailValidateBtn');
+      if (validateBtn) validateBtn.onclick = function() { validatePreOrderWeb(tempId); };
+      var cancelBtn = document.getElementById('orderDetailCancelBtn');
+      if (cancelBtn) cancelBtn.onclick = function() { cancelPreOrderWeb(tempId); };
+    }).catch(function(err) { showToast('Could not load order: ' + (err.message || 'unknown'), 'error'); window.location.href = 'backoffice/preorders.html'; });
+  }
+  function validatePreOrderWeb(tempId) {
+    TindaDB.getPreOrderByTempId(tempId).then(function(order) {
+      if (!order) { showToast('Order not found', 'error'); renderOrdersInbox(); return; }
+      var total = Number(order.totalAmount) || 0;
+      var msg = t('ordersValidateConfirm').replace('{tempId}', order.tempId).replace('{amount}', '\u20B1' + total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      showConfirmModal(msg, t('ordersDetailTitle'), t('ordersValidate'), t('cancel'), 'success').then(function(ok) {
+        if (!ok) return;
+        validatePreOrderWebConfirmed(tempId, order);
+      });
+    }).catch(function(err) { showToast('Could not load order: ' + (err.message || 'unknown'), 'error'); });
+  }
+  async function validatePreOrderWebConfirmed(tempId, order) {
+    // v14.2: validate against the CLOUD catalog (mirror of orders/index.html).
+    // The QR order references the store's Supabase product ids — the prototype's
+    // local state.products (sample/local ids) never contains those rows, so the
+    // old local-only check always aborted with "No longer in catalog".
+    try {
+      var items = order.items;
+      if (typeof items === 'string') { try { items = JSON.parse(items || '[]'); } catch(_) { items = []; } }
+      if (!Array.isArray(items)) items = [];
+      if (typeof fetchValidateCatalog !== 'function') throw new Error('Sync helpers not loaded');
+      var cat = await fetchValidateCatalog(items.map(function(it) { return it.id; }));
+      var map = cat.map, missing = [], short = [], lines = [];
+      items.forEach(function(it) {
+        var productId = it.id, qty = Number(it.qty) || 0;
+        var product = map[String(productId)];
+        if (!product) { missing.push(it.name || 'Unknown'); return; }
+        if (product.quantity < qty) { short.push((it.name || 'Unknown') + ' (have ' + product.quantity + ')'); return; }
+        lines.push({ productId: productId, name: it.name || product.name || '', qty: qty, price: Number(it.price) || 0, costPrice: Number(product.costPrice) || 0 });
+      });
+      if (missing.length) { showToast('No longer in catalog: ' + missing.join(', '), 'error'); renderOrdersInbox(); return; }
+      if (short.length) { showToast('Not enough stock: ' + short.join(', '), 'error'); renderOrdersInbox(); return; }
+      var pay = order.paymentMethod;
+      if (pay !== 'cash' && pay !== 'gcash' && pay !== 'maya') pay = 'cash';
+      // Cloud writes in orders/'s order: sale lines -> stock decrement -> status.
+      if (typeof commitValidatedOrder !== 'function') throw new Error('Sync helpers not loaded');
+      await commitValidatedOrder(cat.sess, lines, pay);
+      await patchPreOrderStatus(order.id, 'fulfilled', 'paid');
+      // Local mirror: prototype reports (state.sales) keep reflecting the sale;
+      // local stock is only touched when the same product exists locally.
+      var transactionId = genId(), now = new Date().toISOString();
+      lines.forEach(function(line) {
+        var amount = line.qty * line.price, profit = (line.price - line.costPrice) * line.qty;
+        state.sales.push({ id: genId(), transactionId: transactionId, paymentMethod: pay, date: todayStr(), createdAt: now, productName: line.name, productId: line.productId, quantity: line.qty, amount: amount, costPrice: line.costPrice, profit: profit, customerName: null });
+        var product = state.products.find(function(p) { return String(p.id) === String(line.productId); });
+        if (product) product.quantity = Math.max(0, roundQty(product.quantity - line.qty));
+      });
+      saveState();
+      showToast(t('ordersFulfilledToast').replace('{tempId}', order.tempId), 'success');
+      if (pageName === 'order_detail') {
+        // Dedicated detail page: let the success toast read (2500ms), then auto-close.
+        setTimeout(function() { window.location.href = 'backoffice/preorders.html'; }, 2600);
+        return;
+      }
+      renderOrdersInbox();
+    } catch (err) {
+      showToast('Could not validate order: ' + (err.message || 'unknown'), 'error');
+      // Detail page has no inbox list, so this is a safe no-op there —
+      // the page intentionally stays open so the error stays visible.
+      renderOrdersInbox();
+    }
+  }
+  function cancelPreOrderWeb(tempId) {
+    TindaDB.getPreOrderByTempId(tempId).then(function(order) {
+      if (!order) { showToast('Order not found', 'error'); renderOrdersInbox(); return; }
+      var msg = t('ordersCancelConfirm').replace('{tempId}', order.tempId);
+      showConfirmModal(msg, t('ordersDetailTitle'), t('ordersCancel'), t('cancel')).then(function(ok) {
+        if (!ok) return;
+        cancelPreOrderWebConfirmed(tempId, order);
+      });
+    }).catch(function(err) { showToast('Could not load order: ' + (err.message || 'unknown'), 'error'); });
+  }
+  function cancelPreOrderWebConfirmed(tempId, order) {
+    patchPreOrderStatus(order.id, 'cancelled', order.paymentStatus || 'unpaid').then(function() {
+      showToast(t('ordersCancelToast').replace('{tempId}', order.tempId), 'success');
+      renderOrdersInbox();
+    }).catch(function(err) { showToast('Could not cancel order: ' + (err.message || 'unknown'), 'error'); renderOrdersInbox(); });
+  }
+  function renderOrdersBubble() {
+    var bubble = dom.ordersBubble;
+    if (!bubble) return;
+    if (pageName === 'setting') { bubble.style.display = 'none'; return; }
+    if (!bubble._ordersBubbleClickSetup) {
+      bubble._ordersBubbleClickSetup = true;
+      bubble.addEventListener('click', function() {
+        if (pageName === 'orders') { closeOrderDetail(); return; }
+        try { sessionStorage.setItem('sss_v3_ordersReturn', window.location.pathname + window.location.search); } catch(_) {}
+        window.location.href = 'backoffice/preorders.html';
+      });
+    }
+    TindaDB.getAllPreOrders().then(function(rows) {
+      var pending = rows.filter(function(r) { return r.status === 'pending'; });
+      var count = pending.length;
+      if (count === 0) { bubble.style.display = 'none'; return; }
+      bubble.style.display = '';
+      var badge = bubble.querySelector('.orders-bubble-badge');
+      if (badge) badge.textContent = String(count);
+    }).catch(function() { bubble.style.display = 'none'; });
   }
 
   // ============================================
@@ -7037,7 +7628,111 @@ saveState();
   window.applyBackupSettingsToDom = applyBackupSettingsToDom;
 
 
-  // Bridge: expose checkout taxonomy to window for checkout_morph.js (IIFE scope)
+  window.renderOrdersInbox = renderOrdersInbox;
+  window.checkForOrders = checkForOrders;
+  window.openOrderDetail = openOrderDetail;
+  window.renderOrderDetailPage = renderOrderDetailPage;
+  window.closeOrderDetail = closeOrderDetail;
+  window.validatePreOrderWeb = validatePreOrderWeb;
+  window.cancelPreOrderWeb = cancelPreOrderWeb;
+  window.renderOrdersBubble = renderOrdersBubble;
+  window.playOrdersChime = playOrdersChime;
+  window.ordersBack = ordersBack;
+  // ── Orders notifier (soundless, permission-gated, spam-aware) ──
+  // Runs on every page load. Polls pending pre-order count every 15s.
+  // First poll establishes a per-session high-water mark (no alert for orders
+  // already open when the page loaded). Subsequent polls fire ONE browser
+  // Notification (same tag, so it replaces itself — no stack) and play the
+  // orders chime ONCE when the count rises above the high-water mark.
+  // The chime is only triggered on non-orders pages; on the orders page
+  // checkForOrders already owns the chime, so the notifier stays quiet there.
+  (function ordersNotifier() {
+    var highWater = 0;
+    var permGranted = (function() {
+      try { return typeof Notification !== 'undefined' && Notification.permission === 'granted'; } catch(_) { return false; }
+    })();
+    var POLL_MS = 15000;
+    var ICON = 'img/TindaGo_logo.png';
+    var NOTIF_TAG = 'tindago-orders';
+    function syncPerm() {
+      try { if (typeof Notification !== 'undefined') permGranted = Notification.permission === 'granted'; } catch(_) { permGranted = false; }
+    }
+    function fmtTitle() {
+      try { return t('ordersTitle') || 'TindaGo'; } catch(_) { return 'TindaGo'; }
+    }
+    function countPending(rows) {
+      var n = 0;
+      if (rows && Array.isArray(rows)) { for (var i = 0; i < rows.length; i++) { if (rows[i].status === 'pending') n++; } }
+      return n;
+    }
+    function fire(c, rows) {
+      if (c <= 0) return;
+      syncPerm();
+      // Stage 2: newest pending order first — its tempId is the tap-through
+      // target for the ?order= deep link on backoffice/preorders.html.
+      var newestId = '';
+      if (rows && Array.isArray(rows)) {
+        var pendingRows = rows.filter(function(r) { return r && r.status === 'pending'; });
+        pendingRows.sort(function(a, b) { return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0); });
+        if (pendingRows.length) newestId = pendingRows[0].tempId || '';
+      }
+      if (permGranted) {
+        try {
+          var notif = new Notification(fmtTitle(), {
+            body: t('ordersNotifBody').replace('{n}', c),
+            icon: ICON,
+            tag: NOTIF_TAG,
+            requireInteraction: true
+          });
+          // Stage 2: tap the notification → focus this window and open the
+          // orders inbox scrolled to the newest pending order.
+          notif.onclick = function(ev) {
+            try { ev.preventDefault(); } catch(_) {}
+            var url = 'backoffice/preorders.html' + (newestId ? '?order=' + encodeURIComponent(newestId) : '');
+            try { window.focus(); } catch(_) {}
+            try { window.location.href = url; } catch(_) {}
+            try { notif.close(); } catch(_) {}
+          };
+        } catch(_) {}
+      }
+      if (pageName !== 'orders') {
+        try { playOrdersChime(); } catch(_) {}
+      }
+    }
+    var pullTick = 0;
+    function pullIfSignedIn() {
+      // v14.1: refresh the local pre_orders cache from the cloud so the
+      // notification/bubble can see NEW orders while the owner sits on any
+      // page (the cache is otherwise only refreshed on the orders page).
+      // ~every 60s (4 x 15s ticks); skipped on the orders page (its own 60s
+      // poll already pulls) and when signed out (no session = no traffic).
+      if (pageName === 'orders') return;
+      pullTick++;
+      if (pullTick % 4 !== 1) return;
+      try {
+        if (typeof resolveWebSession !== 'function') return;
+        resolveWebSession().then(function(sess) {
+          if (!sess) return;
+          if (typeof pullPreOrdersOnly === 'function') pullPreOrdersOnly().catch(function() {});
+        }).catch(function() {});
+      } catch(_) {}
+    }
+    function poll() {
+      pullIfSignedIn();
+      TindaDB.getAllPreOrders().then(function(rows) {
+        var c = countPending(rows);
+        if (c > highWater) { fire(c, rows); highWater = c; }
+        else if (c === 0) { highWater = 0; }
+        // v14.1: keep the orders-bubble badge current on every page that has
+        // the #ordersBubble markup (debts/inventory/restock ship it too).
+        try { renderOrdersBubble(); } catch(_) {}
+      }).catch(function() {});
+    }
+    // Establish high-water first (no alert for orders already on screen),
+    // then poll every 15s.
+    TindaDB.getAllPreOrders().then(function(rows) { highWater = countPending(rows); }).catch(function() { highWater = 0; });
+    setInterval(poll, POLL_MS);
+  })();  // Bridge: expose checkout taxonomy to window for checkout_morph.js (IIFE scope)
   try{window.PRODUCT_CATEGORIES=PRODUCT_CATEGORIES;}catch(e){}
   try{window.PRODUCT_SUBCATEGORIES=PRODUCT_SUBCATEGORIES;}catch(e){}
   try{window.PRODUCT_UNITS=PRODUCT_UNITS;}catch(e){}

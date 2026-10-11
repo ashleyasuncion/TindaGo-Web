@@ -25,16 +25,17 @@ function parsePreorderUrl() {
 }
 
 /**
- * Read the store's public profile (store_profiles) for the landing header.
- * Anonymous read is allowed by RLS (store_profiles_public_select).
- * Returns { store_name, address } or null if missing/error.
+ * Read the store's public profile (store_profiles) for the landing header and
+ * the Phase 6 C "Enable pre-ordering" gate. Anonymous read is allowed by RLS
+ * (store_profiles_public_select).
+ * Returns { store_name, address, is_preorder_enabled } or null if missing/error.
  */
 async function fetchStoreProfile(storeUid) {
     if (!storeUid) return null;
     try {
         const { data, error } = await sb
             .from('store_profiles')
-            .select('store_name, address')
+            .select('store_name, address, is_preorder_enabled')
             .eq('user_id', storeUid)
             .maybeSingle();
         if (error) { console.error('fetchStoreProfile:', error); return null; }
