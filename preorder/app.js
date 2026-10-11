@@ -8,6 +8,28 @@
 
 'use strict';
 
+// ── Ensure an anonymous Supabase session exists ──
+// Supabase requires a JWT for any write operation. Without a prior login,
+// an anonymous JWT ensures inserts carry the required Authorization header.
+async function ensureAnonSession() {
+    try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+            const { data, error } = await sb.auth.signInAnonymously();
+            if (error) {
+                console.error('Anonymous sign-in failed:', error);
+            } else {
+                console.info('Anonymous session established');
+            }
+        }
+    } catch (e) {
+        console.error('ensureAnonSession threw:', e);
+    }
+}
+
+// Call it immediately so all later inserts carry the JWT.
+ensureAnonSession();
+
 // ── Small DOM helpers (match backoffice style) ──
 function $(id) { return document.getElementById(id); }
 function esc(s) {
