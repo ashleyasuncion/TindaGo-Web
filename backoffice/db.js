@@ -355,6 +355,7 @@ const DB = {
             owner_name: p.ownerName || '',
             address: p.address || '',
             phone_display: p.phoneDisplay || '',
+            gcash_number: p.gcashNumber || '',
             store_code: (p.storeCode || '').trim(),
             is_preorder_enabled: !!p.isPreorderEnabled,
             updated_at: Date.now()

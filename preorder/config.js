@@ -70,14 +70,14 @@ async function syncStoreSlug(storeCode, storeUid) {
  * Read the store's public profile (store_profiles) for the landing header and
  * the Phase 6 C "Enable pre-ordering" gate. Anonymous read is allowed by RLS
  * (store_profiles_public_select).
- * Returns { store_name, address, is_preorder_enabled } or null if missing/error.
+ * Returns { store_name, address, is_preorder_enabled, gcash_number } or null if missing/error.
  */
 async function fetchStoreProfile(storeUid) {
     if (!storeUid) return null;
     try {
         const { data, error } = await sb
             .from('store_profiles')
-            .select('store_name, address, is_preorder_enabled')
+            .select('store_name, address, is_preorder_enabled, gcash_number')
             .eq('user_id', storeUid)
             .maybeSingle();
         if (error) { console.error('fetchStoreProfile:', error); return null; }

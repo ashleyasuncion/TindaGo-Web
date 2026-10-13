@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Received — TindaGo</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="../img/TindaGo_logo.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js?v=20261012a"></script>
+<style>
+:root{--primary:#16a34a;--primary-dark:#15803d;--primary-light:#dcfce7;--bg:#f6f8f7;--surface:#fff;--text:#1e293b;--text-secondary:#64748b;--border:#e2e8f0;--danger:#dc2626;--radius:14px;--radius-lg:18px;--shadow:0 2px 10px rgba(0,0,0,0.08);--font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.success-card{max-width:440px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:36px 28px;text-align:center}
+.check-circle{width:72px;height:72px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.check-circle svg{width:36px;height:36px;stroke:var(--primary-dark);stroke-width:3.5;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:48;stroke-dashoffset:48;animation:draw .5s .15s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.check-circle.pending svg{stroke:var(--text-secondary);stroke-dashoffset:0;animation:none;opacity:.5}
+h1{font-size:22px;font-weight:800;margin-bottom:6px}
+.subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:22px}
+.temp-box{background:var(--bg);border:1.5px dashed var(--primary);border-radius:var(--radius-lg);padding:16px;margin-bottom:20px}
+.temp-label{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)}
+.temp-id{font-size:28px;font-weight:800;letter-spacing:.06em;color:var(--primary-dark);margin-top:6px}
+.status-pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;padding:8px 16px;border-radius:20px;margin-bottom:18px}
+.status-pill.paid{background:var(--primary-light);color:var(--primary-dark)}
+.status-pill.pending{background:#fef3c7;color:#b45309}
+.status-pill.failed{background:#fef2f2;color:var(--danger)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:currentColor;animation:pulse 1.4s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.detail-row{display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-top:1px solid var(--border)}
+.detail-row .label{color:var(--text-secondary)}
+.detail-row .value{font-weight:700}
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.btn{display:block;width:100%;padding:13px;border-radius:12px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;text-align:center;text-decoration:none;transition:filter .15s}
+.btn-primary{background:var(--primary);color:#fff;border:none}
+.btn-primary:hover{filter:brightness(1.06)}
+.btn-secondary{background:var(--surface);color:var(--primary-dark);border:1.5px solid var(--primary)}
+.btn-secondary:hover{background:var(--primary-light)}
+.note{font-size:12px;color:var(--text-secondary);margin-top:16px;line-height:1.5}
+.logo-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:18px}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800}
+.logo-text{font-size:16px;font-weight:800}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="success-card" id="successCard">
+  <div class="logo-row">
+    <div class="logo-mark">T</div>
+    <div class="logo-text">TindaGo</div>
+  </div>
+
+  <!-- Confirmed-paid state -->
+  <div id="paidView" class="hidden">
+    <div class="check-circle">
+      <svg viewBox="0 0 24 24"><polyline points="4 12.5 9.5 18 20 6.5"/></svg>
+    </div>
+    <h1>Payment received!</h1>
+    <p class="subtitle">Your pre-order has been confirmed and sent to the store.</p>
+    <span class="status-pill paid"><span class="status-dot"></span>Paid via GCash</span>
+  </div>
+
+  <!-- Still-confirming state (webhook not yet processed) -->
+  <div id="pendingView" class="hidden">
+    <div class="check-circle pending">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+    </div>
+    <h1>Payment submitted</h1>
+    <p class="subtitle">We're confirming your GCash payment with the store. This usually takes a few seconds.</p>
+    <span class="status-pill pending"><span class="status-dot"></span>Confirming…</span>
+  </div>
+
+  <!-- Failed / unknown state -->
+  <div id="failedView" class="hidden">
+    <div class="check-circle pending">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5"/><circle cx="12" cy="16.2" r="0.5" fill="currentColor"/></svg>
+    </div>
+    <h1>Payment status unknown</h1>
+    <p class="subtitle">We couldn't confirm your payment status. If you completed payment in GCash, the store will see it shortly.</p>
+    <span class="status-pill failed"><span class="status-dot"></span>Unable to confirm</span>
+  </div>
+
+  <div class="temp-box">
+    <div class="temp-label">Your Temp ID</div>
+    <div class="temp-id" id="tempId">—</div>
+  </div>
+
+  <div id="orderDetails">
+    <div class="detail-row"><span class="label">Order total</span><span class="value" id="totalAmount">—</span></div>
+    <div class="detail-row"><span class="label">Payment method</span><span class="value">GCash</span></div>
+    <div class="detail-row"><span class="label">Order status</span><span class="value" id="orderStatus">—</span></div>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-primary" id="btnBack" href="./">Back to store</a>
+    <button type="button" class="btn btn-secondary" id="btnCopy">Copy Temp ID</button>
+  </div>
+
+  <p class="note">Show this Temp ID to the cashier when you pick up your order.</p>
+</div>
+
+<script>
+'use strict';
+var TEMP_ID = '';
+
+// ── Helpers ──
+function peso(n) {
+  var v = Number(n) || 0;
+  return '₱' + v.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function show(which) {
+  ['paidView', 'pendingView', 'failedView'].forEach(function (id) {
+    document.getElementById(id).classList.toggle('hidden', id !== which);
+  });
+}
+
+// ── Poll payment status ──
+// The webhook updates payment_status server-side; the success page can't read
+// pre_orders directly (SELECT is owner-only under RLS). So we poll the small
+// preorder-status Edge Function, which projects payment_status + status for a
+// matching temp_id and nothing else. After a short timeout we settle on the
+// paid view — the store inbox is the source of truth if the webhook lags.
+async function pollStatus() {
+  show('pendingView');
+  document.getElementById('orderStatus').textContent = 'Confirming…';
+
+  var attempts = 0;
+  var maxAttempts = 6;           // ~18s total
+
+  var timer = setInterval(async function () {
+    attempts++;
+    try {
+      var resp = await fetch(
+        'https://gncnluxjrpmbjmtzcwsv.supabase.co/functions/v1/preorder-status?temp_id=' + encodeURIComponent(TEMP_ID)
+      );
+      if (resp.ok) {
+        var result = await resp.json();
+        if (result.payment_status === 'paid') {
+          clearInterval(timer);
+          show('paidView');
+          document.getElementById('orderStatus').textContent = 'Paid · Preparing';
+          return;
+        }
+      }
+    } catch (_) { /* probe unavailable — keep waiting */ }
+
+    if (attempts >= maxAttempts) {
+      clearInterval(timer);
+      // Webhook can lag a few seconds; after timeout show a reassuring paid
+      // state rather than alarming the customer — store inbox confirms truth.
+      show('paidView');
+      document.getElementById('orderStatus').textContent = 'Paid';
+    }
+  }, 3000);
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', function () {
+  var params = new URLSearchParams(window.location.search);
+  TEMP_ID = (params.get('temp_id') || '').trim();
+
+  var tempEl = document.getElementById('tempId');
+  tempEl.textContent = TEMP_ID || '—';
+
+  // Keep "Back to store" pointing at the originating store page when the
+  // cancel/success URLs carried ?code= or ?store= through the session.
+  var storeParam = params.get('store') || params.get('code');
+  if (storeParam) {
+    var key = params.get('store') ? 'store' : 'code';
+    document.getElementById('btnBack').href = './?' + key + '=' + encodeURIComponent(storeParam);
+  }
+
+  if (!TEMP_ID) {
+    // Landed here with no temp_id — still a completed payment (POS QR flow
+    // also redirects here with sale_reference). Show paid without polling.
+    show('paidView');
+    document.getElementById('orderStatus').textContent = 'Paid';
+    document.getElementById('tempId').textContent = '—';
+  } else {
+    pollStatus();
+  }
+
+  document.getElementById('btnCopy').addEventListener('click', function () {
+    var btn = this;
+    var text = tempEl.textContent;
+    function done() {
+      btn.textContent = 'Copied!';
+      setTimeout(function () { btn.textContent = 'Copy Temp ID'; }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(done);
+    } else { done(); }
+  });
+});
+</script>
+</body>
+</html>

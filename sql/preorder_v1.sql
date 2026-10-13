@@ -118,7 +118,7 @@ returns table (
 $$
   select id, name, unit, selling_price, quantity, package_size, brand, category, subcategory
   from public.products
-  where user_id = p_store_uuid and quantity > 0
+  where user_id = p_store_uuid
   order by name asc;
 $$;
 
@@ -180,6 +180,17 @@ grant execute on function public.get_uid_by_slug(text) to anon, authenticated;
 -- ----------------------------------------------------------------------------
 alter table public.store_profiles
   add column if not exists store_code text not null default '';
+
+-- ----------------------------------------------------------------------------
+-- 4c. gcash_number on store_profiles — manual GCash intent (2026-10-13).
+--     The store owner's GCash mobile number shown to customers for MANUAL
+--     payment (the PayMongo automated flow is deactivated). Public select RLS
+--     already covers it: store_profiles_public_select reads the whole row, so
+--     anon customers see this number on the pre-order receipt. Writable only
+--     by the owner (store_profiles_owner_all) via the backoffice form.
+-- ----------------------------------------------------------------------------
+alter table public.store_profiles
+  add column if not exists gcash_number text not null default '';
 
 -- ============================================================================
 -- END Phase 6 (A) schema — idempotent, reversible:

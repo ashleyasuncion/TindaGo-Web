@@ -47,7 +47,8 @@ var state = {
     demo: false,
     storeName: 'TindaGo Store',
     storeAddress: '',
-    products: [],        // visible product list (stock > 0)
+    gcashNumber: '',
+    products: [],        // visible product list (ALL products incl. out-of-stock)
     isLoading: false,    // true while products are being fetched from Supabase
     cart: {},            // productId -> qty
     paymentMethod: 'cash',
@@ -139,6 +140,9 @@ function buildProductCardHTML(p) {
     var qty = Number(p.quantity) || 0;
     var out = qty <= 0;
     var inCart = cartQty(p.id);
+    var status = qty > 5 ? 'plenty' : (qty > 0 ? 'low' : 'out');
+    var statusText = qty > 5 ? 'In stock' : (qty > 0 ? qty + ' left' : 'Out of stock');
+
     return '<div class="product-card' + (out ? ' out' : '') + '">' +
         '<div class="product-info">' +
             '<div class="product-name">' + esc(p.name) + '</div>' +
@@ -147,7 +151,7 @@ function buildProductCardHTML(p) {
                 (p.package_size ? esc(p.package_size) + ' · ' : '') +
                 esc(p.unit || 'item') +
             '</div>' +
-            '<div class="product-stock">' + (out ? 'Out of stock' : qty + ' in stock') + '</div>' +
+            '<div class="status-badge status-' + status + '">' + statusText + '</div>' +
         '</div>' +
         '<div class="product-right">' +
             '<div class="product-price">' + peso(p.price) + '</div>' +
@@ -185,6 +189,76 @@ function renderProducts() {
     }
     renderList(state.products);
     buildCategoryOptions(state.products);
+}
+
+// ── Live stock refresh (2026-10-12) ──
+// The owner's app pushes inventory changes to Supabase within ~2 s of a
+// mutation (AppViewModel.scheduleInventoryPush → SyncRepository.syncProducts).
+// This page re-polls get_public_products every REFRESH_MS (and when the tab
+// becomes visible again) so the customer sees fresh stock without reloading.
+// The cart is re-clamped to the new quantities: an item that sold out drops
+// out of the cart, an item below the in-cart quantity shrinks to available.
+var REFRESH_MS = 20000;
+var refreshTimer = null;
+
+function clampCartToStock() {
+    var changed = false;
+    for (var k in state.cart) {
+        var p = getProduct(k);
+        var max = p ? Math.floor(Number(p.quantity) || 0) : 0;
+        if (state.cart[k] > max) {
+            state.cart[k] = max;
+            if (state.cart[k] <= 0) delete state.cart[k];
+            changed = true;
+        }
+    }
+    return changed;
+}
+
+async function refreshStock() {
+    if (state.demo || !state.storeUid || state.submitted) return;
+    var fresh = await fetchPublicProducts(state.storeUid);
+    // fetchPublicProducts returns [] on network/RLS error — treat an
+    // unexpected empty result as transient so a blip never blanks the menu.
+    if ((!fresh || fresh.length === 0) && state.products.length > 0) return;
+    var changed = JSON.stringify(fresh) !== JSON.stringify(state.products);
+    if (!changed) return;
+    state.products = fresh;
+    var cartChanged = clampCartToStock();
+    // Keep whatever panel is open in sync (menu list + steppers, review items,
+    // sticky bar totals).
+    if (!$('checkoutPanel').classList.contains('hidden')) {
+        if (cartChanged && cartCount() === 0) closeReview();
+        else renderReview();
+        showReviewError(cartChanged
+            ? 'Some items in your order just sold out — quantities were updated.'
+            : '');
+    } else {
+        rerender();
+    }
+    // If the customer was mid-cart on the menu, steppers re-render via
+    // rerender()/renderReview() with the clamped quantities.
+    if (cartChanged && $('checkoutPanel').classList.contains('hidden')) rerender();
+}
+
+function startStockRefresh() {
+    if (state.demo || refreshTimer) return;
+    refreshTimer = setInterval(function () {
+        // Pause while the tab is hidden — no point burning requests, and the
+        // visibilitychange handler below catches up the moment it's shown.
+        if (!document.hidden) refreshStock();
+    }, REFRESH_MS);
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) refreshStock();
+    });
+}
+
+function showReviewError(msg) {
+    var el = $('reviewError');
+    if (!el) return;
+    if (!msg) { el.classList.add('hidden'); el.textContent = ''; return; }
+    el.textContent = msg;
+    el.classList.remove('hidden');
 }
 
 // ── Search / category filter ──
@@ -453,6 +527,7 @@ function openReview() {
     $('menuSection').classList.add('hidden');
     $('checkoutPanel').classList.remove('hidden');
     $('summaryBar').classList.add('hidden');
+    showReviewError('');
     renderReview();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -553,17 +628,139 @@ function buildOrderPayload(tempId) {
         total_amount: Math.round(cartTotal() * 100) / 100,
         payment_method: state.paymentMethod,
         status: 'pending',
+        payment_status: 'unpaid',
         customer_note: ($('customerNote').value || '').trim(),
         created_at: Date.now(),
         expires_at: Date.now() + 24 * 60 * 60 * 1000   // 24h default
     };
 }
 
+// ── PayMongo GCash payment flow ──
+// Called by submitPreOrder when paymentMethod is 'gcash'. Creates a PayMongo
+// Checkout Session via the Edge Function, then redirects the customer to the
+// secure PayMongo payment page.
+async function processGcashPayment(tempId, payload) {
+    var total = cartTotal();
+    var lineItems = [];
+    var cartItems = [];
+    try { cartItems = JSON.parse(payload.items_json || '[]'); } catch (_) {}
+    for (var i = 0; i < cartItems.length; i++) {
+        var it = cartItems[i];
+        lineItems.push({
+            name: String(it.name || 'Item').substring(0, 80),
+            price: Math.round((Number(it.price) || 0) * 100) / 100,
+            qty: Number(it.qty) || 1
+        });
+    }
+
+    showGcashLoading();
+
+    try {
+        var resp = await fetch(
+            'https://gncnluxjrpmbjmtzcwsv.supabase.co/functions/v1/create-preorder-session',
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    totalAmount: total,
+                    tempId: tempId,
+                    storeUid: state.storeUid,
+                    items: lineItems
+                })
+            }
+        );
+
+        var result = await resp.json();
+
+        if (!resp.ok || result.error) {
+            throw new Error(result.error || 'Failed to create payment session');
+        }
+
+        // Redirect customer to PayMongo's secure checkout page
+        window.location.href = result.checkoutUrl;
+    } catch (e) {
+        console.error('processGcashPayment:', e);
+        $('receiptStatus').textContent = "Payment setup failed: " + (e.message || 'please try again.');
+        $('receiptStatus').className = 'receipt-status error';
+        state.submitted = false;
+        setTimeout(function () {
+            $('receiptPanel').classList.add('hidden');
+            $('checkoutPanel').classList.remove('hidden');
+            $('summaryBar').classList.remove('hidden');
+            renderReview();
+        }, 3000);
+    }
+}
+
+// Show a "Preparing payment…" state in the receipt panel while the Edge
+// Function call is in-flight.
+function showGcashLoading() {
+    $('receiptTempId').textContent = '—';
+    $('receiptStore').textContent = state.storeName || 'TindaGo Store';
+    $('receiptItems').innerHTML = '<div class="receipt-loading"><div class="loading-spinner"></div><p>Preparing your GCash payment…</p></div>';
+    $('reviewItems').innerHTML = '';
+    $('reviewTotal').textContent = '';
+    $('receiptTotal').textContent = peso(cartTotal());
+    $('receiptMethod').textContent = 'GCASH';
+    $('receiptTime').textContent = new Date().toLocaleString('en-PH', {
+        year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+    });
+    $('receiptStatus').textContent = 'Please wait…';
+    $('receiptStatus').className = 'receipt-status';
+    $('receiptPanel').classList.remove('hidden');
+    $('checkoutPanel').classList.add('hidden');
+    $('summaryBar').classList.add('hidden');
+}
+
 async function submitPreOrder() {
     state.submitted = true;
     $('checkoutPanel').classList.add('hidden');
-    $('summaryBar').classList.add('hidden'); // review/receipt own the screen now
+    $('summaryBar').classList.add('hidden');
     $('receiptPanel').classList.remove('hidden');
+    $('receiptStatus').textContent = 'Checking stock…';
+
+    // Order-time stock validation (2026-10-12): re-fetch the CURRENT stock
+    // right before writing the order. Between menu render and Place Order the
+    // owner's app may have sold the last units (or, in demo mode, nothing
+    // changed). Blocking here prevents orders that can't be fulfilled.
+    // Fails OPEN (lets the order through) only when offline/no response — but
+    // the review panel stays the source of truth for the in-cart stock caps.
+    if (!state.demo) {
+        var latest = await fetchPublicProducts(state.storeUid);
+        if (latest && latest.length) {
+            var byId = {};
+            for (var li = 0; li < latest.length; li++) {
+                byId[String(latest[li].id)] = Math.floor(Number(latest[li].quantity) || 0);
+            }
+            var problems = [];
+            for (var k in state.cart) {
+                var prod = getProduct(k);
+                var want = state.cart[k];
+                var have = byId[k] != null ? byId[k] : 0;
+                if (want > have) {
+                    problems.push((prod ? prod.name : k) + ': only ' + have + ' left');
+                    // Clamp so the customer can place a valid reduced order.
+                    if (have <= 0) delete state.cart[k];
+                    else state.cart[k] = have;
+                }
+            }
+            if (problems.length) {
+                // Bounce back to review with the clamped cart + explanation.
+                state.submitted = false;
+                state.products = latest;
+                $('receiptPanel').classList.add('hidden');
+                $('checkoutPanel').classList.remove('hidden');
+                if (cartCount() === 0) {
+                    showReviewError('Sorry — those items just sold out: ' + problems.join('; '));
+                } else {
+                    showReviewError('Stock changed while you were ordering. Updated quantities: ' + problems.join('; '));
+                }
+                rerender();
+                return;
+            }
+            state.products = latest;
+        }
+    }
     $('receiptStatus').textContent = 'Saving your order…';
 
     var tempId = randomTempId();
@@ -576,15 +773,16 @@ async function submitPreOrder() {
         return;
     }
 
-    // Real mode: insert into pre_orders (anonymous INSERT is allowed by RLS
-    // policy). No .select() — that would try to read the row back, which anon
-    // can't (pre_orders_is_owner requires auth.uid() = user_id) and would fail
-    // the whole insert with a 401 even though the write succeeded.
+    // Real mode: write the order through the SECURITY DEFINER RPC
+    // place_preorder(p_payload jsonb). We MUST wrap the entire order object
+    // inside the parameter name { p_payload: … } so the JS client maps it to
+    // the single function argument instead of trying to map the object keys
+    // to multiple SQL arguments.
+    var payload;
     try {
-        var payload = buildOrderPayload(tempId);
-        var res = await sb.from('pre_orders').insert([payload]);
+        payload = buildOrderPayload(tempId);
+        var res = await sb.rpc('place_preorder', { p_payload: payload });
         if (res.error) throw new Error(res.error.message);
-        showReceipt(payload, false);
     } catch (e) {
         console.error('submitPreOrder:', e);
         $('receiptStatus').textContent = "Sorry, we couldn't save your order. Please try again.";
@@ -596,7 +794,18 @@ async function submitPreOrder() {
             $('receiptPanel').classList.add('hidden');
             renderReview();
         }, 2500);
+        return;
     }
+
+    // ── GCash path: bypassed for manual instructions ──
+    if (state.paymentMethod === 'gcash') {
+        // Automation deactivated: show the manual instructions receipt panel
+        showReceipt(payload, false);
+        return;
+    }
+
+    // ── Cash path: show the receipt immediately ──
+    showReceipt(payload, false);
 }
 
 function showReceipt(order, isDemo) {
@@ -622,9 +831,28 @@ function showReceipt(order, isDemo) {
     $('receiptTime').textContent = new Date(order.created_at).toLocaleString('en-PH', {
         year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
     });
-    $('receiptStatus').textContent = isDemo
+
+    // Manual GCash instructions
+    var gcashInstructions = $('gcashManualInstructions');
+    if (gcashInstructions) {
+        if (order.payment_method === 'gcash' && state.gcashNumber) {
+            $('gcashDisplayNumber').textContent = state.gcashNumber;
+            gcashInstructions.classList.remove('hidden');
+            if (!isDemo) {
+                console.log('GCash automated checkout deactivated — customer pays manually to ' + state.gcashNumber);
+            }
+        } else {
+            gcashInstructions.classList.add('hidden');
+        }
+    }
+
+    var statusMsg = isDemo
         ? 'DEMO order — not saved to the store'
         : 'Order received! Show this Temp ID to the cashier.';
+    if (order.payment_method === 'gcash' && state.gcashNumber) {
+        statusMsg = 'Order received! Pay via GCash manually using the number above, then show this Temp ID to the cashier.';
+    }
+    $('receiptStatus').textContent = statusMsg;
     $('receiptStatus').className = 'receipt-status' + (isDemo ? ' demo' : ' success');
 
     if (isDemo) {
@@ -712,11 +940,19 @@ async function init() {
         }
     }
 
-    // DEV_FALLBACK: if no ?store= param in URL, try localStorage
+    // DEV_FALLBACK: if no ?store= param in URL, try localStorage.
+    // Wrapped in try/catch: incognito / privacy mode may block storage and
+    // throw SecurityError, which would otherwise kill the app before any
+    // Supabase call.
     if (!state.storeUid) {
-        var lsUid = localStorage.getItem('DEV_STORE_UID');
-        if (lsUid) {
-            state.storeUid = lsUid;
+        try {
+            var lsUid = localStorage.getItem('DEV_STORE_UID');
+            if (lsUid) {
+                state.storeUid = lsUid;
+            }
+        } catch (_) {
+            // storage blocked (e.g. incognito) — silently fall through;
+            // user enters store code via URL if needed.
         }
     }
 
@@ -782,6 +1018,25 @@ async function init() {
         renderReview();
     });
     $('copyBtn').addEventListener('click', copyTempId);
+    if ($('gcashDisplayNumber')) {
+        $('gcashDisplayNumber').setAttribute('data-copy', state.gcashNumber || '');
+        $('copyGcashBtn').addEventListener('click', function () {
+            var text = this.parentElement.querySelector('[data-copy]').textContent.trim();
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    var btn = $('copyGcashBtn');
+                    btn.textContent = 'Copied!';
+                    setTimeout(function () { btn.textContent = 'Copy'; }, 1500);
+                });
+            } else {
+                // Fallback: select the text (for older browsers)
+                var range = document.createRange();
+                range.selectNode(this.parentElement.querySelector('[data-copy]'));
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+            }
+        });
+    }
     $('btnNewOrder').addEventListener('click', function () { window.location.reload(); });
 
     if (state.demo) {
@@ -802,14 +1057,17 @@ async function init() {
     if (profile && profile.store_name) {
         state.storeName = profile.store_name;
         state.storeAddress = profile.address || '';
+        state.gcashNumber = profile.gcash_number || '';
     }
 
     var all = await fetchPublicProducts(state.storeUid);
-    state.products = all.filter(function (p) { return Number(p.quantity) > 0; });
+    state.products = all;
     state.isLoading = false;
 
-    // Show landing page (handles pre-order enabled/disabled)
+    // Show landing page (handles pre-order enabled/disabled) and start the
+    // live-stock background refresh (20s interval + on-tab-visible).
     enterLanding(profile);
+    startStockRefresh();
 }
 
 if (document.readyState === 'loading') {

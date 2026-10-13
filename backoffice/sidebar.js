@@ -18,6 +18,7 @@
     { href: 'dashboard.html', label: 'Dashboard' },
     { href: 'products.html', label: 'Products' },
     { href: 'reports.html', label: 'Reports' },
+    { href: 'sales.html', label: 'Sales' },
     { href: 'debts.html', label: 'Debts' },
     { href: 'expenses.html', label: 'Expenses' },
     { href: 'restock.html', label: 'Restock' },
