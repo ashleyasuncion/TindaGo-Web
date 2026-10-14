@@ -20,6 +20,32 @@ function peso(n) {
     return '₱' + v.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// ── Fractional quantity support (mobile POS parity, 2026-10-14) ──
+// Decision A: kg/g/L/ml step by 0.25; every other unit by 1. These mirror the
+// Android helpers in data/Models.kt (isFractionalUnit/stepFor/minFor/parseQty/
+// roundQty/formatQty/snapQty) that back the POS checkout page so the customer
+// page and the store behave identically on fractional goods (e.g. 0.5 kg rice).
+// ''  → nothing typed: caller supplies the fallback (minFor).
+// '1.' → "one point" mid-typing: keep the trailing dot so the customer can type
+//   a decimal instead of the value snapping under their cursor.
+function isFractionalUnit(u) { if (!u) return false; var s = String(u).trim().toLowerCase(); return s === 'kg' || s === 'g' || s === 'l' || s === 'ml'; }
+function stepFor(u) { return isFractionalUnit(u) ? 0.25 : 1; }
+function minFor(u) { return isFractionalUnit(u) ? 0.25 : 1; }
+function roundQty(q) { return Math.round(Number(q) * 100) / 100; }
+function parseQty(v, fb) { var n = parseFloat(v); if (isNaN(n) || !isFinite(n)) return fb; return roundQty(n); }
+function formatQty(q) {
+    var r = roundQty(q);
+    if (r % 1 === 0) return String(r);
+    var s = r.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+    return s;
+}
+function snapQty(qty, unit) {
+    var step = stepFor(unit), min = minFor(unit);
+    if (qty < min) return roundQty(min);
+    var steps = Math.round((qty - min) / step);
+    return roundQty(min + steps * step);
+}
+
 // ── Temp ID generation: TGO- + 5 chars from an unambiguous alphabet ──
 var TEMP_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; // no 0/O, 1/I/L
 function randomTempId() {
@@ -54,6 +80,48 @@ var state = {
     paymentMethod: 'cash',
     submitted: false
 };
+
+// -------------------------------------------------------------------
+// AFK / idle timeout configuration (only active while receipt is shown)
+// -------------------------------------------------------------------
+const IDLE_TIMEOUT_MS = 30_000;          // 30 seconds
+let idleTimerId = null;                 // timer handle
+let idleActive = false;                 // true while receipt panel is visible
+
+/** Start (or restart) the idle timer. Called whenever the receipt becomes visible
+ *  or when the user performs any activity while the receipt is visible. */
+function restartIdleTimer() {
+    if (!idleActive) return;
+    if (idleTimerId !== null) {
+        clearTimeout(idleTimerId);
+    }
+    idleTimerId = setTimeout(() => {
+        // Timer fired → go back to the landing view, clear state
+        idleActive = false;
+        idleTimerId = null;
+        state.cart = {};
+        state.submitted = false;
+        state.paymentMethod = 'cash';
+        selectPayment('cash');
+        // Reset panel visibility exactly like btnNewOrder, so Shop Now after AFK
+        // lands on the product menu — not the stale receipt.
+        $('receiptPanel').classList.add('hidden');
+        $('checkoutPanel').classList.add('hidden');
+        $('menuSection').classList.remove('hidden');
+        $('summaryBar').classList.remove('hidden');
+        // Show landing view (null profile for demo/unknown store)
+        enterLanding(null);
+    }, IDLE_TIMEOUT_MS);
+}
+
+/** Stop the timer completely – used when the user leaves the receipt (e.g., clicks "Place another order"). */
+function clearIdleTimer() {
+    if (idleTimerId !== null) {
+        clearTimeout(idleTimerId);
+        idleTimerId = null;
+    }
+    idleActive = false;
+}
 
 // ── Landing page (entry gate shown after QR scan, before catalog) ──
 var LANDING_HINT_DEFAULT = "Tap Shop Now to view this store's menu and order ahead for pickup.";
@@ -125,6 +193,14 @@ function cartTotal() {
     return sum;
 }
 
+// Maximum purchasable qty of a product: stock, floored to the nearest whole
+// unit for fractional goods too (a 1.5 kg stock still caps at 1.0 — the POS
+// uses the same Math.floor cap on addToCart/clampCartToStock).
+function cartMaxQty(p) {
+    if (!p) return 0;
+    return Math.max(0, Math.floor(Number(p.quantity) || 0));
+}
+
 // ── Render ──
 function renderHeader() {
     $('storeName').textContent = state.storeName || 'TindaGo Store';
@@ -160,7 +236,7 @@ function buildProductCardHTML(p) {
                 : inCart > 0
                     ? '<div class="stepper" data-id="' + esc(p.id) + '">' +
                         '<button type="button" class="step-btn" data-step="-1" aria-label="Decrease">−</button>' +
-                        '<span class="step-qty">' + inCart + '</span>' +
+                        '<span class="step-qty" contenteditable="true" spellcheck="false" data-editable-qty="' + esc(p.id) + '">' + esc(formatQty(inCart)) + '</span>' +
                         '<button type="button" class="step-btn" data-step="1" aria-label="Increase">+</button>' +
                       '</div>'
                     : '<button type="button" class="btn-add" data-add="' + esc(p.id) + '">Add</button>') +
@@ -205,7 +281,7 @@ function clampCartToStock() {
     var changed = false;
     for (var k in state.cart) {
         var p = getProduct(k);
-        var max = p ? Math.floor(Number(p.quantity) || 0) : 0;
+        var max = p ? cartMaxQty(p) : 0;
         if (state.cart[k] > max) {
             state.cart[k] = max;
             if (state.cart[k] <= 0) delete state.cart[k];
@@ -228,8 +304,11 @@ async function refreshStock() {
     // Keep whatever panel is open in sync (menu list + steppers, review items,
     // sticky bar totals).
     if (!$('checkoutPanel').classList.contains('hidden')) {
+        // Refresh the pool even while a qty is being edited, but don't rebuild
+        // the review list (it would blur the in-progress input) — totals above
+        // the list are kept in sync by the live `input` listener regardless.
         if (cartChanged && cartCount() === 0) closeReview();
-        else renderReview();
+        else if (!qtyEditing()) renderReview();
         showReviewError(cartChanged
             ? 'Some items in your order just sold out — quantities were updated.'
             : '');
@@ -308,6 +387,9 @@ function renderSummary() {
 }
 
 function rerender() {
+    // Skip while the customer is mid-typing a quantity (contenteditable span)
+    // so the rebuild can't destroy focus/selection mid-decimal.
+    if (qtyEditing()) { renderSummary(); return; }
     applyFilter();
     renderSummary();
 }
@@ -553,7 +635,7 @@ function renderReview() {
                 '<div class="review-item-right">' +
                     '<div class="stepper" data-id="' + esc(p.id) + '">' +
                         '<button type="button" class="step-btn" data-step="-1" aria-label="Decrease">−</button>' +
-                        '<span class="step-qty">' + qty + '</span>' +
+                        '<span class="step-qty" contenteditable="true" spellcheck="false" data-editable-qty="' + esc(p.id) + '">' + esc(formatQty(qty)) + '</span>' +
                         '<button type="button" class="step-btn" data-step="1" aria-label="Increase">+</button>' +
                     '</div>' +
                     '<div class="review-item-total">' + peso((p.price || 0) * qty) + '</div>' +
@@ -578,19 +660,83 @@ function renderReview() {
 }
 
 // Add/remove from cart (respect stock)
-function addToCart(id) {
+function setQty(id, newQty) {
     var p = getProduct(id);
     if (!p) return;
-    var max = Math.floor(Number(p.quantity) || 0);
-    var cur = cartQty(id);
-    if (cur >= max) return; // at stock cap
-    state.cart[String(id)] = cur + 1;
-    rerender();
+    var max = cartMaxQty(p);
+    var min = minFor(p.unit);
+    var clamped = Math.max(min, Math.min(newQty, max));
+    var snapped = snapQty(clamped, p.unit);
+    if (snapped <= 0) delete state.cart[String(id)];
+    else state.cart[String(id)] = snapped;
+    // After a direct set we need to re-render the appropriate panel:
+    if ($('checkoutPanel').classList.contains('hidden')) {
+        // still in menu view
+        rerender();
+    } else {
+        renderReview();
+    }
 }
-function removeFromCart(id) {
-    state.cart[String(id)] = Math.max(0, cartQty(id) - 1);
-    if (state.cart[String(id)] === 0) delete state.cart[String(id)];
-    rerender();
+
+function adjustQty(id, delta) {
+    var p = getProduct(id);
+    if (!p) return;
+    var cur = cartQty(id);
+    var step = stepFor(p.unit);
+    setQty(id, cur + delta * step);
+}
+
+// Backward‑compatible wrappers for the old button clicks (they now use the step grid)
+function addToCart(id) { adjustQty(id, 1); }
+function removeFromCart(id) { adjustQty(id, -1); }
+
+// ── Editable quantity spans (numeric input parity with the mobile POS) ──
+// Each order/display qty keeps the original <span class="step-qty"> look
+// (unchanged UI) but is contenteditable, so a customer can tap the number and
+// type a quantity directly — including decimals (0.5 kg rice). Commits on
+// Enter or on blur (tap-away); Esc cancels. Content is parsed, snapped to the
+// unit's step grid and clamped to stock exactly like the POS checkout.
+function isEditableQty(el) {
+    return !!(el && el.getAttribute && el.getAttribute('data-editable-qty') !== null);
+}
+
+function commitEditableQty(span) {
+    var id = span.getAttribute('data-editable-qty');
+    if (!id) return;
+    var p = getProduct(id);
+    if (!p) return;
+    var raw = String(span.textContent || '').replace(/ /g, ' ').trim();
+    setQty(id, parseQty(raw, minFor(p.unit)));
+}
+
+function wireEditableQty() {
+    // input → live totals only; the committed cart value is written on blur/Enter.
+    document.addEventListener('input', function (e) {
+        if (isEditableQty(e.target)) renderSummary();
+    });
+    document.addEventListener('keydown', function (e) {
+        var t = e.target;
+        if (!isEditableQty(t)) return;
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            commitEditableQty(t);
+            t.blur();
+        } else if (e.key === 'Escape') {
+            t.blur();
+        }
+    });
+    // blur/focusout don't bubble — capture phase so it fires on the span itself.
+    document.addEventListener('blur', function (e) {
+        if (isEditableQty(e.target)) commitEditableQty(e.target);
+    }, true);
+}
+
+// While a customer is mid-typing, skip full re-renders (e.g. the 20s live-stock
+// refresh rebuilding the card list) so the focus/selection isn't destroyed.
+// The committed value re-renders on blur/Enter.
+function qtyEditing() {
+    var el = document.activeElement;
+    return isEditableQty(el);
 }
 
 // ── Payment method ──
@@ -862,6 +1008,10 @@ function showReceipt(order, isDemo) {
         var tempIdEl = $('receiptTempId');
         if (tempIdEl) tempIdEl.parentNode.appendChild(badge);
     }
+
+    // AFK idle timeout: receipt is now visible → start the 30s countdown
+    idleActive = true;
+    restartIdleTimer();
 }
 
 // ── Copy Temp ID ──
@@ -983,6 +1133,7 @@ async function init() {
     }
 
     // Wire static UI
+    wireEditableQty();
     renderSummary();
     selectPayment('cash');
     wireCategorySearch();
@@ -1037,7 +1188,22 @@ async function init() {
             }
         });
     }
-    $('btnNewOrder').addEventListener('click', function () { window.location.reload(); });
+        $('btnNewOrder').addEventListener('click', function () {
+        // Reset state in-place instead of reloading the page — avoids forcing
+        // the customer back through the landing gate (enterLanding) on every
+        // new order. Mirrors the web POS resetSaleForm pattern.
+        clearIdleTimer();          // user is explicitly continuing → cancel AFK timeout
+        state.cart = {};
+        state.submitted = false;
+        state.paymentMethod = 'cash';
+        selectPayment('cash');
+        $('receiptPanel').classList.add('hidden');
+        $('checkoutPanel').classList.add('hidden');
+        $('menuSection').classList.remove('hidden');
+        $('summaryBar').classList.remove('hidden');
+        rerender();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
     if (state.demo) {
         state.storeName = 'Demo Store';
@@ -1069,6 +1235,16 @@ async function init() {
     enterLanding(profile);
     startStockRefresh();
 }
+
+// -----------------------------------------------------------------
+// Global activity listeners – restart the AFK timer on any user activity
+// (only meaningful while idleActive === true, i.e., receipt is visible)
+// -----------------------------------------------------------------
+['mousemove', 'keydown', 'touchstart', 'click', 'scroll'].forEach(function (ev) {
+    document.addEventListener(ev, function () {
+        if (idleActive) restartIdleTimer();
+    }, { passive: true });
+});
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () { init().catch(console.error); });
