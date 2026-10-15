@@ -411,7 +411,7 @@ var PRODUCT_SUBCATEGORIES = {
     instant_dry_goods: ['instant_noodles','cup_noodles','pasta','soup_mixes'],
     snacks_sweets:     ['chips','crackers','candies','chocolates','cookies'],
     beverages:         ['coffee_mix','powdered_milk','chocolate_drink','juice','soft_drinks','bottled_water'],
-    dairy_refrigerated:['cheese','butter','margarine','chilled_meats'],
+    dairy_refrigerated:['cheese','butter','margarine','chilled_meats','ice_cream'],
     fresh_section:     ['fresh_meat','fresh_seafood','fruits','vegetables','eggs'],
     liquor_wine:       ['beer','gin','brandy','wine','cigarettes'],
     personal_care:     ['shampoo','conditioner','bath_soap','toothpaste','toothbrush','lotion','cosmetics'],
@@ -425,7 +425,7 @@ var SUB_LABELS = {
     instant_noodles:'Instant Noodles',cup_noodles:'Cup Noodles',pasta:'Pasta',soup_mixes:'Soup Mixes',
     chips:'Chips',crackers:'Crackers',candies:'Candies',chocolates:'Chocolates',cookies:'Cookies',
     coffee_mix:'Coffee Mix',powdered_milk:'Powdered Milk',chocolate_drink:'Chocolate Drink',juice:'Juice',soft_drinks:'Soft Drinks',bottled_water:'Bottled Water',
-    cheese:'Cheese',butter:'Butter',margarine:'Margarine',chilled_meats:'Chilled Meats',
+    cheese:'Cheese',butter:'Butter',margarine:'Margarine',chilled_meats:'Chilled Meats',ice_cream:'Ice Cream',
     fresh_meat:'Fresh Meat',fresh_seafood:'Fresh Seafood',fruits:'Fruits',vegetables:'Vegetables',eggs:'Eggs',
     beer:'Beer',gin:'Gin',brandy:'Brandy',wine:'Wine',cigarettes:'Cigarettes',
     shampoo:'Shampoo',conditioner:'Conditioner',bath_soap:'Bath Soap',toothpaste:'Toothpaste',toothbrush:'Toothbrush',lotion:'Lotion',cosmetics:'Cosmetics',
@@ -1206,9 +1206,20 @@ async function init() {
     });
 
     if (state.demo) {
+        // Demo mode loads the full embedded catalog (preorder/products.json —
+        // 212-item store catalog, same schema as DEMO_PRODUCTS). Falls back to
+        // the small built-in list if the file is missing (e.g. file:// opened
+        // where fetch is restricted), so demo never shows an empty store.
         state.storeName = 'Demo Store';
         state.storeAddress = 'Sample address for demo mode';
-        state.products = DEMO_PRODUCTS.slice();
+        try {
+            var resp = await fetch('products.json', { cache: 'no-store' });
+            if (resp.ok) {
+                var data = await resp.json();
+                if (Array.isArray(data) && data.length) state.products = data;
+            }
+        } catch (_) { /* file:// or offline — fall through to DEMO_PRODUCTS */ }
+        if (!state.products.length) state.products = DEMO_PRODUCTS.slice();
         // Show landing page (pre-ordering always enabled in demo)
         enterLanding(null);
         return;

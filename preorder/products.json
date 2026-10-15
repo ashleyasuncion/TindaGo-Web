@@ -209,4 +209,8 @@
  {"id":"33","name":"Young’s Town Sardines","unit":"can","price":22.5,"quantity":20,"package_size":"155g","brand":"Young’s Town","category":"canned_goods","subcategory":"sardines"}, 
  {"id":"151","name":"Zesto Orange Juice","unit":"bottle","price":71.5,"quantity":20,"package_size":"1L","brand":"Zesto","category":"beverages","subcategory":"juice"}, 
  {"id":"202","name":"Zonrox Bleach","unit":"bottle","price":93.5,"quantity":20,"package_size":"1L","brand":"Zonrox","category":"household_care","subcategory":"cleaners"}, 
- {"id":"201","name":"Zonrox Dishwashing","unit":"sachet","price":31.9,"quantity":20,"package_size":"170mL","brand":"Zonrox","category":"household_care","subcategory":"dishwashing"}]
+ {"id":"201","name":"Zonrox Dishwashing","unit":"sachet","price":31.9,"quantity":20,"package_size":"170mL","brand":"Zonrox","category":"household_care","subcategory":"dishwashing"},
+  {"id":"ice-001","name":"Selecta Classic Vanilla Ice Cream","unit":"kg","price":120,"quantity":20,"package_size":"1L","brand":"Selecta","category":"dairy_refrigerated","subcategory":"ice_cream"},
+  {"id":"ice-002","name":"Mango Sorbet - Magnolia","unit":"kg","price":150,"quantity":15,"package_size":"0.5L","brand":"Magnolia","category":"dairy_refrigerated","subcategory":"ice_cream"},
+  {"id":"ice-003","name":"Nestlé Drumstick Caramel","unit":"kg","price":180,"quantity":12,"package_size":"0.5L","brand":"Nestlé","category":"dairy_refrigerated","subcategory":"ice_cream"},
+  {"id":"ice-004","name":"Halo-Halo Ice Cream (Ube) - Selecta","unit":"kg","price":190,"quantity":10,"package_size":"0.5L","brand":"Selecta","category":"dairy_refrigerated","subcategory":"ice_cream"}]

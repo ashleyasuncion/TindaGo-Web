@@ -95,7 +95,7 @@
     <p class="hint">This is what customers see on <code>preorder/?store=…</code> before they order.</p>
     <div class="form-grid">
       <div class="form-group full">
-        <label for="fName">Store name</label>
+        <label for="fName">Store name *</label>
         <input id="fName" class="form-input" placeholder="My Store" maxlength="60">
       </div>
       <div class="form-group full">
@@ -116,9 +116,9 @@
         <input id="fPhone" class="form-input" placeholder="e.g. 0917 123 4567" maxlength="40">
       </div>
       <div class="form-group">
-        <label for="fGcash">GCash number</label>
+        <label for="fGcash">GCash number *</label>
         <input id="fGcash" class="form-input" placeholder="e.g. 0917 123 4567" maxlength="40">
-        <div class="hint" style="margin:4px 0 0">Shown to customers for manual GCash payment. Leave blank to hide GCash instructions.</div>
+        <div class="hint" style="margin:4px 0 0">Shown to customers for manual GCash payment.</div>
       </div>
       <div class="form-group full switch-row">
         <div>
@@ -296,6 +296,9 @@
       clearBanners();
       const name = $('fName').value.trim();
       if (!name) { showError('Store name is required.'); return; }
+      const gcash = $('fGcash').value.trim();
+      if (!gcash) { showError('GCash number is required.'); return; }
+
       setSaving(true);
       try {
         const row = await DB.upsertStoreProfile({
@@ -303,7 +306,7 @@
           ownerName: $('fOwner').value.trim(),
           address: $('fAddress').value.trim(),
           phoneDisplay: $('fPhone').value.trim(),
-          gcashNumber: $('fGcash').value.trim(),
+          gcashNumber: gcash,
           storeCode: $('fCode').value.trim(),
           isPreorderEnabled: $('fEnabled').checked
         });
