@@ -159,6 +159,7 @@ function enterLanding(profile) {
     $('landingView').classList.remove('hidden');
     $('appView').classList.add('hidden');
     $('errorView').classList.add('hidden');
+    updateBackToTop();
 }
 
 function exitLanding() {
@@ -168,6 +169,7 @@ function exitLanding() {
     buildCategoryOptions(state.products);
     applyFilter();
     renderSummary();
+    updateBackToTop();
 }
 
 // Quick lookup by product id
@@ -609,6 +611,7 @@ function openReview() {
     $('menuSection').classList.add('hidden');
     $('checkoutPanel').classList.remove('hidden');
     $('summaryBar').classList.add('hidden');
+    updateBackToTop();
     showReviewError('');
     renderReview();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -618,6 +621,46 @@ function closeReview() {
     $('menuSection').classList.remove('hidden');
     $('summaryBar').classList.remove('hidden');
     renderSummary();
+    updateBackToTop();
+}
+
+// ── Back-to-top button (menu view; parity with inventory .back-to-top) ──
+// Shown only while #appView AND #menuSection are visible and the search area
+// (#searchControl) has scrolled out of the window viewport. IO feeds the flag;
+// updateBackToTop() applies the view gate so review/receipt/landing/error
+// states can never show a stray button (display:none containers report
+// isIntersecting:false).
+var searchOutOfView = false;
+
+function updateBackToTop() {
+    var btn = $('backToTopBtn');
+    if (!btn) return;
+    var appHidden = $('appView').classList.contains('hidden');
+    var menuHidden = $('menuSection').classList.contains('hidden');
+    btn.classList.toggle('hidden', !searchOutOfView || appHidden || menuHidden);
+}
+
+function wireBackToTop() {
+    var btn = $('backToTopBtn');
+    var anchor = $('searchControl');
+    if (!btn || !anchor) return;
+    btn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });   // same call style as openReview/btnNewOrder
+    });
+    if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+            searchOutOfView = !entries[0].isIntersecting;
+            updateBackToTop();
+        }, { threshold: 0 });
+        io.observe(anchor);
+    } else {
+        // Legacy fallback: rough "search area scrolled past" threshold.
+        window.addEventListener('scroll', function () {
+            searchOutOfView = window.scrollY > 160;
+            updateBackToTop();
+        }, { passive: true });
+    }
+    updateBackToTop();
 }
 function renderReview() {
     var html = '';
@@ -1137,6 +1180,7 @@ async function init() {
     renderSummary();
     selectPayment('cash');
     wireCategorySearch();
+    wireBackToTop();
     $('paymentSeg').addEventListener('click', function (e) {
         var btn = e.target.closest('.pay-btn');
         if (btn) selectPayment(btn.getAttribute('data-pay'));
@@ -1202,6 +1246,7 @@ async function init() {
         $('menuSection').classList.remove('hidden');
         $('summaryBar').classList.remove('hidden');
         rerender();
+        updateBackToTop();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 

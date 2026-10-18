@@ -193,6 +193,11 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
 .category-item.back{font-weight:600;color:#64748b}
 .dropdown-header{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;color:#64748b;font-size:13px;font-weight:600}
 .dropdown-divider{height:1px;background:var(--border,#e2e8f0);margin:4px 0}
+/* ── Back-to-top button (menu view only; sits above the sticky summary bar) ── */
+.back-to-top{position:fixed;bottom:80px;right:16px;width:44px;height:44px;border-radius:999px;background:var(--surface);border:1px solid var(--border);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--shadow);z-index:15;transition:color .15s,border-color .15s,box-shadow .15s;animation:fadeIn .2s ease}
+.back-to-top:hover{color:var(--primary);border-color:var(--primary);box-shadow:0 4px 16px rgba(0,0,0,.12)}
+.back-to-top:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -324,6 +329,11 @@ body{font-family:var(--font);color:var(--text);background:var(--bg);min-height:1
     </div>
     <button type="button" id="btnCheckout" class="btn-checkout" disabled>Add items to order</button>
   </div>
+
+  <!-- Back-to-top (menu view only; shown once #searchControl scrolls out of view) -->
+  <button type="button" id="backToTopBtn" class="back-to-top hidden" aria-label="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
 
 </div>
 
