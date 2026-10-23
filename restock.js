@@ -18,6 +18,7 @@
   var lastRestockDate = null;
   var restockLog = [];
   var restockTemp = { step: 1, corrections: [], purchases: [] };
+  var stepScroll = { 1: 0, 2: 0 };
 
   // ─── DOM Refs ───
   var dom = {};
@@ -25,15 +26,17 @@
   function cacheDom() {
     var ids = [
       'restockStep1', 'restockStep2',
+      'restockStep1Dot', 'restockStep2Dot',
+      'restockStep1Desc', 'restockStep2Desc',
       'restockProductList', 'restockSearch',
       'restockCorrectionCount', 'restockContinueBtn',
       'restockPurchaseProduct', 'restockPurchaseSuggestions',
       'restockPurchaseCost', 'restockPurchaseQty',
       'restockPurchaseAddBtn', 'restockPurchaseList',
-      'restockPurchaseTotal', 'restockDoneBtn',
+      'restockPurchaseTotal', 'restockTotalRow', 'restockDoneBtn',
       'restockCancelBtn', 'toastContainer',
       'restockCorrectionHeader', 'restockPurchaseHeader',
-      'restockStickyBar'
+      'restockStickyBar', 'restockStickyBar2', 'restockBackToTopBtn'
     ];
     ids.forEach(function(id) {
       dom[id] = document.getElementById(id);
@@ -46,15 +49,20 @@
       restockTitle: 'Restock Day \ud83d\ude9a',
       restockStep1Label: 'Step 1: Check Shelves',
       restockStep2Label: 'Step 2: Record Purchases',
-      restockAppSays: 'App says',
+      restockStep1Desc: 'Enter the shelf count to compare with app stock.',
+      restockStep2Desc: 'Search a product, then enter cost per unit and quantity.',
+      restockAppSays: 'App',
       restockActual: 'Actual',
       restockDiff: 'Diff',
       restockCorrected: 'Corrected',
       restockUnchanged: 'Matches app',
-      restockMissing: 'unrecorded sales',
-      restockExtra: 'extra found',
+      restockEnterCount: 'Enter count',
+      restockMissingOne: 'unrecorded sale',
+      restockMissingMany: 'unrecorded sales',
+      restockExtraOne: 'extra unit',
+      restockExtraMany: 'extra units',
       restockItemsChecked: 'items checked',
-      restockContinue: 'Continue to Purchases \u2192',
+      restockContinue: 'Continue \u2192',
       restockAddItem: 'Add Item',
       restockRemove: 'Remove',
       restockTotalCost: 'Total Spent',
@@ -65,22 +73,27 @@
       restockNoPurchases: 'No items added yet.',
       restockSaved: 'Restock saved! Inventory updated.',
       restockCancelled: 'Restock cancelled.',
-      restockQtyLabel: 'Qty bought',
+      restockQtyLabel: 'Qty',
       restockCostLabel: 'Cost per unit'
     },
     fil: {
       restockTitle: 'Restock Day \ud83d\ude9a',
       restockStep1Label: 'Hakbang 1: Suriin ang Shelf',
       restockStep2Label: 'Hakbang 2: Itala ang Binili',
-      restockAppSays: 'Ayon sa app',
+      restockStep1Desc: 'Ilagay ang bilang sa shelf para ihambing sa stock ng app.',
+      restockStep2Desc: 'Maghanap ng produkto, pagkatapos ilagay ang presyo at dami.',
+      restockAppSays: 'App',
       restockActual: 'Aktwal',
       restockDiff: 'Pagkakaiba',
       restockCorrected: 'Na-update',
       restockUnchanged: 'Tugma sa app',
-      restockMissing: 'hindi naitalang benta',
-      restockExtra: 'dagdag na natagpuan',
+      restockEnterCount: 'Ilagay ang bilang',
+      restockMissingOne: 'hindi naitalang benta',
+      restockMissingMany: 'hindi naitalang benta',
+      restockExtraOne: 'dagdag na unit',
+      restockExtraMany: 'dagdag na units',
       restockItemsChecked: 'item(s) nasuri',
-      restockContinue: 'Magpatuloy sa Pagbili \u2192',
+      restockContinue: 'Magpatuloy \u2192',
       restockAddItem: 'Idagdag',
       restockRemove: 'Tanggalin',
       restockTotalCost: 'Kabuuang Nagastos',
@@ -91,7 +104,7 @@
       restockNoPurchases: 'Wala pang idinagdag.',
       restockSaved: 'Na-save ang restock! Update ang inventory.',
       restockCancelled: 'Nakansela ang restock.',
-      restockQtyLabel: 'Dami ng binili',
+      restockQtyLabel: 'Dami',
       restockCostLabel: 'Presyo bawat isa'
     }
   };
@@ -133,16 +146,8 @@
     return '\u20b1' + Number(amount || 0).toFixed(2);
   }
 
-  function getStockStatus(product) {
-    // Per-product threshold wins; fall back to the global Settings threshold.
-    // getGlobalLowStockThreshold() handles a 0 threshold correctly (0 means
-    // "alert only when out of stock").
-    var threshold = (product && typeof product.lowStockThreshold === 'number' && product.lowStockThreshold >= 0)
-      ? product.lowStockThreshold
-      : getGlobalLowStockThreshold();
-    if (!product || product.quantity <= 0) return 'out';
-    if (product.quantity <= threshold) return 'low';
-    return 'plenty';
+  function formatQty(qty) {
+    return String(roundQty(qty));
   }
 
   function getGlobalLowStockThreshold() {
@@ -186,22 +191,56 @@
     try { localStorage.setItem('sss_v3_products', JSON.stringify(products)); } catch(e) {}
   }
 
+  function saveTempOnly() {
+    try { localStorage.setItem('sss_v3_restockTemp', JSON.stringify(restockTemp)); } catch(e) {}
+  }
+
   // ─── Step Management ───
   function showStep(step) {
     if (dom.restockStep1) dom.restockStep1.style.display = step === 1 ? 'block' : 'none';
     if (dom.restockStep2) dom.restockStep2.style.display = step === 2 ? 'block' : 'none';
     if (dom.restockCorrectionHeader) dom.restockCorrectionHeader.textContent = t('restockStep1Label');
     if (dom.restockPurchaseHeader) dom.restockPurchaseHeader.textContent = t('restockStep2Label');
+    if (dom.restockStep1Desc) dom.restockStep1Desc.textContent = t('restockStep1Desc');
+    if (dom.restockStep2Desc) dom.restockStep2Desc.textContent = t('restockStep2Desc');
+    if (dom.restockStep1Dot) dom.restockStep1Dot.classList.toggle('active', step === 1);
+    if (dom.restockStep2Dot) dom.restockStep2Dot.classList.toggle('active', step === 2);
+    if (dom.restockContinueBtn) {
+      var continueLabel = dom.restockContinueBtn.querySelector('span');
+      if (continueLabel) continueLabel.textContent = t('restockContinue');
+    }
     // Sticky action bars: Step 1 bar visible on step 1, Step 2 bar visible on step 2
-    var stickyBar = document.getElementById('restockStickyBar');
-    if (stickyBar) stickyBar.style.display = step === 1 ? 'flex' : 'none';
-    var stickyBar2 = document.getElementById('restockStickyBar2');
-    if (stickyBar2) stickyBar2.style.display = step === 2 ? 'flex' : 'none';
+    if (dom.restockStickyBar) dom.restockStickyBar.style.display = step === 1 ? 'flex' : 'none';
+    if (dom.restockStickyBar2) dom.restockStickyBar2.style.display = step === 2 ? 'flex' : 'none';
     // Hide back-to-top when switching steps
-    var backToTop = document.getElementById('restockBackToTopBtn');
-    if (backToTop) backToTop.style.display = 'none';
+    if (dom.restockBackToTopBtn) dom.restockBackToTopBtn.style.display = 'none';
+    // Keep a separate scroll position per step (mirrors the two independent
+    // mobile list states), so Back returns to where the user was checking.
+    var content = document.getElementById('appContent');
+    if (content) {
+      if (restockTemp.step && restockTemp.step !== step) stepScroll[restockTemp.step] = content.scrollTop;
+      content.scrollTop = stepScroll[step] || 0;
+    }
     restockTemp.step = step;
     saveAll();
+  }
+
+  function diffHtml(diff) {
+    var d = roundQty(diff);
+    if (d === 0) {
+      return '<span class="restock-diff match">\u2705 ' + t('restockUnchanged') + '</span>';
+    }
+    if (d < 0) {
+      var missing = Math.abs(d);
+      return '<span class="restock-diff missing">\ud83d\udd34 ' + formatQty(missing) + ' ' +
+        (missing === 1 ? t('restockMissingOne') : t('restockMissingMany')) + '</span>';
+    }
+    return '<span class="restock-diff extra">\ud83c\udf89 +' + formatQty(d) + ' ' +
+      (d === 1 ? t('restockExtraOne') : t('restockExtraMany')) + '</span>';
+  }
+
+  function enterCountHtml() {
+    return '<span class="restock-diff match">' + t('restockEnterCount') + '</span>';
   }
 
   // ─── Step 1: Physical Count Correction ───
@@ -219,38 +258,25 @@
     restockTemp.corrections.forEach(function(c) { correctionsMap[c.productId] = c; });
 
     if (list.length === 0) {
-      dom.restockProductList.innerHTML = '<div class="empty-state">' + t('restockNoCorrections') + '</div>';
+      dom.restockProductList.innerHTML = '<div class="restock-empty">' + t('restockNoCorrections') + '</div>';
       return;
     }
 
     dom.restockProductList.innerHTML = list.map(function(p) {
       var existing = correctionsMap[p.id];
       var actualValue = existing ? existing.newQty : p.quantity;
-      var diff = actualValue - p.quantity;
-      var status = getStockStatus(p);
-      var statusIcon = status === 'plenty' ? '\u2705' : (status === 'low' ? '\u26a0\ufe0f' : '\ud83d\udd34');
+      var diff = roundQty(actualValue - p.quantity);
 
-      var diffHtml = '';
-      if (diff === 0) {
-        diffHtml = '<span style="color:var(--text-muted);font-size:var(--text-xs);">\u2705 ' + t('restockUnchanged') + '</span>';
-      } else if (diff < 0) {
-        diffHtml = '<span style="color:var(--danger);font-size:var(--text-xs);">\ud83d\udd34 ' + Math.abs(diff) + ' ' + t('restockMissing') + '</span>';
-      } else {
-        diffHtml = '<span style="color:var(--primary);font-size:var(--text-xs);">\ud83c\udf89 +' + diff + ' ' + t('restockExtra') + '</span>';
-      }
-
-      return '<div class="restock-correction-item">' +
-        '<div class="restock-correction-info">' +
-          '<div class="restock-correction-name">' + statusIcon + ' ' + p.name + '</div>' +
-          '<div class="restock-correction-detail">' +
-            '<span>' + t('restockAppSays') + ': <strong>' + p.quantity + '</strong></span>' +
-            '<span class="restock-correction-sep">\u2192</span>' +
-            '<span class="restock-correction-edit">' +
-              '<input type="number" class="restock-correction-input" data-pid="' + p.id + '" value="' + actualValue + '" min="0" step="0.01" inputmode="decimal" onchange="window.restockOnCorrectionChange(this)">' +
-            '</span>' +
+      return '<div class="restock-correction-item" data-pid="' + p.id + '">' +
+        '<div class="restock-correction-name">' + p.name + '</div>' +
+        '<div class="restock-correction-row">' +
+          '<span class="restock-app-qty">' + t('restockAppSays') + ' <strong>' + formatQty(p.quantity) + '</strong></span>' +
+          '<div class="restock-actual-wrap">' +
+            '<input type="number" class="restock-correction-input" data-pid="' + p.id + '" value="' + formatQty(actualValue) + '" min="0" step="0.01" inputmode="decimal" aria-label="' + t('restockActual') + '" oninput="window.restockOnCorrectionChange(this)" onblur="window.restockNormalizeCorrection(this)">' +
+            '<span class="restock-actual-label">' + t('restockActual') + '</span>' +
           '</div>' +
+          '<div class="restock-correction-diff">' + diffHtml(diff) + '</div>' +
         '</div>' +
-        '<div class="restock-correction-diff">' + diffHtml + '</div>' +
       '</div>';
     }).join('');
 
@@ -258,31 +284,62 @@
   }
 
   function onCorrectionChange(input) {
+    if (input.validity && input.validity.badInput) return;
     var pid = input.getAttribute('data-pid');
     var product = products.find(function(p) { return p.id === pid; });
     if (!product) return;
-    var _cu = product.unit||'piece'; var _cMin=minFor(_cu); var val = parseQty(input.value, 0); val=roundQty(val);
-    // Find or create correction entry
+
     var idx = -1;
     for (var i = 0; i < restockTemp.corrections.length; i++) {
       if (restockTemp.corrections[i].productId === pid) {
         idx = i; break;
       }
     }
+
+    var card = input.closest ? input.closest('.restock-correction-item') : null;
+    var diffEl = card ? card.querySelector('.restock-correction-diff') : null;
+    var raw = String(input.value || '').trim();
+
+    // Blank means "not counted yet"; drop the correction instead of recording 0.
+    if (raw === '') {
+      if (idx >= 0) restockTemp.corrections.splice(idx, 1);
+      if (diffEl) diffEl.innerHTML = enterCountHtml();
+      saveTempOnly();
+      updateCorrectionCount();
+      return;
+    }
+
+    var val = roundQty(parseQty(raw, NaN));
+    if (isNaN(val) || val < 0) return; // keep the last valid count while typing
+
     if (idx >= 0) {
       restockTemp.corrections[idx].newQty = val;
     } else {
       restockTemp.corrections.push({ productId: pid, oldQty: product.quantity, newQty: val });
     }
-    saveAll();
-    // Re-render just the diff for this item
-    renderCorrections();
+    // Update only this card's status so the input keeps focus and caret.
+    if (diffEl) diffEl.innerHTML = diffHtml(val - product.quantity);
+    saveTempOnly();
+    updateCorrectionCount();
+  }
+
+  function normalizeCorrection(input) {
+    var raw = String(input && input.value || '').trim();
+    if (raw === '') return;
+    var pid = input.getAttribute('data-pid');
+    var product = products.find(function(p) { return p.id === pid; });
+    var existing = restockTemp.corrections.find(function(c) { return c.productId === pid; });
+    var val = parseQty(raw, NaN);
+    if (isNaN(val) || val < 0) {
+      input.value = formatQty(existing ? existing.newQty : (product ? product.quantity : 0));
+    } else {
+      input.value = formatQty(val);
+    }
   }
 
   function updateCorrectionCount() {
     if (dom.restockCorrectionCount) {
-      var changed = restockTemp.corrections.filter(function(c) { return c.oldQty !== c.newQty; }).length;
-      dom.restockCorrectionCount.textContent = changed + '/' + products.length + ' ' + t('restockItemsChecked');
+      dom.restockCorrectionCount.textContent = restockTemp.corrections.length + '/' + products.length + ' ' + t('restockItemsChecked');
     }
   }
 
@@ -303,14 +360,14 @@
     if (!dom.restockPurchaseList) return;
     var purchases = restockTemp.purchases;
     if (purchases.length === 0) {
-      dom.restockPurchaseList.innerHTML = '<div class="empty-state">' + t('restockNoPurchases') + '</div>';
+      dom.restockPurchaseList.innerHTML = '<div class="restock-empty">' + t('restockNoPurchases') + '</div>';
     } else {
       dom.restockPurchaseList.innerHTML = purchases.map(function(item, idx) {
         return '<div class="restock-purchase-item">' +
           '<div class="restock-purchase-info">' +
             '<div class="restock-purchase-name">' + item.productName + '</div>' +
             '<div class="restock-purchase-detail">' +
-              t('restockQtyLabel') + ': <strong>' + item.qtyAdded + '</strong> ' +
+              t('restockQtyLabel') + ': <strong>' + formatQty(item.qtyAdded) + '</strong> ' +
               '\u00d7 ' + formatCurrency(item.costPerUnit) +
             '</div>' +
           '</div>' +
@@ -323,6 +380,7 @@
     }
     var total = purchases.reduce(function(sum, item) { return sum + item.totalCost; }, 0);
     if (dom.restockPurchaseTotal) dom.restockPurchaseTotal.textContent = formatCurrency(total);
+    if (dom.restockTotalRow) dom.restockTotalRow.style.display = purchases.length ? 'flex' : 'none';
   }
 
   function onPurchaseSearch() {
@@ -334,7 +392,7 @@
     }
     var matches = products.filter(function(p) {
       return p.name.toLowerCase().includes(query);
-    }).slice(0, 6);
+    }).slice(0, 4);
     if (matches.length === 0) {
       dom.restockPurchaseSuggestions.classList.remove('open');
       return;
@@ -477,7 +535,11 @@
       dom.restockSearch.addEventListener('input', renderCorrections);
     }
     if (dom.restockPurchaseProduct) {
-      dom.restockPurchaseProduct.addEventListener('input', onPurchaseSearch);
+      dom.restockPurchaseProduct.addEventListener('input', function() {
+        // Editing the text invalidates the previous pick (mobile parity).
+        dom.restockPurchaseProduct.dataset.selectedId = '';
+        onPurchaseSearch();
+      });
     }
     // Back-to-top: show when product list header scrolls out of view (step 1 only).
     (function() {
@@ -497,6 +559,7 @@
 
   // ─── Expose to window ───
   window.restockOnCorrectionChange = onCorrectionChange;
+  window.restockNormalizeCorrection = normalizeCorrection;
   window.restockContinueToPurchases = continueToPurchases;
   window.restockBackToStep1 = backToStep1;
   window.restockSelectProduct = selectProduct;

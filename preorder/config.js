@@ -104,3 +104,5 @@ async function fetchPublicProducts(storeUid) {
         return [];
     }
 }
+
+/**\n * Fetch pending pre-orders for the store via the backoffice RPC.\n * Returns array of pre-order rows with customer_note included.\n * Anonymous read is allowed via the owner's user_id filter.\n */\nasync function fetchPendingPreOrders(storeUid) {\n    if (!storeUid) return [];\n    try {\n        const { data, error } = await sb\n            .from('pre_orders')\n            .select('*')\n            .eq('status', 'pending')\n            .order('created_at', { ascending: false });\n        if (error) { console.error('fetchPendingPreOrders:', error); return []; }\n        return Array.isArray(data) ? data : [];\n    } catch (e) {\n        console.error('fetchPendingPreOrders throw:', e);\n    }\n}

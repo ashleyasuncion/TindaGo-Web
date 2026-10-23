@@ -459,7 +459,7 @@
       const seven=last7Days(sales);
       const sevenTotal=seven.reduce((a,d)=>a+d.total,0);
       const sevenTx=sales.filter(s=>seven.some(d=>d.key===String(s.date||'').slice(0,10))).length;
-      $('kpiSales').textContent=peso(totalSales);
+      $('kpiSales').textContent=peso(sevenTotal);
       $('kpiSalesCount').textContent=sevenTx+' in last 7d \u00B7 '+sales.length+' rows \u00B7 7d '+peso(sevenTotal);
       $('kpiProfit').textContent=peso(totalProfit);
       $('kpiProfitMargin').textContent=totalSales>0?'~ '+((totalProfit/totalSales)*100).toFixed(1)+'% margin':'no sales yet';

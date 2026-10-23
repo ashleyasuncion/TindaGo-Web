@@ -529,7 +529,7 @@
       restockTutorial2: 'Step 1: Check your shelves. Update the actual count for each product.',
       restockTutorial3: 'Enter the real count you see on your shelf next to what the app thinks.',
       restockTutorial4: 'Green check = count matches. Red = unrecorded sales were found.',
-      restockTutorial5: 'After checking, tap Continue to Purchases to record what you bought.',
+      restockTutorial5: 'After checking, tap Continue to record what you bought.',
       restockTutorial6: 'Step 2: Search for a product, enter cost per unit and quantity, tap Add Item. Use the Back button to return to Step 1 if needed.',
       restockTutorial7: 'Review your purchases. Total cost is shown at the bottom.',
       restockTutorial8: 'Tap Done to save. Your inventory is updated. You can also go Back to make changes before finishing.',

@@ -15,12 +15,12 @@
     <div class="phone-notch"></div>
     <div class="app-container" id="app">
       <!-- HEADER -->
-      <header class="app-header" style="background:var(--primary);color:white;">
-        <button class="header-btn" onclick="historyBack()" style="color:white;background:none;border:none;cursor:pointer;display:flex;align-items:center;padding:6px;">
+      <header class="app-header restock-header">
+        <button class="header-btn" onclick="historyBack()" aria-label="Back">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
         </button>
         <h1 style="font-size:var(--text-xl);font-weight:700;flex:1;text-align:center;" id="restockTitle">Restock Day 🚚</h1>
-        <button class="header-btn header-tutorial-btn" id="headerTutorialBtn" onclick="startTutorial('restock', true)" aria-label="Tutorial" style="color:white;">
+        <button class="header-btn header-tutorial-btn" id="headerTutorialBtn" onclick="startTutorial('restock', true)" aria-label="Tutorial">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </button>
       </header>
@@ -37,7 +37,7 @@
         <!-- ===== STEP 1: Physical Count ===== -->
         <div id="restockStep1">
           <div class="restock-section-header" id="restockCorrectionHeader">Step 1: Check Shelves</div>
-          <p class="restock-section-desc">Tingnan ang aktwal na stock sa shelf. Itama ang bilang kung hindi tugma sa app.</p>
+          <p class="restock-section-desc" id="restockStep1Desc">Ilagay ang bilang sa shelf para ihambing sa stock ng app.</p>
 
           <!-- Search -->
           <div class="search-bar" style="margin-bottom:12px;">
@@ -48,7 +48,7 @@
           <div class="restock-correction-count" id="restockCorrectionCount">0/0 items checked</div>
 
           <!-- Product list (padding-bottom for sticky action bar) -->
-          <div class="list-container" id="restockProductList" style="padding-bottom:80px;"></div>
+          <div class="list-container restock-list" id="restockProductList" style="padding-bottom:96px;"></div>
 
           <!-- Back-to-top button (visible when product list scrolls out of view) -->
           <button class="back-to-top" id="restockBackToTopBtn" onclick="document.getElementById('appContent').scrollTo({top:0,behavior:'smooth'})" style="display:none;">
@@ -62,50 +62,48 @@
             <span>Cancel</span>
           </button>
           <button class="btn btn-primary" id="restockContinueBtn" onclick="window.restockContinueToPurchases()" style="flex:1;">
-            <span>Continue to Purchases →</span>
+            <span>Continue →</span>
           </button>
         </div>
 
         <!-- ===== STEP 2: Record Purchases ===== -->
         <div id="restockStep2" style="display:none;">
           <div class="restock-section-header" id="restockPurchaseHeader">Step 2: Record Purchases</div>
-          <p class="restock-section-desc">Itala kung ano ang binili mo ngayong araw para i-restock ang tindahan.</p>
+          <p class="restock-section-desc" id="restockStep2Desc">Maghanap ng produkto, pagkatapos ilagay ang presyo at dami.</p>
 
           <!-- Add purchase form -->
           <div class="restock-purchase-form">
-            <div class="form-group">
-              <label>Product</label>
-              <div class="product-search-wrap">
-                <input type="text" id="restockPurchaseProduct" class="form-input" placeholder="Maghanap ng produkto..." autocomplete="off">
-                <div class="product-suggestions" id="restockPurchaseSuggestions"></div>
+            <div class="product-search-wrap" style="margin-bottom:12px;">
+              <div class="search-bar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="restockPurchaseProduct" placeholder="Maghanap ng produkto..." autocomplete="off">
               </div>
+              <div class="product-suggestions" id="restockPurchaseSuggestions"></div>
             </div>
-            <div style="display:flex;gap:8px;">
-              <div class="form-group" style="flex:1;">
-                <label>Cost per unit (₱)</label>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <div class="form-group" style="flex:1;margin-bottom:0;">
+                <label>Cost/unit (₱)</label>
                 <input type="number" id="restockPurchaseCost" class="form-input" placeholder="0.00" min="0" step="0.01">
               </div>
-              <div class="form-group" style="flex:1;">
-                <label>Qty bought</label>
+              <div class="form-group" style="flex:1;margin-bottom:0;">
+                <label>Qty</label>
                 <input type="number" id="restockPurchaseQty" class="form-input" value="1" min="0.01" step="0.01" inputmode="decimal">
               </div>
             </div>
             <button class="btn btn-primary btn-full" id="restockPurchaseAddBtn" onclick="window.restockAddPurchase()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
               <span>Add Item</span>
             </button>
+            <div class="restock-divider"></div>
           </div>
 
           <!-- Purchased items list -->
-          <div class="restock-purchased-section">
-            <div class="restock-section-header" style="font-size:var(--text-xs);margin-top:16px;margin-bottom:8px;">Items purchased today</div>
-            <div class="list-container" id="restockPurchaseList">
-              <div class="empty-state">No items added yet.</div>
-            </div>
+          <div class="list-container restock-list" id="restockPurchaseList">
+            <div class="restock-empty">No items added yet.</div>
           </div>
 
           <!-- Total -->
-          <div class="restock-total-row" style="margin-bottom:80px;">
+          <div class="restock-total-row" id="restockTotalRow" style="margin-bottom:96px;">
             <span>Total Spent</span>
             <span class="restock-total-amount" id="restockPurchaseTotal">₱0.00</span>
           </div>
@@ -124,17 +122,6 @@
         </div>
       </main>
 
-      <!-- BOTTOM NAV -->
-      <nav class="bottom-nav" id="bottomNav">
-        <a class="nav-item active" href="inventory.html">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          <span class="nav-label" data-i18n="stocksLink">Stock</span>
-        </a>
-        <a class="nav-item" href="debts.html">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01"/></svg>
-          <span class="nav-label" data-i18n="debtsLink">Utang</span>
-        </a>
-      </nav>
       <div id="ordersBubble" class="orders-bubble">
         <span class="orders-bubble-badge"></span>
       </div>

@@ -45,8 +45,8 @@ STEP 4 — Product list
   Highlight      : Product list with status icons -> box per runtime rule
   Interaction    : look at list, tap Next
 ----------------------------------------------------------------------
-STEP 5 — Continue to Purchases
-  Text EN : "After checking, tap Continue to Purchases to record what you bought."
+STEP 5 — Continue
+  Text EN : "After checking, tap Continue to record what you bought."
   Text FIL: (none — falls back to English, see note above)
   Target element : #restockContinueBtn
   Highlight      : Continue button -> box per runtime rule

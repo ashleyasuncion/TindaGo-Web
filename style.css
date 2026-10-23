@@ -1484,12 +1484,22 @@ select.form-input {
 }
 
 /* ═══════════════ RESTOCK DAY ═══════════════ */
+.restock-header {
+  background: var(--surface);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.restock-header .header-btn { color: var(--text-secondary); }
+.restock-header .header-btn:hover,
+.restock-header .header-btn:focus-visible { background: var(--primary-bg); }
+.restock-header .header-tutorial-btn { color: var(--primary); }
+
 .restock-step-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 4px 0 16px;
+  margin: 0 0 12px;
 }
 .restock-step-dot {
   width: 32px; height: 32px;
@@ -1505,7 +1515,7 @@ select.form-input {
   color: white;
 }
 .restock-step-line {
-  width: 40px; height: 3px;
+  width: 48px; height: 2px;
   background: var(--border);
   border-radius: 2px;
 }
@@ -1518,77 +1528,117 @@ select.form-input {
 .restock-section-desc {
   font-size: var(--text-xs);
   color: var(--text-secondary);
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 .restock-correction-count {
   font-size: var(--text-xs);
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  text-align: center;
+  color: var(--primary);
+  font-weight: 600;
+  margin: 8px 0 2px;
+  text-align: left;
 }
+.restock-list { gap: 6px; }
 .restock-correction-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  margin-bottom: 6px;
 }
-.restock-correction-info { flex: 1; min-width: 0; }
 .restock-correction-name {
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 4px;
+  line-height: 1.3;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.restock-correction-detail {
+.restock-correction-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  min-width: 0;
+}
+.restock-app-qty {
+  flex: 0 0 auto;
   font-size: var(--text-xs);
   color: var(--text-secondary);
+  white-space: nowrap;
 }
-.restock-correction-sep {
-  color: var(--text-muted);
-  font-weight: 700;
+.restock-app-qty strong { color: var(--text); }
+.restock-actual-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 88px;
 }
 .restock-correction-input {
-  width: 60px;
-  padding: 4px 8px;
+  width: 100%;
+  height: 48px;
+  padding: 17px 10px 5px;
   border: 1.5px solid var(--border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
   font-family: var(--font);
   font-size: var(--text-sm);
   font-weight: 600;
-  text-align: center;
+  color: var(--text);
+  text-align: left;
   outline: none;
-  transition: border-color var(--transition);
+  transition: border-color var(--transition), box-shadow var(--transition);
 }
 .restock-correction-input:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22,163,74,0.1);
+}
+.restock-correction-input::-webkit-outer-spin-button,
+.restock-correction-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.restock-correction-input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+.restock-actual-label {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text-muted);
+  pointer-events: none;
 }
 .restock-correction-diff {
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  max-width: 120px;
   text-align: right;
 }
-.restock-purchase-form {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  margin-bottom: 12px;
+.restock-diff {
+  font-size: var(--text-xs);
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.restock-diff.match { color: var(--text-muted); }
+.restock-diff.missing { color: var(--danger); }
+.restock-diff.extra { color: var(--primary); }
+.restock-empty {
+  padding: 24px 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+.restock-purchase-form { margin-bottom: 12px; }
+.restock-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0 2px;
 }
 .restock-purchase-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 10px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  margin-bottom: 6px;
+  border-radius: var(--radius);
   animation: fadeIn 0.2s ease;
 }
 .restock-purchase-info { flex: 1; min-width: 0; }
@@ -1596,16 +1646,24 @@ select.form-input {
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .restock-purchase-detail {
   font-size: var(--text-xs);
   color: var(--text-secondary);
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .restock-purchase-total {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary-dark);
   flex-shrink: 0;
 }
 .restock-purchase-remove {
@@ -1626,9 +1684,8 @@ select.form-input {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
+  padding: 16px;
   background: var(--primary-bg);
-  border: 1px solid #bbf7d0;
   border-radius: var(--radius);
   font-size: var(--text-base);
   font-weight: 600;
@@ -1638,9 +1695,8 @@ select.form-input {
 .restock-total-amount {
   font-size: var(--text-xl);
   font-weight: 700;
-  color: var(--primary);
+  color: var(--primary-dark);
 }
-.restock-purchased-section { margin-top: 4px; }
 
 /* ── Product details: category chips, brand/size sub-lines, tags (v2.59) ── */
 .cat-chips {
@@ -1746,12 +1802,15 @@ select.form-input {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 10px 16px 16px;
   background: var(--surface);
   border-top: 1px solid var(--border);
   z-index: 15;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
 }
+.restock-sticky-bar .btn { min-height: 48px; }
+.restock-sticky-bar .btn-sm { min-height: 48px; }
+#restockBackToTopBtn { bottom: 96px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }

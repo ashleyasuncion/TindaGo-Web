@@ -10,6 +10,7 @@ create table if not exists public.products (
  unit text not null default 'piece', low_stock_threshold double precision not null default 5,
  category text not null default '', subcategory text not null default '',
  brand text not null default '', package_size text not null default '',
+ supplier text,
  primary key (user_id, id)
 );
 alter table public.products enable row level security;
@@ -109,3 +110,8 @@ BEGIN
   BEGIN ALTER TABLE public.products ALTER COLUMN low_stock_threshold TYPE double precision USING low_stock_threshold::double precision; EXCEPTION WHEN OTHERS THEN NULL; END;
   BEGIN ALTER TABLE public.specific_sales ALTER COLUMN quantity TYPE double precision USING quantity::double precision; EXCEPTION WHEN OTHERS THEN NULL; END;
 END $$;
+
+-- Supplier column used by the Android app's product sync/backoffice parity.
+-- (Idempotent; existing databases should also run sql/supplier_fractional_v1.sql.)
+alter table public.products add column if not exists supplier text;
+notify pgrst, 'reload schema';

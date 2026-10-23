@@ -30,6 +30,7 @@ create table if not exists public.pre_orders (
   payment_method text not null default 'cash',    -- cash | gcash | maya (intent only)
   payment_status text not null default 'unpaid',  -- unpaid | paid
   status text not null default 'pending',  -- pending -> preparing -> ready -> fulfilled | cancelled
+  customer_name text not null default '',
   customer_note text not null default '',
   created_at bigint not null default 0,
   expires_at bigint not null default 0,     -- optional auto-expire (0 = none)
@@ -68,6 +69,11 @@ create index if not exists pre_orders_temp_id_idx on public.pre_orders (temp_id)
 -- ----------------------------------------------------------------------------
 alter table public.pre_orders
   add column if not exists fulfilled_at bigint not null default 0;
+
+-- 1c. customer_name — customer's chosen name from the public order form.
+--     Kept separate from customer_note so the app inbox can show the name.
+alter table public.pre_orders
+  add column if not exists customer_name text not null default '';
 
 -- ----------------------------------------------------------------------------
 -- 2. store_profiles — public store identity for the customer landing page

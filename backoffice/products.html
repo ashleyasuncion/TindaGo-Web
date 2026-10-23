@@ -98,6 +98,7 @@ dialog::backdrop{background:rgba(15,23,42,0.45)}
 <div class="form-group"><label for="fCategory">Category</label><select class="form-select" id="fCategory"></select></div>
 <div class="form-group"><label for="fSubcategory">Subcategory</label><select class="form-select" id="fSubcategory"></select></div>
 <div class="form-group"><label for="fPackageSize">Package size</label><input class="form-input" id="fPackageSize" placeholder="e.g. 155g, 1L" maxlength="40"></div>
+<div class="form-group"><label for="fSupplier">Supplier</label><select class="form-select" id="fSupplier"></select></div>
 <div class="form-group"><label for="fQty">Initial quantity</label><input class="form-input" id="fQty" type="number" step="1" min="0" value="0"></div>
 <div class="form-group"><label for="fThreshold">Low-stock threshold</label><input class="form-input" id="fThreshold" type="number" step="1" min="0" value="5"></div>
 </div>
@@ -129,6 +130,7 @@ dialog::backdrop{background:rgba(15,23,42,0.45)}
 <div class="form-group full"><label for="eName">Name *</label><input class="form-input" id="eName" required maxlength="120"></div>
 <div class="form-group"><label for="eBrand">Brand</label><input class="form-input" id="eBrand" maxlength="80"></div>
 <div class="form-group"><label for="ePackageSize">Package size</label><input class="form-input" id="ePackageSize" maxlength="40"></div>
+<div class="form-group"><label for="eSupplier">Supplier</label><select class="form-select" id="eSupplier"></select></div>
 <div class="form-group"><label for="eCost">Cost price (PHP) *</label><input class="form-input" id="eCost" type="number" step="0.01" min="0" required></div>
 <div class="form-group"><label for="eSell">Selling price (PHP) *</label><input class="form-input" id="eSell" type="number" step="0.01" min="0" required></div>
 <div class="form-group"><label for="eUnit">Unit</label><select class="form-select" id="eUnit"></select></div>
@@ -153,6 +155,7 @@ const CATEGORIES=["pantry_staples","canned_goods","instant_dry_goods","snacks_sw
 const UNITS=["piece","sachet","pack","box","bottle","can","kg","g","L","mL","bundle","dozen","sack","loaf","tube","bar","sticks"];
 const SUBCATEGORIES={"pantry_staples":["rice","cooking_oil","sugar","salt","vinegar","bread"],"canned_goods":["sardines","corned_beef","tuna","meat_loaf","sausage"],"instant_dry_goods":["instant_noodles","cup_noodles","pasta","soup_mixes"],"snacks_sweets":["chips","crackers","candies","chocolates","cookies"],"beverages":["coffee_mix","powdered_milk","chocolate_drink","juice","soft_drinks","bottled_water"],"dairy_refrigerated":["cheese","butter","margarine","chilled_meats"],"fresh_section":["fresh_meat","fresh_seafood","fruits","vegetables","eggs"],"liquor_wine":["beer","gin","brandy","wine","cigarettes"],"personal_care":["shampoo","conditioner","bath_soap","toothpaste","toothbrush","lotion","cosmetics"],"household_care":["laundry","fabric_softener","dishwashing","cleaners","trash_bags","mosquito_control"],"baby_care":["diapers","baby_wipes","baby_toiletries"],"paper_sanitary":["tissue","paper_towels","sanitary_pads"]};
 function fillCategorySelect(sel,empty){sel.innerHTML=(empty?'<option value="">-- None --</option>':'')+CATEGORIES.map(c=>'<option value="'+esc(c)+'">'+esc(labelize(c))+'</option>').join('');}
+function fillSupplierSelect(sel,suppliers){sel.innerHTML='<option value="">(None)</option>'+suppliers.map(s=>'<option value="'+esc(s.name||s)+'">'+esc(s.name||s)+'</option>').join('');}
 function fillUnitSelect(sel){sel.innerHTML=UNITS.map(u=>'<option value="'+esc(u)+'">'+esc(labelize(u))+'</option>').join('');}
 function fillSubcategorySelect(sel,cat){const list=SUBCATEGORIES[cat]||[];sel.innerHTML='<option value="">-- None --</option>'+list.map(s=>'<option value="'+esc(s)+'">'+esc(labelize(s))+'</option>').join('');sel.disabled=list.length===0;}
 function stockStatus(p){const q=Number(p.quantity)||0,t=Number(p.lowStockThreshold)||0;if(q<=0)return'out';if(q<=t)return'low';return'plenty';}
@@ -200,6 +203,7 @@ DB.init(session);
 $('pageSubtitle').textContent='Catalog owner — manage inventory here. Counter is read-only \u00B7 signed in as '+(session.user.email||'store');
 fillUnitSelect($('fUnit'));fillUnitSelect($('eUnit'));
 fillCategorySelect($('fCategory'),true);fillCategorySelect($('eCategory'),true);
+fillSupplierSelect($('fSupplier'),[]);fillSupplierSelect($('eSupplier'),[]);
 fillSubcategorySelect($('fSubcategory'),'');fillSubcategorySelect($('eSubcategory'),'');
 $('fCategory').addEventListener('change',()=>fillSubcategorySelect($('fSubcategory'),$('fCategory').value));
 $('eCategory').addEventListener('change',()=>fillSubcategorySelect($('eSubcategory'),$('eCategory').value));
@@ -217,7 +221,7 @@ const sell=Number($('fSell').value);
 if(!name){showError('Product name is required.');return;}
 if(!Number.isFinite(cost)||cost<0){showError('Cost price must be 0 or more.');return;}
 if(!Number.isFinite(sell)||sell<0){showError('Selling price must be 0 or more.');return;}
-const payload={name:name,costPrice:cost,sellingPrice:sell,unit:$('fUnit').value||'piece',category:$('fCategory').value||'',subcategory:$('fSubcategory').value||'',brand:$('fBrand').value.trim(),packageSize:$('fPackageSize').value.trim(),quantity:Math.max(0,parseInt($('fQty').value||'0',10)||0),lowStockThreshold:Math.max(0,parseInt($('fThreshold').value||'5',10)||0)};
+const payload={name:name,costPrice:cost,sellingPrice:sell,unit:$('fUnit').value||'piece',category:$('fCategory').value||'',subcategory:$('fSubcategory').value||'',brand:$('fBrand').value.trim(),packageSize:$('fPackageSize').value.trim(),supplier:$('fSupplier').value.trim(),quantity:Math.max(0,parseInt($('fQty').value||'0',10)||0),lowStockThreshold:Math.max(0,parseInt($('fThreshold').value||'5',10)||0)};
 const btn=$('btnAdd');btn.disabled=true;btn.textContent='Adding...';
 try{const row=await DB.addProduct(payload);if(!row){showError('Could not add product — check connection and try again.');return;}$('productForm').reset();fillSubcategorySelect($('fSubcategory'),'');showSuccess('Product "'+name+'" added.');await reload();}catch(err){showError('Add failed: '+(err.message||'unknown error'));}finally{btn.disabled=false;btn.textContent='Add Product';}
 });
@@ -234,6 +238,7 @@ const p=products.find(x=>Number(x.id)===id);
 if(!p)return;
 editId=id;clearBanners();
 $('eName').value=p.name||'';$('eBrand').value=p.brand||'';$('ePackageSize').value=p.packageSize||'';
+$('eSupplier').value=p.supplier||'';
 $('eCost').value=String(p.costPrice??0);$('eSell').value=String(p.sellingPrice??0);
 fillUnitSelect($('eUnit'));$('eUnit').value=p.unit||'piece';
 fillCategorySelect($('eCategory'),true);$('eCategory').value=p.category||'';
@@ -256,7 +261,7 @@ if(!name){showError('Product name is required.');return;}
 if(!Number.isFinite(cost)||cost<0){showError('Cost price must be 0 or more.');return;}
 if(!Number.isFinite(sell)||sell<0){showError('Selling price must be 0 or more.');return;}
 const orig=products.find(x=>Number(x.id)===Number(editId));if(!orig){showError('Product not found — reload and try again.');return;}
-const payload={id:editId,name:name,quantity:Math.max(0,parseInt($('eQty').value||'0',10)||0),costPrice:cost,sellingPrice:sell,unit:$('eUnit').value||'piece',lowStockThreshold:Math.max(0,parseInt($('eThreshold').value||'5',10)||0),category:$('eCategory').value||'',subcategory:$('eSubcategory').value||'',brand:$('eBrand').value.trim(),packageSize:$('ePackageSize').value.trim()};
+const payload={id:editId,name:name,quantity:Math.max(0,parseInt($('eQty').value||'0',10)||0),costPrice:cost,sellingPrice:sell,unit:$('eUnit').value||'piece',lowStockThreshold:Math.max(0,parseInt($('eThreshold').value||'5',10)||0),category:$('eCategory').value||'',subcategory:$('eSubcategory').value||'',brand:$('eBrand').value.trim(),packageSize:$('ePackageSize').value.trim(),supplier:$('eSupplier').value.trim()};
 const btn=$('btnSaveEdit');btn.disabled=true;btn.textContent='Saving...';
 try{const err=await DB.upsertProduct(payload);if(err){showError('Save failed: '+(err.message||'unknown error'));return;}dialog.close();showSuccess('Product "'+name+'" saved.');await reload();}catch(err){showError('Save failed: '+(err.message||'unknown error'));}finally{btn.disabled=false;btn.textContent='Save Changes';}
 });

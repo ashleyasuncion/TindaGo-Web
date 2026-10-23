@@ -78,7 +78,8 @@ var state = {
     isLoading: false,    // true while products are being fetched from Supabase
     cart: {},            // productId -> qty
     paymentMethod: 'cash',
-    submitted: false
+    submitted: false,
+    lastOrderTempId: null   // Temp ID of the most recent REAL order (cancel target)
 };
 
 // -------------------------------------------------------------------
@@ -101,6 +102,7 @@ function restartIdleTimer() {
         idleTimerId = null;
         state.cart = {};
         state.submitted = false;
+        state.lastOrderTempId = null;
         state.paymentMethod = 'cash';
         selectPayment('cash');
         // Reset panel visibility exactly like btnNewOrder, so Shop Now after AFK
@@ -203,6 +205,27 @@ function cartMaxQty(p) {
     return Math.max(0, Math.floor(Number(p.quantity) || 0));
 }
 
+// ── Remove a single product from the cart entirely (per-product cancel) ──
+function removeProduct(id) {
+    if (state.cart[String(id)]) delete state.cart[String(id)];
+    if ($('checkoutPanel').classList.contains('hidden')) {
+        rerender();
+    } else {
+        if (cartCount() === 0) closeReview();
+        else renderReview();
+    }
+}
+
+// ── Clear the whole cart (cancel order) ──
+// Called before the order is placed (sticky bar / review "Cancel order").
+// After placement, use cancelOrder() instead — that also cancels in the DB.
+function clearCart() {
+    state.cart = {};
+    closeReview();
+    renderSummary();
+    updateBackToTop();
+}
+
 // ── Render ──
 function renderHeader() {
     $('storeName').textContent = state.storeName || 'TindaGo Store';
@@ -237,6 +260,7 @@ function buildProductCardHTML(p) {
                 ? '<div class="btn-add disabled">Sold out</div>'
                 : inCart > 0
                     ? '<div class="stepper" data-id="' + esc(p.id) + '">' +
+                        '<button type="button" class="step-btn step-remove" data-remove="' + esc(p.id) + '" aria-label="Remove ' + esc(p.name) + '">✕</button>' +
                         '<button type="button" class="step-btn" data-step="-1" aria-label="Decrease">−</button>' +
                         '<span class="step-qty" contenteditable="true" spellcheck="false" data-editable-qty="' + esc(p.id) + '">' + esc(formatQty(inCart)) + '</span>' +
                         '<button type="button" class="step-btn" data-step="1" aria-label="Increase">+</button>' +
@@ -386,6 +410,10 @@ function renderSummary() {
             btn.textContent = 'Review order ' + (state.demo ? '(DEMO)' : '') + ' · ' + peso(cartTotal());
         }
     }
+    // Sticky-bar "Cancel order" (clear cart) — present the moment the cart has
+    // items, so the customer can abandon the whole order before placing it.
+    var cancelCart = $('btnCancelCart');
+    if (cancelCart) cancelCart.classList.toggle('hidden', count === 0);
 }
 
 function rerender() {
@@ -676,6 +704,7 @@ function renderReview() {
                     '<div class="review-item-price">' + peso(p.price) + ' / ' + esc(p.unit || 'item') + '</div>' +
                 '</div>' +
                 '<div class="review-item-right">' +
+                    '<button type="button" class="review-item-remove" data-remove="' + esc(p.id) + '" aria-label="Remove ' + esc(p.name) + '">✕</button>' +
                     '<div class="stepper" data-id="' + esc(p.id) + '">' +
                         '<button type="button" class="step-btn" data-step="-1" aria-label="Decrease">−</button>' +
                         '<span class="step-qty" contenteditable="true" spellcheck="false" data-editable-qty="' + esc(p.id) + '">' + esc(formatQty(qty)) + '</span>' +
@@ -687,6 +716,12 @@ function renderReview() {
     }
     $('reviewItems').innerHTML = html;
     $('reviewTotal').textContent = peso(cartTotal());
+
+    // Review-step "Cancel order" (clear cart) — visible whenever the review is
+    // showing (renderReview only runs on that panel) and there are items.
+    var cancelButton = $('btnCancelCartReview');
+    if (cancelButton) cancelButton.classList.toggle('hidden', cartCount() === 0 || state.submitted);
+
     var place = $('btnPlaceOrder');
     if (place) {
         if (state.submitted) {
@@ -986,6 +1021,10 @@ async function submitPreOrder() {
         return;
     }
 
+    // Order persisted (real mode only) — record its Temp ID so the receipt's
+    // Cancel order button has something to cancel via cancel_preorder.
+    state.lastOrderTempId = tempId;
+
     // ── GCash path: bypassed for manual instructions ──
     if (state.paymentMethod === 'gcash') {
         // Automation deactivated: show the manual instructions receipt panel
@@ -998,6 +1037,11 @@ async function submitPreOrder() {
 }
 
 function showReceipt(order, isDemo) {
+    // Reset the header in case the previous receipt was cancelled (title/check
+    // swapped by cancelOrder) — every new order starts as a success receipt.
+    $('receiptTitle').textContent = 'Order received!';
+    $('receiptCheck').textContent = '✓';
+
     $('receiptTempId').textContent = order.temp_id;
     $('receiptStore').textContent = state.storeName;
 
@@ -1052,9 +1096,61 @@ function showReceipt(order, isDemo) {
         if (tempIdEl) tempIdEl.parentNode.appendChild(badge);
     }
 
+    // ── Cancel button: only shown for REAL orders (demo has nothing in the
+    // DB to cancel) and only while this session's order is still cancellable.
+    var cancelBtn = $('btnCancelOrder');
+    var showCancel = !isDemo && !!state.lastOrderTempId;
+    if (cancelBtn) {
+        cancelBtn.classList.toggle('hidden', !showCancel);
+        cancelBtn.disabled = false;
+        cancelBtn.textContent = 'Cancel order';
+    }
+
     // AFK idle timeout: receipt is now visible → start the 30s countdown
     idleActive = true;
     restartIdleTimer();
+}
+
+// ── Customer self-service cancel (receipt panel) ──
+// Mirrors the backoffice doCancel / Android cancelPreOrder, but for the
+// ANONYMOUS customer: a direct PATCH is blocked by RLS (pre_orders UPDATE is
+// owner-only), so this goes through the SECURITY DEFINER cancel_preorder RPC
+// (sql/preorder_cancel_v1.sql) which matches on (user_id, temp_id).
+async function cancelOrder() {
+    var btn = $('btnCancelOrder');
+    if (!btn || btn.disabled) return;
+    var tempId = state.lastOrderTempId;
+    if (!tempId || !state.storeUid) return;
+    if (!window.confirm('Cancel this order? This cannot be undone.')) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Cancelling…';
+    $('copyBtn').disabled = false; // keep copy enabled; only the cancel button locks
+
+    try {
+        var res = await sb.rpc('cancel_preorder', {
+            p_store: state.storeUid,
+            p_temp_id: tempId
+        });
+        if (res.error) throw new Error(res.error.message);
+
+        // Order cancelled — swap the receipt to a cancelled state so the
+        // customer isn't left on a "success" receipt for a dead order.
+        $('receiptTitle').textContent = 'Order cancelled';
+        $('receiptCheck').textContent = '×';
+        $('receiptStatus').textContent = 'This order has been cancelled. Please place a new order if you changed your mind.';
+        $('receiptStatus').className = 'receipt-status error';
+        $('btnCancelOrder').classList.add('hidden');
+        $('btnNewOrder').textContent = 'Start a new order';
+        state.lastOrderTempId = null;
+        state.submitted = false;
+    } catch (e) {
+        console.error('cancelOrder:', e);
+        $('receiptStatus').textContent = "Sorry, we couldn't cancel this order. It may already be completed. Please ask the cashier.";
+        $('receiptStatus').className = 'receipt-status error';
+        btn.disabled = false;
+        btn.textContent = 'Cancel order';
+    }
 }
 
 // ── Copy Temp ID ──
@@ -1188,6 +1284,8 @@ async function init() {
     $('productList').addEventListener('click', function (e) {
         var add = e.target.closest('[data-add]');
         if (add) { addToCart(add.getAttribute('data-add')); return; }
+        var remove = e.target.closest('[data-remove]');
+        if (remove) { removeProduct(remove.getAttribute('data-remove')); return; }
         var step = e.target.closest('[data-step]');
         if (step) {
             var id = step.closest('.stepper').getAttribute('data-id');
@@ -1199,12 +1297,26 @@ async function init() {
         if (cartCount() === 0 || state.submitted) return;
         openReview();
     });
+    // Cancel order buttons (clear cart before placement)
+    $('btnCancelCart').addEventListener('click', clearCart);
+    $('btnCancelCartReview').addEventListener('click', clearCart);
     $('btnBackMenu').addEventListener('click', closeReview);
+    // Place an order via the checked path — checks cart qty, opens review.
     $('btnPlaceOrder').addEventListener('click', function () {
         if (cartCount() === 0 || state.submitted) return;
         submitPreOrder();
     });
+    $('btnCancelOrder').addEventListener('click', cancelOrder);
+    // Pre-orders viewer: shows pending customer orders with notes (mirrors backoffice)
+    $('btnPreOrders').addEventListener('click', function () {
+        $('preOrdersSection').classList.toggle('hidden');
+        if (!$('preOrdersSection').classList.contains('hidden')) {
+            renderPreOrders();
+        }
+    });
     $('reviewItems').addEventListener('click', function (e) {
+        var remove = e.target.closest('[data-remove]');
+        if (remove) { removeProduct(remove.getAttribute('data-remove')); return; }
         var step = e.target.closest('[data-step]');
         if (!step) return;
         var id = step.closest('.stepper').getAttribute('data-id');
@@ -1239,6 +1351,7 @@ async function init() {
         clearIdleTimer();          // user is explicitly continuing → cancel AFK timeout
         state.cart = {};
         state.submitted = false;
+        state.lastOrderTempId = null;
         state.paymentMethod = 'cash';
         selectPayment('cash');
         $('receiptPanel').classList.add('hidden');
@@ -1290,6 +1403,81 @@ async function init() {
     // live-stock background refresh (20s interval + on-tab-visible).
     enterLanding(profile);
     startStockRefresh();
+}
+
+// -----------------------------------------------------------------
+// Pre-order viewing — fetch and display pending pre-orders for the store
+// Mirrors the backoffice getPendingPreOrders but for the customer-facing page
+// -----------------------------------------------------------------
+function renderPreOrders() {
+    var storeUid = state.storeUid;
+    if (!storeUid) return;
+    // Use the config.js fetchPendingPreOrders if available, otherwise fallback
+    // to direct Supabase call (this file runs after config.js)
+    var pending = [];
+    try {
+        var result = window.fetchPendingPreOrders ? window.fetchPendingPreOrders(storeUid) : null;
+        if (result && Array.isArray(result)) {
+            pending = result;
+        } else {
+            // Fallback: direct Supabase query
+            sb.from('pre_orders').select('*').eq('status', 'pending').order('created_at', { ascending: false }).then(function (resp) {
+                pending = resp.data || [];
+                renderPreOrderCards(pending);
+            });
+        }
+    } catch (e) {
+        console.error('renderPreOrders:', e);
+    }
+    return pending;
+}
+
+function renderPreOrderCards(rows) {
+    var list = $('preOrderList');
+    if (!list) return;
+    if (!rows.length) {
+        list.innerHTML = '<div class="empty-state">No pending pre-orders right now.<br>When customers place orders through your QR page, they appear here.</div>';
+        return;
+    }
+    var html = '';
+    for (var i = 0; i < rows.length; i++) {
+        var r = rows[i];
+        var note = (r.customer_note || '').trim();
+        var when = (r.created_at) ? timeAgo(r.created_at) : '';
+        var method = (r.payment_method || 'cash').toUpperCase();
+        var total = peso(r.total_amount);
+        var tempId = r.temp_id || '—';
+        var items = '';
+        // Parse items from JSON
+        try {
+            var parsed = JSON.parse(r.items_json || '[]');
+            for (var j = 0; j < parsed.length; j++) {
+                var it = parsed[j];
+                items += '<div class="po-item">' + (it.qty || 0) + '× ' + (it.name || 'item') + '</div>';
+            }
+        } catch (_) {
+            items = '<div class="po-item">(no items)</div>';
+        }
+        html +=
+            '<article class="po-card">' +
+                '<div class="po-header">' +
+                    '<div>' +
+                        '<div class="po-tempid">' + esc(tempId) + '</div>' +
+                        (note ? '<div class="po-note">"' + esc(note) + '"</div>' : '') +
+                    '</div>' +
+                    '<div class="po-meta">' +
+                        '<div class="po-total">' + total + '</div>' +
+                        '<div>' + esc(when) + '</div>' +
+                        '<div class="po-method">' + method + '</div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="po-items">' + esc(items) + '</div>' +
+                '<div class="po-actions">' +
+                    '<button type="button" class="btn btn-primary btn-sm" data-action="details" data-id="' + esc(r.id) + '">Details</button>' +
+                '</div>' +
+            '</article>';
+    }
+    list.innerHTML = html;
 }
 
 // -----------------------------------------------------------------

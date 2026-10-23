@@ -137,7 +137,8 @@ begin
                 raise exception 'Product % is no longer available', v_pid;
             end if;
             if v_avail < v_qty then
-                raise exception 'Not enough stock for % (requested %, available %)', v_pid, v_qty, v_avail;
+        -- allow pre-order of out-of-stock items (backorder)
+                -- out‑of‑stock allowed (backorder) – no exception raised
             end if;
         end if;
     end loop;

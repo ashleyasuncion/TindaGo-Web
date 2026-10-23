@@ -58,7 +58,8 @@ const DB = {
             category: r.category,
             subcategory: r.subcategory,
             brand: r.brand,
-            packageSize: r.package_size
+            packageSize: r.package_size,
+            supplier: r.supplier
         }));
     },
 
@@ -75,7 +76,8 @@ const DB = {
             category: p.category || '',
             subcategory: p.subcategory || '',
             brand: p.brand || '',
-            package_size: p.packageSize || ''
+            package_size: p.packageSize || '',
+            supplier: p.supplier || ''
         };
         // Composite conflict key matches the v2 PK (user_id, id) so one
         // store's upsert can never overwrite another store's row.
@@ -99,7 +101,8 @@ const DB = {
             category: p.category || '',
             subcategory: p.subcategory || '',
             brand: p.brand || '',
-            package_size: p.packageSize || ''
+            package_size: p.packageSize || '',
+            supplier: p.supplier || ''
         };
         const { data, error } = await sb.from('products').insert(row).select().single();
         if (error) { console.error('addProduct:', error); return null; }
