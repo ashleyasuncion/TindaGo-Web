@@ -74,6 +74,7 @@ var state = {
     storeName: 'TindaGo Store',
     storeAddress: '',
     gcashNumber: '',
+    gcashQrUrl: '',   // owner-uploaded GCash QR image ('' = none)
     products: [],        // visible product list (ALL products incl. out-of-stock)
     isLoading: false,    // true while products are being fetched from Supabase
     cart: {},            // productId -> qty
@@ -1065,14 +1066,33 @@ function showReceipt(order, isDemo) {
         year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
     });
 
-    // Manual GCash instructions
+    // Manual GCash instructions — the owner may publish a number, a QR image,
+    // or both. Show whichever exists and hide the other.
     var gcashInstructions = $('gcashManualInstructions');
+    var gcashNumberRow = $('gcashNumberRow');
+    var gcashQrWrap = $('gcashQrWrap');
+    var gcashQrImage = $('gcashQrImage');
+    var hasGcashNumber = !!(state.gcashNumber || '').trim();
+    var hasGcashQr = !!(state.gcashQrUrl || '').trim();
     if (gcashInstructions) {
-        if (order.payment_method === 'gcash' && state.gcashNumber) {
-            $('gcashDisplayNumber').textContent = state.gcashNumber;
+        if (order.payment_method === 'gcash' && (hasGcashNumber || hasGcashQr)) {
+            if (gcashNumberRow) gcashNumberRow.style.display = hasGcashNumber ? '' : 'none';
+            if (hasGcashNumber && $('gcashDisplayNumber')) {
+                $('gcashDisplayNumber').textContent = state.gcashNumber;
+            }
+            if (gcashQrWrap && gcashQrImage) {
+                if (hasGcashQr) {
+                    gcashQrImage.src = state.gcashQrUrl;
+                    gcashQrWrap.classList.remove('hidden');
+                } else {
+                    gcashQrImage.removeAttribute('src');
+                    gcashQrWrap.classList.add('hidden');
+                }
+            }
             gcashInstructions.classList.remove('hidden');
             if (!isDemo) {
-                console.log('GCash automated checkout deactivated — customer pays manually to ' + state.gcashNumber);
+                console.log('Manual GCash payment — number=' + (hasGcashNumber ? 'yes' : 'no') +
+                    ', qr=' + (hasGcashQr ? 'yes' : 'no'));
             }
         } else {
             gcashInstructions.classList.add('hidden');
@@ -1082,8 +1102,8 @@ function showReceipt(order, isDemo) {
     var statusMsg = isDemo
         ? 'DEMO order — not saved to the store'
         : 'Order received! Show this Temp ID to the cashier.';
-    if (order.payment_method === 'gcash' && state.gcashNumber) {
-        statusMsg = 'Order received! Pay via GCash manually using the number above, then show this Temp ID to the cashier.';
+    if (order.payment_method === 'gcash' && (hasGcashNumber || hasGcashQr)) {
+        statusMsg = 'Order received! Pay via GCash using the details above, then show this Temp ID to the cashier.';
     }
     $('receiptStatus').textContent = statusMsg;
     $('receiptStatus').className = 'receipt-status' + (isDemo ? ' demo' : ' success');
@@ -1393,6 +1413,7 @@ async function init() {
         state.storeName = profile.store_name;
         state.storeAddress = profile.address || '';
         state.gcashNumber = profile.gcash_number || '';
+        state.gcashQrUrl = profile.gcash_qr_url || '';
     }
 
     var all = await fetchPublicProducts(state.storeUid);

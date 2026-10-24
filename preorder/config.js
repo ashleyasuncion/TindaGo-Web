@@ -70,16 +70,28 @@ async function syncStoreSlug(storeCode, storeUid) {
  * Read the store's public profile (store_profiles) for the landing header and
  * the Phase 6 C "Enable pre-ordering" gate. Anonymous read is allowed by RLS
  * (store_profiles_public_select).
- * Returns { store_name, address, is_preorder_enabled, gcash_number } or null if missing/error.
+ * Returns { store_name, address, is_preorder_enabled, gcash_number, gcash_qr_url }
+ * or null if missing/error.
  */
 async function fetchStoreProfile(storeUid) {
     if (!storeUid) return null;
     try {
-        const { data, error } = await sb
+        let { data, error } = await sb
             .from('store_profiles')
-            .select('store_name, address, is_preorder_enabled, gcash_number')
+            .select('store_name, address, is_preorder_enabled, gcash_number, gcash_qr_url')
             .eq('user_id', storeUid)
             .maybeSingle();
+        if (error) {
+            // Pre-migration project: retry without the QR column so the page
+            // still loads the store name, address and GCash number.
+            const retry = await sb
+                .from('store_profiles')
+                .select('store_name, address, is_preorder_enabled, gcash_number')
+                .eq('user_id', storeUid)
+                .maybeSingle();
+            data = retry.data;
+            error = retry.error;
+        }
         if (error) { console.error('fetchStoreProfile:', error); return null; }
         return data || null;
     } catch (e) {
@@ -105,4 +117,22 @@ async function fetchPublicProducts(storeUid) {
     }
 }
 
-/**\n * Fetch pending pre-orders for the store via the backoffice RPC.\n * Returns array of pre-order rows with customer_note included.\n * Anonymous read is allowed via the owner's user_id filter.\n */\nasync function fetchPendingPreOrders(storeUid) {\n    if (!storeUid) return [];\n    try {\n        const { data, error } = await sb\n            .from('pre_orders')\n            .select('*')\n            .eq('status', 'pending')\n            .order('created_at', { ascending: false });\n        if (error) { console.error('fetchPendingPreOrders:', error); return []; }\n        return Array.isArray(data) ? data : [];\n    } catch (e) {\n        console.error('fetchPendingPreOrders throw:', e);\n    }\n}
+/**
+ * Fetch pending pre-orders for the store via the backoffice RPC.
+ * Returns array of pre-order rows with customer_note included.
+ * Anonymous read is allowed via the owner's user_id filter.
+ */
+async function fetchPendingPreOrders(storeUid) {
+    if (!storeUid) return [];
+    try {
+        const { data, error } = await sb
+            .from('pre_orders')
+            .select('*')
+            .eq('status', 'pending')
+            .order('created_at', { ascending: false });
+        if (error) { console.error('fetchPendingPreOrders:', error); return []; }
+        return Array.isArray(data) ? data : [];
+    } catch (e) {
+        console.error('fetchPendingPreOrders throw:', e);
+    }
+}

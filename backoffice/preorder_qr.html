@@ -69,6 +69,11 @@
     .status-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px}
     .status-chip.on{color:var(--primary-dark);background:var(--primary-light);border:1px solid #bbf7d0}
     .status-chip.off{color:var(--text-secondary);background:var(--bg);border:1px solid var(--border)}
+    .qr-upload{display:flex;flex-direction:column;gap:10px;padding:14px;border:1.5px dashed var(--border);border-radius:12px;background:var(--bg)}
+    .qr-upload-preview{display:flex;justify-content:center}
+    .qr-upload-preview img{width:180px;height:180px;object-fit:contain;background:#fff;border:1px solid var(--border);border-radius:10px;padding:6px}
+    .qr-upload-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+    .hidden{display:none!important}
     @media (max-width:640px){.form-grid{grid-template-columns:1fr}.content{padding:16px}}
   </style>
 </head>
@@ -119,6 +124,20 @@
         <label for="fGcash">GCash number *</label>
         <input id="fGcash" class="form-input" placeholder="e.g. 0917 123 4567" maxlength="40">
         <div class="hint" style="margin:4px 0 0">Shown to customers for manual GCash payment.</div>
+      </div>
+      <div class="form-group full">
+        <label for="fGcashQr">GCash QR image (optional)</label>
+        <div class="qr-upload">
+          <div id="gcashQrPreviewWrap" class="qr-upload-preview hidden">
+            <img id="gcashQrPreview" alt="GCash QR preview">
+          </div>
+          <div class="qr-upload-actions">
+            <input type="file" id="fGcashQr" accept="image/png,image/jpeg,image/webp" hidden>
+            <button type="button" id="btnPickGcashQr" class="btn btn-outline">Choose image</button>
+            <button type="button" id="btnRemoveGcashQr" class="btn btn-outline hidden">Remove</button>
+          </div>
+          <div class="hint" style="margin:0">PNG, JPG or WebP up to 2 MB. Shown to customers on the GCash receipt and in the app's GCash sale dialog.</div>
+        </div>
       </div>
       <div class="form-group full switch-row">
         <div>
@@ -222,6 +241,22 @@
     else { pill.className = 'sync-pill nodata'; txt.textContent = 'Pre-orders paused'; }
   }
 
+  // Paint the GCash QR preview. '' hides the box and the Remove button (no
+  // image stored); a public URL or a local object URL shows the preview.
+  function showGcashQrPreview(url) {
+    var wrap = $('gcashQrPreviewWrap'), img = $('gcashQrPreview'), rm = $('btnRemoveGcashQr');
+    if (!wrap || !img) return;
+    if (url) {
+      img.src = url;
+      wrap.classList.remove('hidden');
+      if (rm) rm.classList.remove('hidden');
+    } else {
+      img.removeAttribute('src');
+      wrap.classList.add('hidden');
+      if (rm) rm.classList.add('hidden');
+    }
+  }
+
   // ── Init ──
   async function main() {
     const session = await requireAuth();
@@ -234,6 +269,11 @@
 
     // Load the existing profile, if any
     let profile = null;
+    // GCash QR staging: a chosen file is uploaded on Save, and Remove is also
+    // committed on Save, so the form keeps one predictable write point.
+    let currentGcashQrUrl = '';
+    let pendingGcashQrFile = null;
+    let gcashQrRemoved = false;
     clearBanners();
     try {
       profile = await DB.getStoreProfile();
@@ -247,11 +287,43 @@
       $('fOwner').value = profile.owner_name || '';
       $('fPhone').value = profile.phone_display || '';
       $('fGcash').value = profile.gcash_number || '';
+      currentGcashQrUrl = profile.gcash_qr_url || '';
       $('fEnabled').checked = !!profile.is_preorder_enabled;
     }
+    showGcashQrPreview(currentGcashQrUrl);
     updateStatusChip($('fEnabled').checked);
     paintSyncPill(!!profile, $('fEnabled').checked);
     $('fEnabled').addEventListener('change', function () { updateStatusChip($('fEnabled').checked); paintSyncPill(!!profile, $('fEnabled').checked); });
+
+    // GCash QR picker — validate locally, preview immediately, upload on Save.
+    $('btnPickGcashQr').addEventListener('click', function () { $('fGcashQr').click(); });
+    $('fGcashQr').addEventListener('change', function () {
+      clearBanners();
+      var file = this.files && this.files[0];
+      if (!file) return;
+      if (['image/png', 'image/jpeg', 'image/webp'].indexOf(file.type) === -1) {
+        showError('QR image must be a PNG, JPG or WebP file.');
+        this.value = '';
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        showError('QR image is too large — keep it under 2 MB.');
+        this.value = '';
+        return;
+      }
+      pendingGcashQrFile = file;
+      gcashQrRemoved = false;
+      showGcashQrPreview(URL.createObjectURL(file));
+    });
+
+    $('btnRemoveGcashQr').addEventListener('click', function () {
+      clearBanners();
+      pendingGcashQrFile = null;
+      gcashQrRemoved = true;
+      currentGcashQrUrl = '';
+      $('fGcashQr').value = '';
+      showGcashQrPreview('');
+    });
 
     // Draw the live QR using the signed-in user's UUID. When a store code is
     // saved the QR points at ?code=<code>; otherwise ?store=<uid> (back-compat).
@@ -301,12 +373,35 @@
 
       setSaving(true);
       try {
+        // Commit the QR change first so a failed upload/removal never leaves the
+        // profile pointing at an image that was not stored.
+        if (pendingGcashQrFile) {
+          const uploadedUrl = await DB.uploadGcashQr(pendingGcashQrFile);
+          if (!uploadedUrl) {
+            showError('Could not upload the GCash QR — ' +
+              (DB._lastQrError || 'check the Storage bucket and permissions, then try again.'));
+            return;
+          }
+          currentGcashQrUrl = uploadedUrl;
+          pendingGcashQrFile = null;
+        } else if (gcashQrRemoved) {
+          const removeErr = await DB.removeGcashQr();
+          if (removeErr) {
+            showError('Could not remove the GCash QR — ' +
+              (DB._lastQrError || 'try again.'));
+            return;
+          }
+          currentGcashQrUrl = '';
+          gcashQrRemoved = false;
+        }
+
         const row = await DB.upsertStoreProfile({
           storeName: name,
           ownerName: $('fOwner').value.trim(),
           address: $('fAddress').value.trim(),
           phoneDisplay: $('fPhone').value.trim(),
           gcashNumber: gcash,
+          gcashQrUrl: currentGcashQrUrl,
           storeCode: $('fCode').value.trim(),
           isPreorderEnabled: $('fEnabled').checked
         });
@@ -320,6 +415,8 @@
           return;
         }
         showSuccess('Pre-order settings saved.');
+        $('fGcashQr').value = '';
+        showGcashQrPreview(currentGcashQrUrl);
         // Regenerate the QR and refresh the topbar pill to match the saved state.
         // Rebuild the URL with the newly saved code (or fall back to the UUID),
         // and keep the slug table in sync so ?code= resolves for customers.

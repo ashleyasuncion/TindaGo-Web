@@ -359,6 +359,7 @@ const DB = {
             address: p.address || '',
             phone_display: p.phoneDisplay || '',
             gcash_number: p.gcashNumber || '',
+            gcash_qr_url: p.gcashQrUrl || '',
             store_code: (p.storeCode || '').trim(),
             is_preorder_enabled: !!p.isPreorderEnabled,
             updated_at: Date.now()
@@ -370,6 +371,54 @@ const DB = {
             .single();
         if (error) { console.error('upsertStoreProfile:', error); DB._lastProfileError = (error && error.message) || String(error); return null; }
         return data;
+    },
+
+    // ── GCash QR image (Storage bucket `gcash-qr`, owner's <uid>/ folder) ──
+    // Uploaded once from preorder_qr.html and then read by the customer page
+    // and the Android checkout. The object path is stable (upsert) so a new
+    // upload replaces the old QR instead of accumulating files; the stored URL
+    // carries ?v=<timestamp> so browsers/apps recapture the changed image.
+    async uploadGcashQr(file) {
+        const uid = this.uid();
+        if (!uid || !file) { DB._lastQrError = 'not signed in or no file'; return null; }
+        const path = uid + '/gcash-qr';
+        const { error } = await sb.storage
+            .from('gcash-qr')
+            .upload(path, file, {
+                upsert: true,
+                contentType: file.type || 'image/png',
+                cacheControl: '3600'
+            });
+        if (error) {
+            console.error('uploadGcashQr:', error);
+            DB._lastQrError = (error && error.message) || String(error);
+            return null;
+        }
+        const { data } = sb.storage.from('gcash-qr').getPublicUrl(path);
+        if (!data || !data.publicUrl) { DB._lastQrError = 'could not build a public URL'; return null; }
+        return data.publicUrl + '?v=' + Date.now();
+    },
+
+    // Delete every object in the owner's folder (handles a QR uploaded before
+    // the stable filename was introduced). Returns null on success or the error.
+    async removeGcashQr() {
+        const uid = this.uid();
+        if (!uid || !sb.storage) { DB._lastQrError = 'not signed in'; return 'not signed in'; }
+        const listed = await sb.storage.from('gcash-qr').list(uid);
+        if (listed.error) {
+            console.error('removeGcashQr list:', listed.error);
+            DB._lastQrError = listed.error.message || String(listed.error);
+            return listed.error;
+        }
+        const paths = (listed.data || []).map(function (f) { return uid + '/' + f.name; });
+        if (!paths.length) return null;
+        const removed = await sb.storage.from('gcash-qr').remove(paths);
+        if (removed.error) {
+            console.error('removeGcashQr remove:', removed.error);
+            DB._lastQrError = removed.error.message || String(removed.error);
+            return removed.error;
+        }
+        return null;
     },
 
     // Owner-maintained short-code → uid mapping the customer page resolves
